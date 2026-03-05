@@ -1,3 +1,8 @@
+# Required GitHub Secrets (Settings > Secrets and variables > Actions):
+#   FTP_SERVER   = ftp.kat.sd
+#   FTP_USERNAME = kat-ftp@kat.sd
+#   FTP_PASSWORD = (your FTP password)
+
 name: Deploy React to cPanel
 
 on:
@@ -24,39 +29,13 @@ jobs:
       - name: Build React App
         run: npm run build
 
-      - name: Prepare Build Folder
-        run: |
-          [ -d rafique-forntend-build ] && rm -rf rafique-forntend-build
-          mv dist rafique-forntend-build
-
-      - name: Compress Build
-        run: |
-          cd rafique-forntend-build
-          zip -r ../rafique-forntend-build.zip .
-
-      - name: Upload Build
-        uses: appleboy/scp-action@v0.1.7
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          source: "rafique-forntend-build.zip"
-          target: "~/"
-
-      - name: Extract on Server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            APP_DIR="public_html/rafique-fornt"
-            mkdir -p "$APP_DIR"
-            # Remove only old build archives (zip files) inside this app directory
-            find "$APP_DIR" -maxdepth 1 -type f -name "*.zip" -delete || true
-            # Extract new build contents into the app directory
-            unzip -o ~/rafique-forntend-build.zip -d "$APP_DIR"
-            # Remove uploaded build archive after extraction
-            rm -f ~/rafique-forntend-build.zip
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: public_html/rafique-front
+          local-dir: ./dist
+          protocol: ftp
+          port: 21
