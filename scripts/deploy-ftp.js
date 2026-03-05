@@ -51,10 +51,16 @@ async function deploy() {
       port: 21,
       secure: false,
     })
+    // If folder exists, remove it and its contents for a clean deploy
+    try {
+      await client.removeDir(remoteDir)
+      console.log('Removed existing folder:', remoteDir)
+    } catch (_) {
+      // Folder may not exist on first deploy
+    }
+    // Create fresh folder and upload dist contents into it
     await client.ensureDir(remoteDir)
-    await client.cd(remoteDir)
-    await client.clearWorkingDir()
-    await client.uploadFromDir(localDir)
+    await client.uploadFromDir(localDir, remoteDir)
     console.log('Deploy done: %s -> %s', localDir, remoteDir)
   } catch (err) {
     console.error('Deploy failed:', err.message)
