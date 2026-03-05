@@ -7,19 +7,19 @@
 
 import { Client } from 'basic-ftp'
 import { readFileSync, existsSync } from 'fs'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { join } from 'path'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const root = join(__dirname, '..')
+// Use cwd so .env is found when run via "bun run deploy" or "npm run deploy" from project root
+const root = process.cwd()
 
 // Load .env if present (no extra dependency)
 function loadEnv() {
   const envPath = join(root, '.env')
   if (!existsSync(envPath)) return
   try {
-    const content = readFileSync(envPath, 'utf8')
-    for (const line of content.split('\n')) {
+    let content = readFileSync(envPath, 'utf8')
+    content = content.replace(/\uFEFF/g, '') // strip BOM
+    for (const line of content.split(/\r?\n/)) {
       const m = line.match(/^([^#=]+)=(.*)$/)
       if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '')
     }
