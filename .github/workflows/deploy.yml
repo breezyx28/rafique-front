@@ -36,6 +36,6 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: public_html/rafique-front/
-          local-dir: ./dist
+          local-dir: ./dist/
           protocol: ftp
           port: 21
