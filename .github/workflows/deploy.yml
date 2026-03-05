@@ -1,0 +1,62 @@
+name: Deploy React to cPanel
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build React App
+        run: npm run build
+
+      - name: Prepare Build Folder
+        run: |
+          [ -d rafique-forntend-build ] && rm -rf rafique-forntend-build
+          mv dist rafique-forntend-build
+
+      - name: Compress Build
+        run: |
+          cd rafique-forntend-build
+          zip -r ../rafique-forntend-build.zip .
+
+      - name: Upload Build
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "rafique-forntend-build.zip"
+          target: "~/"
+
+      - name: Extract on Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            APP_DIR="public_html/rafique-fornt"
+            mkdir -p "$APP_DIR"
+            # Remove only old build archives (zip files) inside this app directory
+            find "$APP_DIR" -maxdepth 1 -type f -name "*.zip" -delete || true
+            # Extract new build contents into the app directory
+            unzip -o ~/rafique-forntend-build.zip -d "$APP_DIR"
+            # Remove uploaded build archive after extraction
+            rm -f ~/rafique-forntend-build.zip
