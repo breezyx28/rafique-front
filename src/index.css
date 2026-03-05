@@ -1,0 +1,225 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+:root {
+  /* Brand */
+  --color-primary: #0B9E8E;
+  --color-primary-light: #E6F7F5;
+  --color-primary-dark: #077A6E;
+
+  /* Layout */
+  --color-bg-app: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-border: #EBEBEB;
+
+  /* Text */
+  --color-text-primary: #1A1A2E;
+  --color-text-secondary: #6B7280;
+  --color-text-muted: #9CA3AF;
+
+  /* Status */
+  --color-success: #22C55E;
+  --color-success-bg: #DCFCE7;
+  --color-warning: #F59E0B;
+  --color-warning-bg: #FEF3C7;
+  --color-danger: #EF4444;
+  --color-danger-bg: #FEE2E2;
+
+  /* KPI card tints */
+  --card-peach: #FFF0EB;
+  --card-mint: #EDFAF5;
+  --card-lavender: #EEF0FF;
+  --card-sky: #EBF5FF;
+
+  /* Spending tints */
+  --spend-lavender: #EEF0FF;
+  --spend-amber: #FFF4E5;
+  --spend-mint: #F0FFF4;
+  --spend-salmon: #FFF0EB;
+  --spend-purple: #F5F0FF;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
+  --shadow-nav: 0 2px 8px rgba(11, 158, 142, 0.15);
+  --radius: 0.625rem;
+  --background: #FFFFFF;
+  --foreground: #1A1A2E;
+  --card: #FFFFFF;
+  --card-foreground: #1A1A2E;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A2E;
+  --primary: #0B9E8E;
+  --primary-foreground: #FFFFFF;
+  --secondary: #E6F7F5;
+  --secondary-foreground: #0B9E8E;
+  --muted: #F5F5F5;
+  --muted-foreground: #9CA3AF;
+  --accent: #F5F5F5;
+  --accent-foreground: #1A1A2E;
+  --destructive: #EF4444;
+  --border: #EBEBEB;
+  --input: #EBEBEB;
+  --ring: #0B9E8E;
+  --chart-1: #0B9E8E;
+  --chart-2: #22C55E;
+  --chart-3: #F59E0B;
+  --chart-4: #EEF0FF;
+  --chart-5: #EBF5FF;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1A1A2E;
+  --sidebar-primary: #0B9E8E;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F5F5F5;
+  --sidebar-accent-foreground: #1A1A2E;
+  --sidebar-border: #EBEBEB;
+  --sidebar-ring: #0B9E8E;
+}
+
+body {
+  background-color: var(--color-bg-app);
+  color: var(--color-text-primary);
+  font-family: 'Plus Jakarta Sans', 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
+  font-feature-settings: 'rlig' 1, 'calt' 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+[dir='rtl'] body {
+  font-family: 'Cairo', 'Noto Sans Arabic', sans-serif;
+}
+
+[lang='bn'] body {
+  font-family: 'Hind Siliguri', sans-serif;
+}
+
+/* Quick utility classes matching the design spec */
+
+.card-base {
+  background-color: var(--color-surface);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border);
+  padding: 20px 22px;
+}
+
+.card-peach {
+  background-color: var(--card-peach);
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+
+.card-mint {
+  background-color: var(--card-mint);
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+
+.card-lavender {
+  background-color: var(--card-lavender);
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+
+.card-sky {
+  background-color: var(--card-sky);
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.label-muted {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
+  padding-inline: 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.badge-success {
+  background-color: var(--color-success-bg);
+  color: #16a34a;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.badge-warning {
+  background-color: var(--color-warning-bg);
+  color: #d97706;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background-color: #f5f5f5;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
