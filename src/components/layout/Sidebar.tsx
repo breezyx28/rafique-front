@@ -94,8 +94,8 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
           {!collapsed ? 'ACCOUNT MANAGEMENT' : ''}
         </p>
         <nav className="space-y-1">
-          {accountNavItems.map(({ to, icon: Icon, key, label }) =>
-            renderNavItem(to, Icon, label ?? t(`nav.${key}`))
+          {accountNavItems.map(({ to, icon: Icon, key }) =>
+            renderNavItem(to, Icon, t(`nav.${key}`))
           )}
         </nav>
       </div>
