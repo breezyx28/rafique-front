@@ -50,7 +50,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-        #   port: ${{ secrets.SSH_PORT }}
+          port: ${{ secrets.SSH_PORT }}
           script: |
             APP_DIR="public_html/rafique-fornt"
             mkdir -p "$APP_DIR"
