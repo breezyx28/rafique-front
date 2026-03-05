@@ -2,7 +2,7 @@
  * Deploy dist/ to cPanel via FTP.
  * Set env vars (or use .env in project root):
  *   FTP_HOST, FTP_USER, FTP_PASSWORD
- * Optional: FTP_REMOTE_DIR (default: public_html/rafique-front)
+ * Optional: FTP_REMOTE_DIR (default: public_html/rafique/rafique-front)
  */
 
 import { Client } from 'basic-ftp'
@@ -31,7 +31,7 @@ loadEnv()
 const host = process.env.FTP_HOST || 'ftp.kat.sd'
 const user = process.env.FTP_USER
 const password = process.env.FTP_PASSWORD
-const remoteDir = process.env.FTP_REMOTE_DIR || 'public_html/rafique-front'
+const remoteDir = process.env.FTP_REMOTE_DIR || 'public_html/rafique/rafique-front'
 const localDir = join(root, 'dist')
 
 if (!user || !password) {
