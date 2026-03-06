@@ -1,9 +1,8 @@
 import axios from 'axios'
 
-// Base API URL. Backend now serves everything under `/api`,
-// e.g. POST /api/auth/login, GET /api/customers, etc.
-// If VITE_API_URL is set, it should already include the `/api` prefix.
-export const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api'
+// Base API URL from env. Set in .env (dev) or .env.production (build).
+export const API_BASE =
+  import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:3001/api' : '')
 
 export const api = axios.create({
   baseURL: API_BASE,
