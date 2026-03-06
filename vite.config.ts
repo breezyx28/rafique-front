@@ -7,12 +7,19 @@ export default defineConfig({
   plugins: [
     react(),
     {
-      name: 'copy-env-to-dist',
+      name: 'copy-files-to-dist',
       closeBundle() {
-        const src = path.resolve(__dirname, '.env.production')
-        const dest = path.resolve(__dirname, 'dist', '.env')
-        if (existsSync(src)) {
-          copyFileSync(src, dest)
+        const distDir = path.resolve(__dirname, 'dist')
+        const copies: [string, string][] = [
+          ['.env.production', '.env'],
+          ['.htaccess', '.htaccess'],
+        ]
+        for (const [srcName, destName] of copies) {
+          const src = path.resolve(__dirname, srcName)
+          const dest = path.join(distDir, destName)
+          if (existsSync(src)) {
+            copyFileSync(src, dest)
+          }
         }
       },
     },
