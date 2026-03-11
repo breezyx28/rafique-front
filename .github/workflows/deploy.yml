@@ -1,0 +1,80 @@
+# Deploy React app: build → encrypt .env.production → deploy contents of dist → decrypt on server
+# The contents of dist/ (not the dist folder itself) are deployed into DEPLOY_PATH.
+#
+# Required secrets (Settings → Secrets and variables → Actions):
+#   SSH_PRIVATE_KEY      - Private key for root@rafique.kat-jr.com (content of id_rsa)
+#   ENV_ENCRYPT_PASSWORD - Password to encrypt/decrypt .env.production (avoid single quotes)
+
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      SSH_HOST: rafique.kat-jr.com
+      SSH_USER: root
+      DEPLOY_PATH: /var/www/html/rafique/frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Encrypt .env.production and add to dist
+        run: |
+          # Remove plain .env from dist (we deploy encrypted only)
+          rm -f dist/.env
+          # Encrypt .env.production into dist for deployment
+          openssl enc -aes-256-cbc -salt -pbkdf2 \
+            -in .env.production \
+            -out dist/.env.production.enc \
+            -k "${{ secrets.ENV_ENCRYPT_PASSWORD }}"
+
+      - name: Prepare SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ env.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Create deploy archive (contents of dist only)
+        run: |
+          cd dist && zip -r ../deploy-frontend.zip . && cd ..
+
+      - name: Upload to server
+        run: |
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            deploy-frontend.zip \
+            ${{ env.SSH_USER }}@${{ env.SSH_HOST }}:~/deploy-frontend.zip
+
+      - name: Extract and decrypt .env on server
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ env.SSH_USER }}@${{ env.SSH_HOST }} \
+            "mkdir -p ${{ env.DEPLOY_PATH }} && \
+             cd ${{ env.DEPLOY_PATH }} && \
+             (rm -rf * .[!.]* 2>/dev/null; true) && \
+             unzip -o ~/deploy-frontend.zip -d . && \
+             rm -f ~/deploy-frontend.zip && \
+             openssl enc -aes-256-cbc -d -pbkdf2 -in .env.production.enc -out .env -k '${{ secrets.ENV_ENCRYPT_PASSWORD }}' && \
+             rm -f .env.production.enc"
+
+      - name: Cleanup
+        if: always()
+        run: rm -f ~/.ssh/deploy_key deploy-frontend.zip

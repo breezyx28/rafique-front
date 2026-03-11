@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "deploy": "git add . && git commit -m 'scp deploy' && git push && npm run build && node scripts/deploy-scp.js",
+    "deploy": "git add . && git commit -m 'deploy' && git push",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -45,7 +45,6 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
-    "archiver": "^7.0.1",
     "autoprefixer": "^10.4.27",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
