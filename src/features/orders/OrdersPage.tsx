@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Eye, FileText, Pencil, Printer, Search, Trash2 } from 'lucide-react'
@@ -6,10 +6,17 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import type { InvoicePayload } from '@/features/invoices/types'
-import { printInvoice } from '@/features/invoices/printInvoice'
-import { useDeleteOrderMutation, useGetOrdersQuery, useUpdateOrderMutation } from '@/features/api/appApi'
+import { printInvoiceAndPickup } from '@/features/invoices/printInvoice'
+import {
+  useDeleteOrderMutation,
+  useDeliverOrderToWorkshopMutation,
+  useGetInventoryFabricsQuery,
+  useGetOrdersQuery,
+  useUndoDeliverOrderToWorkshopMutation,
+  useUpdateOrderMutation,
+} from '@/features/api/appApi'
 
-type OrderType = 'custom' | 'ready'
+type OrderType = 'custom' | 'ready' | 'fabric'
 type PaymentMethod = 'cash' | 'mbok'
 type OrderStatus = 'pending' | 'in_progress' | 'ready' | 'delivered' | 'cancelled'
 
@@ -45,14 +52,41 @@ export function OrdersPage() {
   })
   const [deleteOrder] = useDeleteOrderMutation()
   const [updateOrder] = useUpdateOrderMutation()
+  const [deliverToWorkshop] = useDeliverOrderToWorkshopMutation()
+  const [undoDeliver] = useUndoDeliverOrderToWorkshopMutation()
+  const { data: fabricsData } = useGetInventoryFabricsQuery({ page: 1, limit: 100 })
+  const [confirmDeliver, setConfirmDeliver] = useState<any | null>(null)
+  const [undoToast, setUndoToast] = useState<{ id: number; orderNumber: string; expiresAt: number } | null>(null)
+  const [undoSeconds, setUndoSeconds] = useState(30)
+
+  useEffect(() => {
+    if (!undoToast) return
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((undoToast.expiresAt - Date.now()) / 1000))
+      setUndoSeconds(left)
+      if (left <= 0) setUndoToast(null)
+    }
+    tick()
+    const timer = window.setInterval(tick, 250)
+    return () => window.clearInterval(timer)
+  }, [undoToast])
 
   const filteredOrders = useMemo(() => {
     const q = search.trim().toLowerCase()
     return (data?.data ?? []).filter((o) => {
       const customerName = o.customer?.name ?? 'Walk-in'
-      const products = (o.items ?? []).map((item) => item.product?.name || `Item ${item.productId ?? ''}`).join(', ')
+      const products = [
+        ...(o.items ?? []).map((item) => item.product?.name || `Item ${item.productId ?? ''}`),
+        ...(o.fabricSales ?? []).map((item) => `${item.fabric?.name ?? 'Fabric'} (${item.meters}m)`),
+      ].join(', ')
       const method = o.paymentMethod ?? 'cash'
-      const matchesSearch = !q || String(o.id).includes(q) || products.toLowerCase().includes(q) || customerName.toLowerCase().includes(q)
+      const matchesSearch =
+        !q ||
+        String(o.id).includes(q) ||
+        o.orderNumber.toLowerCase().includes(q) ||
+        (o.receiptNumber ?? '').toLowerCase().includes(q) ||
+        products.toLowerCase().includes(q) ||
+        customerName.toLowerCase().includes(q)
       const matchesCustomer = !customer || customerName.toLowerCase().includes(customer.toLowerCase())
       const matchesMethod = paymentMethod === 'all' || method === paymentMethod
       return matchesSearch && matchesCustomer && matchesMethod
@@ -62,7 +96,8 @@ export function OrdersPage() {
   const totalPages = Math.max(1, Math.ceil((data?.meta.total ?? filteredOrders.length) / (data?.meta.limit ?? 20)))
 
   const toInvoicePayload = (row: any): InvoicePayload => ({
-    orderNumber: String(row.id),
+    orderNumber: row.orderNumber,
+    receiptNumber: row.receiptNumber,
     submittedAt: (row.createdAt ?? '').slice(0, 10),
     customerName: row.customer?.name ?? 'Walk-in',
     customerPhone: row.customer?.phone ?? '—',
@@ -84,6 +119,29 @@ export function OrdersPage() {
 
   return (
     <div className="space-y-5">
+      {undoToast && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] bg-warningBg px-4 py-3 text-[13px] text-[#B45309]">
+          <p>
+            Order #{undoToast.orderNumber} was sent to the workshop. Undo available for {undoSeconds}s.
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              try {
+                await undoDeliver(undoToast.id).unwrap()
+                setUndoToast(null)
+              } catch (error) {
+                const apiError = error as { data?: { message?: string } }
+                window.alert(apiError.data?.message ?? 'Undo window expired.')
+                setUndoToast(null)
+              }
+            }}
+          >
+            Undo
+          </Button>
+        </div>
+      )}
       <div>
         <h1 className="text-[28px] font-bold text-text-primary">
           {t('ordersPage.title', 'Orders Report')}
@@ -119,6 +177,18 @@ export function OrdersPage() {
               }`}
             >
               {t('orders.readyOrders', 'Ready Orders')}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('fabric')
+                setPage(1)
+              }}
+              className={`rounded-full px-4 py-1 text-[12px] font-medium ${
+                activeTab === 'fabric' ? 'bg-[#1A1A2E] text-white' : 'text-text-muted'
+              }`}
+            >
+              {t('orders.fabricOrders', 'Fabric Sales')}
             </button>
           </div>
           <Button variant="secondary" size="sm" className="gap-1">
@@ -192,6 +262,7 @@ export function OrdersPage() {
                 <thead className="bg-[#FAFAFA]">
                   <tr className="text-left text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">{t('orders.orderNumber', 'Order #')}</th>
+                    <th className="px-4 py-3">{t('orders.receiptNumber', 'Receipt #')}</th>
                     <th className="px-4 py-3">{t('orders.customer', 'Customer')}</th>
                     <th className="px-4 py-3">{t('orders.products', 'Products')}</th>
                     <th className="px-4 py-3">{t('orders.date', 'Date')}</th>
@@ -201,17 +272,22 @@ export function OrdersPage() {
                     <th className="px-4 py-3">{t('orders.remaining', 'Remaining')}</th>
                     <th className="px-4 py-3">{t('orders.status', 'Status')}</th>
                     <th className="px-4 py-3">{t('orders.method', 'Method')}</th>
+                    <th className="px-4 py-3">{t('orders.workshop', 'Workshop')}</th>
                     <th className="px-4 py-3">{t('customersPage.actions', 'Actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredOrders.map((row) => {
                     const remaining = row.remaining ?? row.total - row.paid
-                    const products = (row.items ?? []).map((item: any) => item.product?.name || `Item ${item.productId ?? ''}`).join(', ')
+                    const products = [
+                      ...(row.items ?? []).map((item: any) => item.product?.name || `Item ${item.productId ?? ''}`),
+                      ...(row.fabricSales ?? []).map((item: any) => `${item.fabric?.name ?? 'Fabric'} (${item.meters}m)`),
+                    ].join(', ')
                     const method = (row.paymentMethod ?? 'cash').toUpperCase()
                     return (
                       <tr key={String(row.id)} className="border-t border-border text-[13px]">
-                        <td className="px-4 py-3 font-semibold text-text-primary">#{row.id}</td>
+                        <td className="px-4 py-3 font-semibold text-text-primary">#{row.orderNumber}</td>
+                        <td className="px-4 py-3 text-text-secondary">{row.receiptNumber ?? '—'}</td>
                         <td className="px-4 py-3 text-text-primary">
                           {row.customer?.name ?? t('orders.walkIn', 'Walk-in')}
                         </td>
@@ -230,6 +306,35 @@ export function OrdersPage() {
                         </td>
                         <td className="px-4 py-3 text-text-primary">{method}</td>
                         <td className="px-4 py-3">
+                          {row.type === 'custom' ? (
+                            <div className="flex flex-col gap-1">
+                              <label className="inline-flex items-center gap-2 text-[12px] text-text-secondary">
+                                <input
+                                  type="checkbox"
+                                  checked={!!row.workshopDeliveredAt}
+                                  disabled={!!row.workshopDeliveredAt}
+                                  onChange={(event) => {
+                                    event.target.checked = false
+                                    if (!row.workshopDeliveredAt) setConfirmDeliver(row)
+                                  }}
+                                />
+                                {row.workshopDeliveredAt ? 'In workshop' : 'Deliver'}
+                              </label>
+                              {row.status === 'ready' && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={async () => {
+                                    await updateOrder({ id: row.id, body: { status: 'delivered' } }).unwrap()
+                                  }}
+                                >
+                                  Customer collected
+                                </Button>
+                              )}
+                            </div>
+                          ) : '—'}
+                        </td>
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-1 text-text-secondary">
                             <button
                               type="button"
@@ -241,7 +346,16 @@ export function OrdersPage() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => setEditingOrder({ ...row })}
+                              onClick={() =>
+                                setEditingOrder({
+                                  ...row,
+                                  items: (row.items ?? []).map((item: any) => ({
+                                    ...item,
+                                    fabricId: item.fabricConsumptions?.[0]?.fabricId ?? '',
+                                    fabricMeters: item.fabricConsumptions?.[0]?.meters ?? '',
+                                  })),
+                                })
+                              }
                               className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
                               aria-label="Edit"
                             >
@@ -265,7 +379,7 @@ export function OrdersPage() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => printInvoice(toInvoicePayload(row), 'customer')}
+                              onClick={() => printInvoiceAndPickup(toInvoicePayload(row))}
                               className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
                               aria-label="Print"
                             >
@@ -278,7 +392,7 @@ export function OrdersPage() {
                   })}
                   {filteredOrders.length === 0 && (
                     <tr>
-                      <td colSpan={11} className="px-4 py-8 text-center text-[13px] text-text-muted">
+                      <td colSpan={13} className="px-4 py-8 text-center text-[13px] text-text-muted">
                         {t(
                           'ordersPage.noResults',
                           'No orders found for current filters.'
@@ -322,22 +436,6 @@ export function OrdersPage() {
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <div>
                 <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('ordersPage.editStatusLabel', 'Status')}
-                </label>
-                <select
-                  value={editingOrder.status}
-                  onChange={(e) => setEditingOrder({ ...editingOrder, status: e.target.value as OrderStatus })}
-                  className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
-                >
-                  <option value="pending">pending</option>
-                  <option value="in_progress">in_progress</option>
-                  <option value="ready">ready</option>
-                  <option value="delivered">delivered</option>
-                  <option value="cancelled">cancelled</option>
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">
                   {t('ordersPage.editPaidLabel', 'Paid')}
                 </label>
                 <Input
@@ -347,18 +445,126 @@ export function OrdersPage() {
                   onChange={(e) => setEditingOrder({ ...editingOrder, paid: Number(e.target.value) })}
                 />
               </div>
+              {editingOrder.status === 'ready' && (
+                <div className="flex items-end">
+                  <Button
+                    className="w-full"
+                    onClick={async () => {
+                      await updateOrder({ id: editingOrder.id, body: { status: 'delivered' } }).unwrap()
+                      setEditingOrder(null)
+                    }}
+                  >
+                    Customer collected
+                  </Button>
+                </div>
+              )}
             </div>
+            {editingOrder.type === 'custom' && !editingOrder.workshopDeliveredAt && (
+              <div className="mt-4 space-y-3">
+                <p className="text-[12px] font-semibold text-text-secondary">Fabric and meters</p>
+                {(editingOrder.items ?? []).map((item: any, index: number) => (
+                  <div key={item.id ?? index} className="grid gap-2 rounded-[10px] border border-border p-3 md:grid-cols-2">
+                    <p className="md:col-span-2 text-[13px] font-semibold">{item.product?.name ?? `Item ${item.id}`}</p>
+                    <select
+                      value={item.fabricId}
+                      onChange={(e) => {
+                        const items = [...editingOrder.items]
+                        items[index] = { ...items[index], fabricId: Number(e.target.value) }
+                        setEditingOrder({ ...editingOrder, items })
+                      }}
+                      className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                    >
+                      <option value="">Select fabric</option>
+                      {(fabricsData?.data ?? []).map((fabric) => (
+                        <option key={fabric.id} value={fabric.id}>
+                          {fabric.name} ({fabric.qty} m)
+                        </option>
+                      ))}
+                    </select>
+                    <Input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={item.fabricMeters}
+                      onChange={(e) => {
+                        const items = [...editingOrder.items]
+                        items[index] = { ...items[index], fabricMeters: Number(e.target.value) }
+                        setEditingOrder({ ...editingOrder, items })
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="mt-5 flex justify-end gap-2">
               <Button variant="outline" onClick={() => setEditingOrder(null)}>
                 {t('ordersPage.editCancel', 'Cancel')}
               </Button>
               <Button
                 onClick={async () => {
-                  await updateOrder({ id: editingOrder.id, body: { status: editingOrder.status, paid: Number(editingOrder.paid) } })
+                  await updateOrder({
+                    id: editingOrder.id,
+                    body: {
+                      paid: Number(editingOrder.paid),
+                      items:
+                        editingOrder.type === 'custom' && !editingOrder.workshopDeliveredAt
+                          ? (editingOrder.items ?? [])
+                              .filter((item: any) => item.id && item.fabricId && Number(item.fabricMeters) > 0)
+                              .map((item: any) => ({
+                                itemId: item.id,
+                                fabricId: Number(item.fabricId),
+                                fabricMeters: Number(item.fabricMeters),
+                              }))
+                          : undefined,
+                    },
+                  }).unwrap()
                   setEditingOrder(null)
                 }}
               >
                 {t('ordersPage.editSave', 'Save Changes')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {confirmDeliver && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.32)] p-4">
+          <div className="w-full max-w-md rounded-[14px] bg-white p-5 shadow-lg">
+            <h3 className="text-[18px] font-semibold text-text-primary">Deliver to workshop?</h3>
+            <p className="mt-2 text-[13px] text-text-secondary">
+              This will cut fabric meters from inventory for order #{confirmDeliver.orderNumber}.
+              You can undo for 30 seconds after confirming.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setConfirmDeliver(null)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  try {
+                    await deliverToWorkshop(confirmDeliver.id).unwrap()
+                    setUndoToast({
+                      id: confirmDeliver.id,
+                      orderNumber: confirmDeliver.orderNumber,
+                      expiresAt: Date.now() + 30_000,
+                    })
+                    setConfirmDeliver(null)
+                  } catch (error) {
+                    const apiError = error as { data?: { message?: string | string[] } }
+                    const message = apiError.data?.message
+                    window.alert(
+                      Array.isArray(message)
+                        ? message.join(', ')
+                        : message ??
+                            t(
+                              'orders.deliverError',
+                              'Could not deliver this order. Fabric quantity may not be enough.'
+                            )
+                    )
+                  }
+                }}
+              >
+                Confirm deliver
               </Button>
             </div>
           </div>

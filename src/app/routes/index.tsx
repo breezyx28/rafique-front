@@ -13,6 +13,13 @@ import { SettingsPage } from '@/features/settings/SettingsPage'
 import { ProductConfigPage } from '@/features/settings/products/ProductConfigPage'
 import { InvoicesPage } from '@/features/invoices/InvoicesPage'
 import { InvoiceDetailsPage } from '@/features/invoices/InvoiceDetailsPage'
+import { FabricPOSPage } from '@/features/orders/fabric/FabricPOSPage'
+import {
+  DeliveredOrdersPage,
+  SewingPricingPage,
+  TailorPaymentPage,
+  WorkshopProductivityPage,
+} from '@/features/workshop/WorkshopPages'
 
 export function AppRoutes() {
   return (
@@ -23,6 +30,7 @@ export function AppRoutes() {
         <Route path="orders" element={<OrdersPage />} />
         <Route path="orders/new" element={<NewOrderPage />} />
         <Route path="orders/ready" element={<ReadyPOSPage />} />
+        <Route path="orders/fabric" element={<FabricPOSPage />} />
         <Route path="customers" element={<CustomersPage />} />
         <Route path="customers/:customerId/edit" element={<CustomerEditPage />} />
         <Route path="inventory" element={<InventoryPage />} />
@@ -31,6 +39,10 @@ export function AppRoutes() {
         <Route path="invoices/:orderNumber" element={<InvoiceDetailsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="settings/products" element={<ProductConfigPage />} />
+        <Route path="workshop/orders" element={<DeliveredOrdersPage />} />
+        <Route path="workshop/pricing" element={<SewingPricingPage />} />
+        <Route path="workshop/payroll" element={<TailorPaymentPage />} />
+        <Route path="workshop/productivity" element={<WorkshopProductivityPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

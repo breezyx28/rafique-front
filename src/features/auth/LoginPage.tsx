@@ -34,7 +34,14 @@ export function LoginPage() {
     try {
       const { accessToken, user } = await login(data).unwrap()
       setAuth(accessToken, { id: user.id, username: user.username, role: user.role })
-      navigate('/', { replace: true })
+      navigate(
+        user.role === 'Workshop'
+          ? '/workshop/orders'
+          : user.role === 'Cashier'
+            ? '/orders/new'
+            : '/',
+        { replace: true }
+      )
     } catch {
       setError(t('auth.loginError'))
     }

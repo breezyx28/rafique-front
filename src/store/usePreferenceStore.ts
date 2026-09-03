@@ -15,9 +15,22 @@ export const usePreferenceStore = create<PreferenceState>()(
     (set) => ({
       language: (localStorage.getItem('language') as LangCode) ?? 'en',
       confirmOrderDialog: true,
-      setLanguage: (code) => set({ language: code }),
+      setLanguage: (code) => {
+        localStorage.setItem('language', code)
+        set({ language: code })
+      },
       setConfirmOrderDialog: (value) => set({ confirmOrderDialog: value }),
     }),
-    { name: 'jelabeya-prefs' }
+    {
+      name: 'jelabeya-prefs',
+      partialize: (state) => ({
+        confirmOrderDialog: state.confirmOrderDialog,
+      }),
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as Partial<PreferenceState>),
+        language: (localStorage.getItem('language') as LangCode) ?? 'en',
+      }),
+    }
   )
 )

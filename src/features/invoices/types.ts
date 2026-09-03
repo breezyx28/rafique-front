@@ -1,5 +1,6 @@
 export interface InvoicePayload {
   orderNumber: string
+  receiptNumber?: string | null
   submittedAt: string
   customerName: string
   customerPhone: string
@@ -19,7 +20,7 @@ export interface InvoicePayload {
   }>
 }
 
-export type InvoiceType = 'customer' | 'workshop'
+export type InvoiceType = 'customer' | 'workshop' | 'pickup'
 
 export const money = (v: number) => `${v.toLocaleString()} SDG`
 

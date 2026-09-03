@@ -4,10 +4,17 @@ import { Download, Save, ShieldCheck, Upload, UserPlus } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import { useGetSettingsQuery, usePatchSettingsMutation, useChangeUserPasswordMutation } from '@/features/api/appApi'
+import {
+  useChangeUserPasswordMutation,
+  useCreateUserMutation,
+  useGetSettingsQuery,
+  useGetUsersQuery,
+  usePatchSettingsMutation,
+} from '@/features/api/appApi'
 import { usePreferenceStore } from '@/store/usePreferenceStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { API_BASE } from '@/lib/api'
+import { setLanguage as applyLanguage } from '@/lib/i18n'
 
 type SettingsTab = 'general' | 'preferences' | 'users' | 'security' | 'backup'
 
@@ -21,6 +28,8 @@ export function SettingsPage() {
   const [changePassword, { isLoading: isChangingPassword }] = useChangeUserPasswordMutation()
   const prefStore = usePreferenceStore()
   const authUser = useAuthStore((s) => s.user)
+  const { data: users, refetch: refetchUsers } = useGetUsersQuery()
+  const [createUser] = useCreateUserMutation()
 
   const [shopName, setShopName] = useState('')
   const [shopPhone, setShopPhone] = useState('')
@@ -39,8 +48,9 @@ export function SettingsPage() {
   const [securitySuccess, setSecuritySuccess] = useState('')
 
   const [isUserModalOpen, setIsUserModalOpen] = useState(false)
-  const [adminName, setAdminName] = useState('')
   const [adminUsername, setAdminUsername] = useState('')
+  const [userPassword, setUserPassword] = useState('')
+  const [userRole, setUserRole] = useState<'Admin' | 'Cashier' | 'Workshop'>('Workshop')
 
   useEffect(() => {
     if (!settings) return
@@ -54,7 +64,6 @@ export function SettingsPage() {
     setPrinter(String(settings.printer ?? ''))
     setShowOrderConfirm(Boolean(settings.showOrderSubmitConfirm ?? true))
 
-    setAdminName(String(settings.adminName ?? ''))
     setAdminUsername(String(settings.adminUsername ?? ''))
   }, [settings])
 
@@ -186,7 +195,7 @@ export function SettingsPage() {
                     showOrderSubmitConfirm: showOrderConfirm,
                   })
                   if (language === 'en' || language === 'ar' || language === 'bn') {
-                    prefStore.setLanguage(language)
+                    applyLanguage(language)
                   }
                   prefStore.setConfirmOrderDialog(showOrderConfirm)
                 }}
@@ -206,8 +215,9 @@ export function SettingsPage() {
               size="sm"
               className="gap-1"
               onClick={() => {
-                setAdminName(String(settings?.adminName ?? ''))
-                setAdminUsername(String(settings?.adminUsername ?? ''))
+                setAdminUsername('')
+                setUserPassword('')
+                setUserRole('Workshop')
                 setIsUserModalOpen(true)
               }}
             >
@@ -226,17 +236,15 @@ export function SettingsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    [adminName || String(settings?.adminName ?? 'Admin'), adminUsername || String(settings?.adminUsername ?? 'admin'), 'Admin', t('settingsPage.active', 'Active')],
-                  ].map((u) => (
-                    <tr key={u[1]} className="border-t border-border text-[13px]">
-                      <td className="px-4 py-3 font-semibold text-text-primary">{u[0]}</td>
-                      <td className="px-4 py-3 text-text-secondary">{u[1]}</td>
+                  {(users ?? []).map((u) => (
+                    <tr key={u.id} className="border-t border-border text-[13px]">
+                      <td className="px-4 py-3 font-semibold text-text-primary">{u.username}</td>
+                      <td className="px-4 py-3 text-text-secondary">{u.username}</td>
                       <td className="px-4 py-3">
-                        <span className="rounded-full bg-primary-light px-2.5 py-0.5 text-[11px] font-semibold text-primary">{u[2]}</span>
+                        <span className="rounded-full bg-primary-light px-2.5 py-0.5 text-[11px] font-semibold text-primary">{u.role?.name ?? '—'}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="rounded-full bg-successBg px-2.5 py-0.5 text-[11px] font-semibold text-success">{u[3]}</span>
+                        <span className="rounded-full bg-successBg px-2.5 py-0.5 text-[11px] font-semibold text-success">{t('settingsPage.active', 'Active')}</span>
                       </td>
                     </tr>
                   ))}
@@ -386,15 +394,25 @@ export function SettingsPage() {
             <div className="mt-4 space-y-3">
               <div>
                 <label className="mb-1 block text-[12px] font-medium text-text-secondary">
-                  {t('settingsPage.user', 'User')}
-                </label>
-                <Input value={adminName} onChange={(e) => setAdminName(e.target.value)} />
-              </div>
-              <div>
-                <label className="mb-1 block text-[12px] font-medium text-text-secondary">
                   {t('settingsPage.username', 'Username')}
                 </label>
                 <Input value={adminUsername} onChange={(e) => setAdminUsername(e.target.value)} />
+              </div>
+              <div>
+                <label className="mb-1 block text-[12px] font-medium text-text-secondary">Password</label>
+                <Input type="password" value={userPassword} onChange={(e) => setUserPassword(e.target.value)} />
+              </div>
+              <div>
+                <label className="mb-1 block text-[12px] font-medium text-text-secondary">Role</label>
+                <select
+                  value={userRole}
+                  onChange={(e) => setUserRole(e.target.value as typeof userRole)}
+                  className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                >
+                  <option value="Workshop">Workshop</option>
+                  <option value="Cashier">Cashier</option>
+                  <option value="Admin">Admin</option>
+                </select>
               </div>
             </div>
             <div className="mt-5 flex justify-end gap-2">
@@ -406,9 +424,15 @@ export function SettingsPage() {
               </Button>
               <Button
                 onClick={async () => {
-                  await patchSettings({ adminName, adminUsername })
+                  await createUser({
+                    username: adminUsername.trim(),
+                    password: userPassword,
+                    role: userRole,
+                  }).unwrap()
+                  await refetchUsers()
                   setIsUserModalOpen(false)
                 }}
+                disabled={!adminUsername.trim() || userPassword.length < 6}
               >
                 {t('common.save', 'Save')}
               </Button>

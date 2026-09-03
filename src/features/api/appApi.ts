@@ -45,6 +45,7 @@ const productSchema = z.object({
   name: z.string(),
   type: z.enum(['custom', 'ready']),
   basePrice: z.coerce.number().nullable().optional(),
+  sewingPrice: z.coerce.number().optional().default(0),
   fields: z.array(productFieldSchema).optional().default([]),
 }).passthrough()
 
@@ -79,12 +80,27 @@ const orderItemSchema = z
     productId: z.coerce.number().optional(),
     product: productSchema.nullable().optional(),
     measurements: z.array(orderMeasurementSchema).optional().default([]),
+    workshopStatus: z.enum(['not_ready', 'ready']).optional().default('not_ready'),
+    readyAt: z.string().nullable().optional(),
+    fabricConsumptions: z.array(z.object({
+      id: z.coerce.number(),
+      fabricId: z.coerce.number(),
+      meters: z.coerce.number(),
+      deductedAt: z.string().nullable().optional(),
+      fabric: z.object({
+        id: z.coerce.number(),
+        name: z.string(),
+        qty: z.coerce.number(),
+      }).passthrough().optional(),
+    }).passthrough()).optional().default([]),
   })
   .passthrough()
 
 const orderSchema = z.object({
   id: z.coerce.number(),
-  type: z.enum(['custom', 'ready']),
+  orderNumber: z.string(),
+  receiptNumber: z.string().nullable().optional(),
+  type: z.enum(['custom', 'ready', 'fabric']),
   status: z.enum(['pending', 'in_progress', 'ready', 'delivered', 'cancelled']).default('pending'),
   paymentMethod: z.enum(['cash', 'mbok']).nullable().optional().default('cash'),
   total: z.coerce.number(),
@@ -94,8 +110,18 @@ const orderSchema = z.object({
   noteCustomer: z.string().nullable().optional(),
   noteWorkshop: z.string().nullable().optional(),
   createdAt: z.string().nullable().optional(),
+  workshopDeliveredAt: z.string().nullable().optional(),
+  readyForReceiveAt: z.string().nullable().optional(),
   customer: customerSchema.nullable().optional(),
   items: z.array(orderItemSchema).optional().default([]),
+  fabricSales: z.array(z.object({
+    id: z.coerce.number(),
+    fabricId: z.coerce.number(),
+    meters: z.coerce.number(),
+    unitPrice: z.coerce.number(),
+    subtotal: z.coerce.number(),
+    fabric: z.object({ id: z.coerce.number(), name: z.string() }).passthrough().optional(),
+  }).passthrough()).optional().default([]),
 }).passthrough()
 
 const inventoryItemSchema = z.object({
@@ -112,6 +138,10 @@ const fabricSchema = z.object({
   unit: z.string().nullable().optional().default('unit'),
   qty: z.coerce.number().default(0),
   costPerUnit: z.coerce.number().default(0),
+  packageMeters: z.coerce.number().default(20),
+  packagePrice: z.coerce.number().default(0),
+  sellingPricePerMeter: z.coerce.number().default(0),
+  sewingRatePerMeter: z.coerce.number().default(0),
 }).passthrough()
 
 const expenseTypeSchema = z.object({
@@ -142,6 +172,11 @@ const notificationSchema = z.object({
 }).passthrough()
 
 const settingsSchema = z.record(z.string(), z.unknown())
+const userSchema = z.object({
+  id: z.coerce.number(),
+  username: z.string(),
+  role: z.object({ id: z.coerce.number(), name: z.string() }).optional(),
+}).passthrough()
 
 const dashboardStatsSchema = z.object({
   totalOrders: z.coerce.number().default(0),
@@ -222,7 +257,7 @@ export const appApi = createApi({
       return headers
     },
   }),
-  tagTypes: ['Customer', 'Order', 'InventoryItem', 'Fabric', 'Expense', 'ExpenseType', 'Settings', 'Product', 'ProductField', 'Notification'],
+  tagTypes: ['Customer', 'Order', 'InventoryItem', 'Fabric', 'Expense', 'ExpenseType', 'Settings', 'Product', 'ProductField', 'Notification', 'Workshop'],
   endpoints: (builder) => ({
     getDashboardStats: builder.query<z.infer<typeof dashboardStatsSchema>, void>({
       query: () => '/dashboard/stats',
@@ -293,6 +328,17 @@ export const appApi = createApi({
       query: ({ id, password }) => ({ url: `/users/${id}/password`, method: 'PATCH', body: { password } }),
       transformResponse: () => ({ ok: true }),
     }),
+    getUsers: builder.query<z.infer<typeof userSchema>[], void>({
+      query: () => '/users',
+      transformResponse: (response) => parseMany(response, userSchema),
+    }),
+    createUser: builder.mutation<
+      z.infer<typeof userSchema>,
+      { username: string; password: string; role: 'Admin' | 'Cashier' | 'Workshop' }
+    >({
+      query: (body) => ({ url: '/users', method: 'POST', body }),
+      transformResponse: (response) => parseOne(response, userSchema),
+    }),
 
     getProducts: builder.query<z.infer<typeof productSchema>[], { type?: 'custom' | 'ready' } | undefined>({
       query: (params) => ({ url: '/products', params: params || undefined }),
@@ -307,6 +353,17 @@ export const appApi = createApi({
       transformResponse: (response) => parseOne(response, productSchema),
       invalidatesTags: [{ type: 'Product', id: 'LIST' }],
     }),
+    updateProduct: builder.mutation<
+      z.infer<typeof productSchema>,
+      { id: number; body: { name?: string; basePrice?: number; sewingPrice?: number } }
+    >({
+      query: ({ id, body }) => ({ url: `/products/${id}`, method: 'PATCH', body }),
+      transformResponse: (response) => parseOne(response, productSchema),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Product', id },
+        { type: 'Product', id: 'LIST' },
+      ],
+    }),
     getProductFields: builder.query<z.infer<typeof productFieldSchema>[], number>({
       query: (productId) => `/products/${productId}/fields`,
       transformResponse: (response) => parseMany(response, productFieldSchema),
@@ -317,7 +374,7 @@ export const appApi = createApi({
     }),
     createProductField: builder.mutation<
       z.infer<typeof productFieldSchema>,
-      { productId: number; body: { fieldKey: string; inputType: string; required?: boolean; labels?: Array<{ language: 'en' | 'ar' | 'bn'; label: string }> } }
+      { productId: number; body: { fieldKey: string; inputType: string; required?: boolean; labels?: Array<{ lang: 'en' | 'ar' | 'bn'; label: string }> } }
     >({
       query: ({ productId, body }) => ({ url: `/products/${productId}/fields`, method: 'POST', body }),
       transformResponse: (response) => parseOne(response, productFieldSchema),
@@ -325,7 +382,7 @@ export const appApi = createApi({
     }),
     updateProductField: builder.mutation<
       z.infer<typeof productFieldSchema>,
-      { fieldId: number; productId: number; body: { fieldKey?: string; inputType?: string; required?: boolean; labels?: Array<{ language: 'en' | 'ar' | 'bn'; label: string }> } }
+      { fieldId: number; productId: number; body: { fieldKey?: string; inputType?: string; required?: boolean; labels?: Array<{ lang: 'en' | 'ar' | 'bn'; label: string }> } }
     >({
       query: ({ fieldId, body }) => ({ url: `/products/fields/${fieldId}`, method: 'PATCH', body }),
       transformResponse: (response) => parseOne(response, productFieldSchema),
@@ -337,7 +394,7 @@ export const appApi = createApi({
       invalidatesTags: (_result, _error, { fieldId, productId }) => [{ type: 'ProductField', id: fieldId }, { type: 'ProductField', id: `LIST-${productId}` }],
     }),
 
-    getOrders: builder.query<Paginated<z.infer<typeof orderSchema>>, { page?: number; limit?: number; type?: 'custom' | 'ready'; status?: 'pending' | 'in_progress' | 'ready' | 'delivered' | 'cancelled'; from?: string; to?: string } | undefined>({
+    getOrders: builder.query<Paginated<z.infer<typeof orderSchema>>, { page?: number; limit?: number; type?: 'custom' | 'ready' | 'fabric'; status?: 'pending' | 'in_progress' | 'ready' | 'delivered' | 'cancelled'; from?: string; to?: string } | undefined>({
       query: (params) => ({ url: '/orders', params: params || undefined }),
       transformResponse: (response) => parsePaginated(response, orderSchema),
       providesTags: (result) =>
@@ -359,7 +416,7 @@ export const appApi = createApi({
       z.infer<typeof orderSchema>,
       {
         customerId: number
-        items: Array<{ productId: number; qty: number; unitPrice: number; measurements: Array<{ fieldId: number; value: string }> }>
+        items: Array<{ productId: number; qty: number; unitPrice: number; fabricId: number; fabricMeters: number; measurements: Array<{ fieldId: number; value: string }> }>
         total: number
         paid: number
         paymentMethod?: 'cash' | 'mbok'
@@ -390,6 +447,22 @@ export const appApi = createApi({
         { type: 'Customer', id: 'LIST-MIN' },
       ],
     }),
+    createFabricOrder: builder.mutation<
+      z.infer<typeof orderSchema>,
+      {
+        customerId?: number
+        items: Array<{ fabricId: number; meters: number }>
+        paid: number
+        paymentMethod?: 'cash' | 'mbok'
+      }
+    >({
+      query: (body) => ({ url: '/orders/fabric', method: 'POST', body }),
+      transformResponse: (response) => parseOne(response, orderSchema),
+      invalidatesTags: [
+        { type: 'Order', id: 'LIST' },
+        { type: 'Fabric', id: 'LIST' },
+      ],
+    }),
     updateOrder: builder.mutation<
       z.infer<typeof orderSchema>,
       {
@@ -399,6 +472,7 @@ export const appApi = createApi({
           paid?: number
           dueDate?: string
           paymentMethod?: 'cash' | 'mbok'
+          items?: Array<{ itemId: number; fabricId: number; fabricMeters: number }>
         }
       }
     >({
@@ -457,13 +531,13 @@ export const appApi = createApi({
     }),
     createFabric: builder.mutation<
       z.infer<typeof fabricSchema>,
-      { body: { name: string; unit?: string; qty: number; costPerUnit: number } }
+      { body: { name: string; unit?: string; qty: number; costPerUnit?: number; packageMeters?: number; packagePrice?: number; sewingRatePerMeter?: number } }
     >({
       query: ({ body }) => ({ url: '/inventory/fabrics', method: 'POST', body }),
       transformResponse: (response) => parseOne(response, fabricSchema),
       invalidatesTags: [{ type: 'Fabric', id: 'LIST' }],
     }),
-    updateFabric: builder.mutation<z.infer<typeof fabricSchema>, { id: number; body: { name?: string; unit?: string; qty?: number; costPerUnit?: number } }>({
+    updateFabric: builder.mutation<z.infer<typeof fabricSchema>, { id: number; body: { name?: string; unit?: string; qty?: number; costPerUnit?: number; packageMeters?: number; packagePrice?: number; sewingRatePerMeter?: number } }>({
       query: ({ id, body }) => ({ url: `/inventory/fabrics/${id}`, method: 'PATCH', body }),
       transformResponse: (response) => parseOne(response, fabricSchema),
       invalidatesTags: (_result, _error, { id }) => [{ type: 'Fabric', id }, { type: 'Fabric', id: 'LIST' }],
@@ -472,6 +546,56 @@ export const appApi = createApi({
       query: (id) => ({ url: `/inventory/fabrics/${id}`, method: 'DELETE' }),
       transformResponse: () => ({ ok: true }),
       invalidatesTags: (_result, _error, id) => [{ type: 'Fabric', id }, { type: 'Fabric', id: 'LIST' }],
+    }),
+
+    getWorkshopOrders: builder.query<z.infer<typeof orderSchema>[], void>({
+      query: () => '/workshop/orders',
+      transformResponse: (response) => parseMany(response, orderSchema),
+      providesTags: [{ type: 'Workshop', id: 'ORDERS' }],
+    }),
+    deliverOrderToWorkshop: builder.mutation<z.infer<typeof orderSchema>, number>({
+      query: (id) => ({ url: `/workshop/orders/${id}/deliver`, method: 'PATCH' }),
+      transformResponse: (response) => parseOne(response, orderSchema),
+      invalidatesTags: [
+        { type: 'Workshop', id: 'ORDERS' },
+        { type: 'Order', id: 'LIST' },
+        { type: 'Fabric', id: 'LIST' },
+      ],
+    }),
+    undoDeliverOrderToWorkshop: builder.mutation<z.infer<typeof orderSchema>, number>({
+      query: (id) => ({ url: `/workshop/orders/${id}/undo-deliver`, method: 'PATCH' }),
+      transformResponse: (response) => parseOne(response, orderSchema),
+      invalidatesTags: [
+        { type: 'Workshop', id: 'ORDERS' },
+        { type: 'Order', id: 'LIST' },
+        { type: 'Fabric', id: 'LIST' },
+      ],
+    }),
+    setWorkshopItemReadiness: builder.mutation<
+      z.infer<typeof orderSchema>,
+      { id: number; ready: boolean }
+    >({
+      query: ({ id, ready }) => ({
+        url: `/workshop/items/${id}/readiness`,
+        method: 'PATCH',
+        body: { ready },
+      }),
+      transformResponse: (response) => parseOne(response, orderSchema),
+      invalidatesTags: [
+        { type: 'Workshop', id: 'ORDERS' },
+        { type: 'Order', id: 'LIST' },
+      ],
+    }),
+    getWorkshopPayroll: builder.query<
+      { breakdown: Array<{ fabricId: number; fabricName: string; meters: number; rate: number; amount: number }>; total: number },
+      void
+    >({
+      query: () => '/workshop/payroll',
+      transformResponse: (response) => unwrapBody(response) as {
+        breakdown: Array<{ fabricId: number; fabricName: string; meters: number; rate: number; amount: number }>
+        total: number
+      },
+      providesTags: [{ type: 'Workshop', id: 'PAYROLL' }],
     }),
 
     getExpenseTypes: builder.query<z.infer<typeof expenseTypeSchema>[], void>({
@@ -555,8 +679,11 @@ export const {
   useUpdateCustomerMutation,
   useDeleteCustomerMutation,
   useChangeUserPasswordMutation,
+  useGetUsersQuery,
+  useCreateUserMutation,
   useGetProductsQuery,
   useCreateProductMutation,
+  useUpdateProductMutation,
   useGetProductFieldsQuery,
   useCreateProductFieldMutation,
   useUpdateProductFieldMutation,
@@ -567,6 +694,7 @@ export const {
   useGetOrderByIdQuery,
   useCreateCustomOrderMutation,
   useCreateReadyOrderMutation,
+  useCreateFabricOrderMutation,
   useUpdateOrderMutation,
   useDeleteOrderMutation,
   useGetInventoryItemsQuery,
@@ -577,6 +705,11 @@ export const {
   useCreateFabricMutation,
   useUpdateFabricMutation,
   useDeleteFabricMutation,
+  useGetWorkshopOrdersQuery,
+  useDeliverOrderToWorkshopMutation,
+  useUndoDeliverOrderToWorkshopMutation,
+  useSetWorkshopItemReadinessMutation,
+  useGetWorkshopPayrollQuery,
   useGetExpenseTypesQuery,
   useCreateExpenseTypeMutation,
   useGetExpensesQuery,

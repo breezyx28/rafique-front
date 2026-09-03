@@ -3,12 +3,14 @@ import { money } from './types'
 
 function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
   const isCustomer = type === 'customer'
+  const isPickup = type === 'pickup'
+  const title = isPickup ? 'Pickup Slip' : isCustomer ? 'Customer Invoice' : 'Workshop Invoice'
   return `
 <!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>${isCustomer ? 'Customer' : 'Workshop'} Invoice #${order.orderNumber}</title>
+    <title>${title} #${order.orderNumber}</title>
     <style>
       @page {
         size: 80mm auto;
@@ -92,13 +94,14 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
     <div class="receipt">
       <div class="center">
         <h1>Rafique Tailors</h1>
-        <p class="muted">${isCustomer ? 'CUSTOMER' : 'WORKSHOP'} INVOICE</p>
+        <p class="muted">${isPickup ? 'PICKUP SLIP' : isCustomer ? 'CUSTOMER INVOICE' : 'WORKSHOP INVOICE'}</p>
       </div>
       <div class="sep"></div>
+      ${order.receiptNumber ? `<p><strong>Receipt #${order.receiptNumber}</strong></p>` : ''}
       <p>Order #${order.orderNumber}</p>
       <p>Date: ${order.submittedAt}</p>
       <p>Due: ${order.dueDate}</p>
-      ${isCustomer ? `<p>Customer: ${order.customerName}</p><p>Phone: ${order.customerPhone}</p>` : ''}
+      ${isCustomer || isPickup ? `<p>Customer: ${order.customerName}</p><p>Phone: ${order.customerPhone}</p>` : ''}
       <div class="sep"></div>
     ${order.items
       .map(
@@ -118,7 +121,7 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
       )
       .join('')}
     ${
-      isCustomer
+      isCustomer || isPickup
         ? `<div class="totals">
       <div class="sep"></div>
       <p>Total: ${money(order.total)}</p>
@@ -139,6 +142,13 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
   </body>
 </html>
 `
+}
+
+export function printInvoiceAndPickup(order: InvoicePayload) {
+  printInvoice(order, 'customer')
+  if (order.receiptNumber) {
+    window.setTimeout(() => printInvoice(order, 'pickup'), 600)
+  }
 }
 
 export function printInvoice(order: InvoicePayload, type: InvoiceType) {

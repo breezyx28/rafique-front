@@ -32,6 +32,8 @@ export function ReadyPOSPage() {
   const [receivedAmount, setReceivedAmount] = useState<number>(0)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash')
   const [dueDate, setDueDate] = useState('')
+  const [checkoutMessage, setCheckoutMessage] = useState('')
+  const [checkoutError, setCheckoutError] = useState('')
 
   const filteredProducts = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -44,6 +46,7 @@ export function ReadyPOSPage() {
         stock: item.qty,
         price: item.price,
       }))
+      .filter((p) => p.stock > 0)
       .filter((p) => !q || p.name.toLowerCase().includes(q) || p.size.toLowerCase().includes(q))
   }, [data?.data, search])
 
@@ -54,6 +57,7 @@ export function ReadyPOSPage() {
     setCart((prev) => {
       const idx = prev.findIndex((i) => i.id === product.id)
       if (idx >= 0) {
+        if (prev[idx].qty >= product.stock) return prev
         const next = [...prev]
         next[idx] = { ...next[idx], qty: next[idx].qty + 1 }
         return next
@@ -64,7 +68,11 @@ export function ReadyPOSPage() {
 
   const changeQty = (id: number, nextQty: number) => {
     if (nextQty < 1) return
-    setCart((prev) => prev.map((item) => (item.id === id ? { ...item, qty: nextQty } : item)))
+    setCart((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, qty: Math.min(nextQty, item.stock) } : item
+      )
+    )
   }
 
   return (
@@ -196,27 +204,53 @@ export function ReadyPOSPage() {
               </div>
               <Button
                 className="mt-2 w-full"
-                disabled={cart.length === 0 || isSubmitting}
+                disabled={
+                  cart.length === 0 ||
+                  isSubmitting ||
+                  receivedAmount < 0 ||
+                  receivedAmount > total
+                }
                 onClick={async () => {
                   if (!cart.length) return
-                  await createReadyOrder({
-                    items: cart.map((item) => ({
-                      inventoryItemId: item.inventoryItemId,
-                      qty: item.qty,
-                      unitPrice: item.price,
-                    })),
-                    total,
-                    paid: receivedAmount,
-                    paymentMethod: paymentMethod.toLowerCase() as 'cash' | 'mbok',
-                    dueDate: dueDate || undefined,
-                  })
-                  setCart([])
-                  setReceivedAmount(0)
-                  setDueDate('')
+                  setCheckoutError('')
+                  setCheckoutMessage('')
+                  try {
+                    const order = await createReadyOrder({
+                      items: cart.map((item) => ({
+                        inventoryItemId: item.inventoryItemId,
+                        qty: item.qty,
+                        unitPrice: item.price,
+                      })),
+                      total,
+                      paid: receivedAmount,
+                      paymentMethod: paymentMethod.toLowerCase() as 'cash' | 'mbok',
+                      dueDate: dueDate || undefined,
+                    }).unwrap()
+                    setCheckoutMessage(
+                      t('orders.ready.checkoutSuccess', 'Order #{{number}} completed', {
+                        number: order.orderNumber,
+                      })
+                    )
+                    setCart([])
+                    setReceivedAmount(0)
+                    setDueDate('')
+                  } catch (error) {
+                    const apiError = error as { data?: { message?: string } }
+                    setCheckoutError(
+                      apiError.data?.message ??
+                        t('orders.ready.checkoutError', 'Checkout failed. Please try again.')
+                    )
+                  }
                 }}
               >
                 {t('orders.ready.checkout', 'Checkout')}
               </Button>
+              {checkoutMessage && (
+                <p className="text-[12px] font-medium text-success">{checkoutMessage}</p>
+              )}
+              {checkoutError && (
+                <p className="text-[12px] font-medium text-danger">{checkoutError}</p>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input'
 import {
   useCreateFabricMutation,
   useCreateInventoryItemMutation,
+  useCreateProductMutation,
   useDeleteFabricMutation,
   useDeleteInventoryItemMutation,
   useGetInventoryFabricsQuery,
@@ -32,17 +33,20 @@ export function InventoryPage() {
   const [deleteFabric] = useDeleteFabricMutation()
   const { data: readyProducts } = useGetProductsQuery({ type: 'ready' })
   const [createInventoryItem] = useCreateInventoryItemMutation()
+  const [createProduct] = useCreateProductMutation()
   const [createFabric] = useCreateFabricMutation()
   const [isCreateReadyOpen, setIsCreateReadyOpen] = useState(false)
   const [isCreateFabricOpen, setIsCreateFabricOpen] = useState(false)
   const [createReadyProductId, setCreateReadyProductId] = useState<number | ''>('')
+  const [createReadyProductName, setCreateReadyProductName] = useState('')
   const [createReadySize, setCreateReadySize] = useState('')
   const [createReadyQty, setCreateReadyQty] = useState(1)
   const [createReadyPrice, setCreateReadyPrice] = useState(0)
   const [createFabricName, setCreateFabricName] = useState('')
   const [createFabricUnit, setCreateFabricUnit] = useState('')
   const [createFabricQty, setCreateFabricQty] = useState(0)
-  const [createFabricCostPerUnit, setCreateFabricCostPerUnit] = useState(0)
+  const [createFabricPackageMeters, setCreateFabricPackageMeters] = useState(20)
+  const [createFabricPackagePrice, setCreateFabricPackagePrice] = useState(0)
   const [editingReady, setEditingReady] = useState<any | null>(null)
   const [editingFabric, setEditingFabric] = useState<any | null>(null)
   const [deletingReady, setDeletingReady] = useState<any | null>(null)
@@ -184,9 +188,9 @@ export function InventoryPage() {
                     <th className="px-4 py-3">
                       {t('inventoryPage.fabricQty', 'Qty')}
                     </th>
-                    <th className="px-4 py-3">
-                      {t('inventoryPage.fabricCostPerUnit', 'Cost / Unit')}
-                    </th>
+                    <th className="px-4 py-3">Package meters</th>
+                    <th className="px-4 py-3">Package price</th>
+                    <th className="px-4 py-3">Price / meter</th>
                     <th className="px-4 py-3">
                       {t('inventoryPage.fabricTotalValue', 'Total Value')}
                     </th>
@@ -201,8 +205,10 @@ export function InventoryPage() {
                       <td className="px-4 py-3 font-semibold text-text-primary">{f.name}</td>
                       <td className="px-4 py-3 text-text-secondary">{f.unit}</td>
                       <td className="px-4 py-3 text-text-primary">{f.qty}</td>
-                      <td className="px-4 py-3 font-semibold text-text-primary">{money(f.costPerUnit)}</td>
-                      <td className="px-4 py-3 font-semibold text-primary">{money(f.qty * f.costPerUnit)}</td>
+                      <td className="px-4 py-3 text-text-primary">{f.packageMeters}</td>
+                      <td className="px-4 py-3 font-semibold text-text-primary">{money(f.packagePrice)}</td>
+                      <td className="px-4 py-3 font-semibold text-text-primary">{money(f.sellingPricePerMeter)}</td>
+                      <td className="px-4 py-3 font-semibold text-primary">{money(f.qty * f.sellingPricePerMeter)}</td>
                       <td className="px-4 py-3"><div className="flex items-center gap-1 text-text-secondary"><button type="button" onClick={() => setEditingFabric({ ...f })} className="rounded-md p-1.5 hover:bg-[#F5F5F5]" aria-label="Edit fabric item"><Pencil className="h-4 w-4" /></button><button type="button" onClick={() => setDeletingFabric(f)} className="rounded-md p-1.5 hover:bg-[#F5F5F5]" aria-label="Delete fabric item"><Trash2 className="h-4 w-4" /></button></div></td>
                     </tr>
                   ))}
@@ -326,17 +332,29 @@ export function InventoryPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('inventoryPage.editFabricCostPerUnit', 'Cost / Unit')}
-                </label>
+                <label className="mb-1 block text-[12px] text-text-secondary">Package meters</label>
                 <Input
                   type="number"
-                  min={0}
-                  value={editingFabric.costPerUnit}
+                  min={0.01}
+                  value={editingFabric.packageMeters ?? 20}
                   onChange={(e) =>
                     setEditingFabric({
                       ...editingFabric,
-                      costPerUnit: Number(e.target.value),
+                      packageMeters: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[12px] text-text-secondary">Package price</label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={editingFabric.packagePrice ?? editingFabric.costPerUnit}
+                  onChange={(e) =>
+                    setEditingFabric({
+                      ...editingFabric,
+                      packagePrice: Number(e.target.value),
                     })
                   }
                 />
@@ -354,7 +372,8 @@ export function InventoryPage() {
                       name: editingFabric.name,
                       unit: editingFabric.unit,
                       qty: editingFabric.qty,
-                      costPerUnit: editingFabric.costPerUnit,
+                      packageMeters: editingFabric.packageMeters ?? 20,
+                      packagePrice: editingFabric.packagePrice ?? editingFabric.costPerUnit,
                     },
                   })
                   setEditingFabric(null)
@@ -452,6 +471,19 @@ export function InventoryPage() {
                   ))}
                 </select>
               </div>
+              <div className="md:col-span-2">
+                <label className="mb-1 block text-[12px] text-text-secondary">
+                  {t('inventoryPage.createReadyNewProduct', 'Or create a new ready product')}
+                </label>
+                <Input
+                  value={createReadyProductName}
+                  onChange={(e) => {
+                    setCreateReadyProductName(e.target.value)
+                    if (e.target.value.trim()) setCreateReadyProductId('')
+                  }}
+                  placeholder={t('inventoryPage.createReadyNewProductPlaceholder', 'Product name')}
+                />
+              </div>
               <div>
                 <label className="mb-1 block text-[12px] text-text-secondary">
                   {t('inventoryPage.editReadySize', 'Size')}
@@ -487,10 +519,19 @@ export function InventoryPage() {
               </Button>
               <Button
                 onClick={async () => {
-                  if (!createReadyProductId) return
+                  let productId = createReadyProductId
+                  if (!productId && createReadyProductName.trim()) {
+                    const product = await createProduct({
+                      name: createReadyProductName.trim(),
+                      type: 'ready',
+                      basePrice: createReadyPrice,
+                    }).unwrap()
+                    productId = product.id
+                  }
+                  if (!productId) return
                   await createInventoryItem({
                     body: {
-                      productId: createReadyProductId,
+                      productId,
                       size: createReadySize || undefined,
                       qty: createReadyQty,
                       price: createReadyPrice,
@@ -498,11 +539,12 @@ export function InventoryPage() {
                   })
                   setIsCreateReadyOpen(false)
                   setCreateReadyProductId('')
+                  setCreateReadyProductName('')
                   setCreateReadySize('')
                   setCreateReadyQty(1)
                   setCreateReadyPrice(0)
                 }}
-                disabled={!createReadyProductId}
+                disabled={!createReadyProductId && !createReadyProductName.trim()}
               >
                 {t('inventoryPage.createReadySave', 'Add')}
               </Button>
@@ -541,15 +583,22 @@ export function InventoryPage() {
                   onChange={(e) => setCreateFabricQty(Number(e.target.value) || 0)}
                 />
               </div>
-              <div className="md:col-span-2">
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('inventoryPage.editFabricCostPerUnit', 'Cost / Unit')}
-                </label>
+              <div>
+                <label className="mb-1 block text-[12px] text-text-secondary">Package meters</label>
+                <Input
+                  type="number"
+                  min={0.01}
+                  value={createFabricPackageMeters}
+                  onChange={(e) => setCreateFabricPackageMeters(Number(e.target.value) || 20)}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[12px] text-text-secondary">Package price</label>
                 <Input
                   type="number"
                   min={0}
-                  value={createFabricCostPerUnit || ''}
-                  onChange={(e) => setCreateFabricCostPerUnit(Number(e.target.value) || 0)}
+                  value={createFabricPackagePrice || ''}
+                  onChange={(e) => setCreateFabricPackagePrice(Number(e.target.value) || 0)}
                 />
               </div>
             </div>
@@ -565,14 +614,16 @@ export function InventoryPage() {
                       name: createFabricName.trim(),
                       unit: createFabricUnit || undefined,
                       qty: createFabricQty,
-                      costPerUnit: createFabricCostPerUnit,
+                      packageMeters: createFabricPackageMeters || 20,
+                      packagePrice: createFabricPackagePrice,
                     },
                   })
                   setIsCreateFabricOpen(false)
                   setCreateFabricName('')
                   setCreateFabricUnit('')
                   setCreateFabricQty(0)
-                  setCreateFabricCostPerUnit(0)
+                  setCreateFabricPackageMeters(20)
+                  setCreateFabricPackagePrice(0)
                 }}
                 disabled={!createFabricName.trim()}
               >

@@ -29,13 +29,15 @@ export function InvoiceDetailsPage() {
   const location = useLocation()
   const incomingOrder = (location.state as { order?: InvoicePayload } | null)?.order
   const typeParam = searchParams.get('type')
-  const type: InvoiceType = typeParam === 'workshop' ? 'workshop' : 'customer'
+  const type: InvoiceType =
+    typeParam === 'workshop' ? 'workshop' : typeParam === 'pickup' ? 'pickup' : 'customer'
   const orderId = Number(orderNumber)
   const { data: apiOrder } = useGetOrderByIdQuery(orderId, { skip: Number.isNaN(orderId) })
 
   const order: InvoicePayload | undefined = apiOrder
     ? {
-        orderNumber: String(apiOrder.id),
+        orderNumber: apiOrder.orderNumber,
+        receiptNumber: apiOrder.receiptNumber,
         submittedAt: (apiOrder.createdAt ?? '').slice(0, 10),
         customerName: apiOrder.customer?.name ?? 'Walk-in',
         customerPhone: apiOrder.customer?.phone ?? '—',
@@ -85,7 +87,11 @@ export function InvoiceDetailsPage() {
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-[28px] font-bold text-text-primary">
-            {type === 'customer' ? t('invoiceDetailsPage.customerInvoice', 'Customer Invoice') : t('invoiceDetailsPage.workshopInvoice', 'Workshop Invoice')}
+            {type === 'workshop'
+              ? t('invoiceDetailsPage.workshopInvoice', 'Workshop Invoice')
+              : type === 'pickup'
+                ? t('invoiceDetailsPage.pickupSlip', 'Pickup Slip')
+                : t('invoiceDetailsPage.customerInvoice', 'Customer Invoice')}
           </h1>
           <p className="text-[13px] text-text-secondary">
             {t('invoiceDetailsPage.orderDue', 'Order #{{orderNumber}} · Due: {{dueDate}}', { orderNumber: order.orderNumber, dueDate: order.dueDate })}
@@ -100,7 +106,11 @@ export function InvoiceDetailsPage() {
           </Button>
           <Button className="gap-1" onClick={() => printInvoice(order, type)}>
             <Printer className="h-4 w-4" />
-            {type === 'customer' ? t('invoiceDetailsPage.printCustomer', 'Print Customer') : t('invoiceDetailsPage.printWorkshop', 'Print Workshop')}
+            {type === 'workshop'
+              ? t('invoiceDetailsPage.printWorkshop', 'Print Workshop')
+              : type === 'pickup'
+                ? t('invoiceDetailsPage.printPickup', 'Print Pickup Slip')
+                : t('invoiceDetailsPage.printCustomer', 'Print Customer')}
           </Button>
         </div>
       </div>
@@ -124,6 +134,14 @@ export function InvoiceDetailsPage() {
             >
               {t('invoiceDetailsPage.workshopInvoice', 'Workshop Invoice')}
             </Link>
+            <Link
+              to={`/invoices/${order.orderNumber}?type=pickup`}
+              className={`rounded-full px-4 py-1 text-[12px] font-medium ${
+                type === 'pickup' ? 'bg-[#1A1A2E] text-white' : 'text-text-muted'
+              }`}
+            >
+              {t('invoiceDetailsPage.pickupSlip', 'Pickup Slip')}
+            </Link>
           </div>
         </CardContent>
       </Card>
@@ -131,7 +149,11 @@ export function InvoiceDetailsPage() {
       <Card className="mx-auto w-full max-w-3xl">
         <CardHeader className="border-b border-border pb-4">
           <CardTitle className="text-[18px]">
-            {type === 'customer' ? t('invoiceDetailsPage.customerInvoice', 'Customer Invoice') : t('invoiceDetailsPage.workshopInvoice', 'Workshop Invoice')}
+            {type === 'workshop'
+              ? t('invoiceDetailsPage.workshopInvoice', 'Workshop Invoice')
+              : type === 'pickup'
+                ? t('invoiceDetailsPage.pickupSlip', 'Pickup Slip')
+                : t('invoiceDetailsPage.customerInvoice', 'Customer Invoice')}
           </CardTitle>
           <p className="text-[12px] text-text-secondary">
             {t('invoiceDetailsPage.orderDateDue', 'Order #{{orderNumber}} · Date: {{date}} · Due: {{dueDate}}', {
@@ -139,10 +161,11 @@ export function InvoiceDetailsPage() {
               date: order.submittedAt,
               dueDate: order.dueDate,
             })}
+            {order.receiptNumber ? ` · Receipt #${order.receiptNumber}` : ''}
           </p>
         </CardHeader>
         <CardContent className="space-y-4 pt-4">
-          {type === 'customer' ? (
+          {type !== 'workshop' ? (
             <>
               <div className="text-[13px]">
                 <p className="font-semibold text-text-primary">{t('app.shopName', 'Rafique Tailors')}</p>

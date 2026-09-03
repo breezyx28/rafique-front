@@ -13,9 +13,22 @@ export const languages = [
 
 export type LangCode = 'en' | 'ar' | 'bn'
 
+function getStoredLanguage(): LangCode {
+  const stored = localStorage.getItem('language')
+  return stored === 'ar' || stored === 'bn' ? stored : 'en'
+}
+
+function applyDocumentLanguage(code: LangCode) {
+  document.documentElement.dir = code === 'ar' ? 'rtl' : 'ltr'
+  document.documentElement.lang = code
+}
+
+const initialLanguage = getStoredLanguage()
+applyDocumentLanguage(initialLanguage)
+
 i18n.use(initReactI18next).init({
   resources: { en: { translation: en }, ar: { translation: ar }, bn: { translation: bn } },
-  lng: localStorage.getItem('language') ?? 'en',
+  lng: initialLanguage,
   fallbackLng: 'en',
   interpolation: { escapeValue: false },
 })
@@ -23,12 +36,9 @@ i18n.use(initReactI18next).init({
 export function setLanguage(code: LangCode) {
   const lang = languages.find((l) => l.code === code)
   if (lang) {
-    document.documentElement.dir = lang.dir
-    document.documentElement.lang = code
-    // Keep i18n instance and preference store in sync
+    applyDocumentLanguage(code)
     usePreferenceStore.getState().setLanguage(code)
-    i18n.changeLanguage(code)
-    localStorage.setItem('language', code)
+    void i18n.changeLanguage(code)
   }
 }
 

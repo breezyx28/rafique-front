@@ -1,7 +1,15 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      try {
+        var language = localStorage.getItem('language') || 'en'
+        if (!['en', 'ar', 'bn'].includes(language)) language = 'en'
+        document.documentElement.lang = language
+        document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
+      } catch (_) {}
+    </script>
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>frontend</title>

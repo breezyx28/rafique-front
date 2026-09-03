@@ -14,6 +14,7 @@ import {
   useGetCustomerMeasurementsQuery,
   useGetProductsQuery,
   useGetProductFieldsQuery,
+  useGetInventoryFabricsQuery,
 } from '@/features/api/appApi'
 
 type PaymentMethod = 'Cash' | 'MBOK'
@@ -24,6 +25,9 @@ interface CartItem {
   productName: string
   qty: number
   unitPrice: number
+  fabricId: number
+  fabricName: string
+  fabricMeters: number
   measurements: Array<{ fieldId: number; label: string; value: string }>
 }
 
@@ -138,6 +142,7 @@ export function NewOrderPage() {
   }, [measurementsOrders, ordersModalCustomer])
 
   const { data: products } = useGetProductsQuery({ type: 'custom' })
+  const { data: fabricsData } = useGetInventoryFabricsQuery({ page: 1, limit: 100 })
   const [productId, setProductId] = useState<number | null>(null)
   const activeProductId = productId ?? products?.[0]?.id ?? null
   const { data: productFields } = useGetProductFieldsQuery(activeProductId ?? 0, {
@@ -145,6 +150,8 @@ export function NewOrderPage() {
   })
 
   const [qty, setQty] = useState(1)
+  const [fabricId, setFabricId] = useState<number | null>(null)
+  const [fabricMeters, setFabricMeters] = useState('')
   const [inputUnitPriceStr, setInputUnitPriceStr] = useState('')
   const [cart, setCart] = useState<CartItem[]>([])
   const [measurementValuesByProduct, setMeasurementValuesByProduct] = useState<
@@ -175,6 +182,17 @@ export function NewOrderPage() {
 
   const addToCart = () => {
     if (!activeProductId) return
+    const selectedFabric = fabricsData?.data.find((fabric) => fabric.id === fabricId)
+    const meters = Number(fabricMeters)
+    const reservedMeters = cart
+      .filter((item) => item.fabricId === selectedFabric?.id)
+      .reduce((sum, item) => sum + item.fabricMeters, 0)
+    if (
+      !selectedFabric ||
+      meters <= 0 ||
+      meters + reservedMeters > selectedFabric.qty
+    )
+      return
     const product = activeProduct ?? (products ?? []).find((p) => p.id === activeProductId)
     if (!product) return
     const unitPrice = Math.max(0, Number(inputUnitPriceStr) || 0)
@@ -188,6 +206,9 @@ export function NewOrderPage() {
         productName: product.name,
         qty,
         unitPrice,
+        fabricId: selectedFabric.id,
+        fabricName: selectedFabric.name,
+        fabricMeters: meters,
         measurements: fields.map((field) => {
           const fieldId = field.id
           const value = valuesForProduct[fieldId] ?? ''
@@ -415,6 +436,35 @@ export function NewOrderPage() {
                         placeholder="0"
                       />
                     </div>
+                    <div>
+                      <label className="mb-1 block text-[12px] font-medium text-text-secondary">
+                        {tr('orders.new.fabric', 'Fabric')}
+                      </label>
+                      <select
+                        value={fabricId ?? ''}
+                        onChange={(e) => setFabricId(e.target.value ? Number(e.target.value) : null)}
+                        className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                      >
+                        <option value="">{tr('orders.new.selectFabric', 'Select fabric')}</option>
+                        {(fabricsData?.data ?? []).map((fabric) => (
+                          <option key={fabric.id} value={fabric.id}>
+                            {fabric.name} ({fabric.qty} m)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[12px] font-medium text-text-secondary">
+                        {tr('orders.new.fabricMeters', 'Total fabric meters')}
+                      </label>
+                      <Input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={fabricMeters}
+                        onChange={(e) => setFabricMeters(e.target.value)}
+                      />
+                    </div>
                     <div className="flex items-center gap-2">
                       <Button variant="outline" size="sm" onClick={() => setQty((q) => Math.max(1, q - 1))}>
                         <Minus className="h-4 w-4" />
@@ -424,7 +474,11 @@ export function NewOrderPage() {
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    <Button className="w-full" onClick={addToCart}>
+                    <Button
+                      className="w-full"
+                      onClick={addToCart}
+                      disabled={!fabricId || Number(fabricMeters) <= 0}
+                    >
                       {tr('orders.new.addProduct', 'Add {{product}}').replace(
                         '{{product}}',
                         (products ?? []).find((p) => p.id === activeProductId)?.name ?? 'Product'
@@ -525,6 +579,9 @@ export function NewOrderPage() {
                   <div>
                     <p className="text-[13px] font-semibold text-text-primary">{item.productName}</p>
                     <p className="text-[12px] text-text-muted">{money(item.unitPrice)} {tr('orders.new.cart.each', 'each')}</p>
+                    <p className="text-[12px] text-text-muted">
+                      {item.fabricName} · {item.fabricMeters} m
+                    </p>
                   </div>
                   <button
                     type="button"
@@ -711,6 +768,8 @@ export function NewOrderPage() {
                       productId: item.productId,
                       qty: item.qty,
                       unitPrice: item.unitPrice,
+                      fabricId: item.fabricId,
+                      fabricMeters: item.fabricMeters,
                       measurements: item.measurements.map((m) => ({
                         fieldId: m.fieldId,
                         value: m.value,

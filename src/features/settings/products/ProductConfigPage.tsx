@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { GripVertical, Plus, Trash2 } from 'lucide-react'
+import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -11,6 +11,7 @@ import {
   useGetProductFieldsQuery,
   useGetProductsQuery,
   useUpdateProductFieldMutation,
+  useUpdateProductMutation,
 } from '@/features/api/appApi'
 
 interface FieldConfig {
@@ -29,6 +30,7 @@ export function ProductConfigPage() {
   const { data: rawFields } = useGetProductFieldsQuery(selectedProductId ?? 0, { skip: !selectedProductId })
   const [isAddProductOpen, setIsAddProductOpen] = useState(false)
   const [newProductName, setNewProductName] = useState('')
+  const [renamingProduct, setRenamingProduct] = useState<{ id: number; name: string } | null>(null)
   const [isCreatingProduct, setIsCreatingProduct] = useState(false)
   const [isAddFieldOpen, setIsAddFieldOpen] = useState(false)
   const [newFieldEn, setNewFieldEn] = useState('')
@@ -38,6 +40,7 @@ export function ProductConfigPage() {
   const [newFieldRequired, setNewFieldRequired] = useState(false)
   const [isCreatingField, setIsCreatingField] = useState(false)
   const [createProduct] = useCreateProductMutation()
+  const [updateProduct] = useUpdateProductMutation()
   const [createField] = useCreateProductFieldMutation()
   const [updateFieldMutation] = useUpdateProductFieldMutation()
   const [deleteFieldMutation] = useDeleteProductFieldMutation()
@@ -70,9 +73,9 @@ export function ProductConfigPage() {
         inputType: merged.inputType,
         required: merged.required,
         labels: [
-            { language: 'en', label: merged.en || 'Field' },
-            { language: 'ar', label: merged.ar || merged.en || 'Field' },
-            { language: 'bn', label: merged.bn || merged.en || 'Field' },
+            { lang: 'en', label: merged.en || 'Field' },
+            { lang: 'ar', label: merged.ar || merged.en || 'Field' },
+            { lang: 'bn', label: merged.bn || merged.en || 'Field' },
         ],
       },
     })
@@ -109,9 +112,9 @@ export function ProductConfigPage() {
           inputType: newFieldInputType,
           required: newFieldRequired,
           labels: [
-            { language: 'en', label: enLabel },
-            { language: 'ar', label: newFieldAr.trim() || enLabel },
-            { language: 'bn', label: newFieldBn.trim() || enLabel },
+            { lang: 'en', label: enLabel },
+            { lang: 'ar', label: newFieldAr.trim() || enLabel },
+            { lang: 'bn', label: newFieldBn.trim() || enLabel },
           ],
         },
       }).unwrap()
@@ -148,18 +151,30 @@ export function ProductConfigPage() {
           </CardHeader>
           <CardContent className="space-y-2">
             {(products ?? []).map((p) => (
-              <button
+              <div
                 key={p.id}
-                type="button"
-                onClick={() => {
-                  setActiveProductId(p.id)
-                }}
-                className={`w-full rounded-[10px] px-3 py-2 text-left text-[13px] font-medium ${
-                  selectedProductId === p.id ? 'bg-primary-light text-primary' : 'hover:bg-[#F5F5F5] text-text-secondary'
+                className={`flex items-center rounded-[10px] ${
+                  selectedProductId === p.id
+                    ? 'bg-primary-light text-primary'
+                    : 'text-text-secondary hover:bg-[#F5F5F5]'
                 }`}
               >
-                {p.name}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveProductId(p.id)}
+                  className="flex-1 px-3 py-2 text-left text-[13px] font-medium"
+                >
+                  {p.name}
+                </button>
+                <button
+                  type="button"
+                  className="mr-2 rounded-md p-1 hover:bg-white"
+                  onClick={() => setRenamingProduct({ id: p.id, name: p.name })}
+                  aria-label={`Rename ${p.name}`}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              </div>
             ))}
             <Button
               variant="outline"
@@ -274,6 +289,42 @@ export function ProductConfigPage() {
             disabled={!newProductName.trim() || isCreatingProduct}
           >
             Create
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      <Dialog open={!!renamingProduct} onOpenChange={(open) => !open && setRenamingProduct(null)}>
+        <DialogHeader>
+          <DialogTitle>Rename Product</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2">
+          <label className="text-[13px] font-medium text-text-primary">Product name</label>
+          <Input
+            value={renamingProduct?.name ?? ''}
+            onChange={(e) =>
+              setRenamingProduct((current) =>
+                current ? { ...current, name: e.target.value } : current
+              )
+            }
+            autoFocus
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setRenamingProduct(null)}>
+            Cancel
+          </Button>
+          <Button
+            disabled={!renamingProduct?.name.trim()}
+            onClick={async () => {
+              if (!renamingProduct) return
+              await updateProduct({
+                id: renamingProduct.id,
+                body: { name: renamingProduct.name.trim() },
+              }).unwrap()
+              setRenamingProduct(null)
+            }}
+          >
+            Save
           </Button>
         </DialogFooter>
       </Dialog>
