@@ -219,6 +219,81 @@ const topCustomerSchema = z.object({
   totalSpent: z.coerce.number(),
 })
 
+const dashboardOverviewSchema = z.object({
+  period: z.object({
+    from: z.string(),
+    to: z.string(),
+    grain: z.enum(['day', 'week', 'month']),
+  }),
+  stats: z.object({
+    orders: z.coerce.number().default(0),
+    customOrders: z.coerce.number().default(0),
+    readyOrders: z.coerce.number().default(0),
+    fabricOrders: z.coerce.number().default(0),
+    revenue: z.coerce.number().default(0),
+    paid: z.coerce.number().default(0),
+    remaining: z.coerce.number().default(0),
+    expenses: z.coerce.number().default(0),
+    customers: z.coerce.number().default(0),
+    newCustomers: z.coerce.number().default(0),
+    workingDays: z.coerce.number().default(0),
+    readyStock: z.coerce.number().default(0),
+    lowStock: z.coerce.number().default(0),
+    fabricMeters: z.coerce.number().default(0),
+    workshopReady: z.coerce.number().default(0),
+    workshopNotReady: z.coerce.number().default(0),
+  }).passthrough(),
+  timeline: z.array(z.object({
+    date: z.string(),
+    orders: z.coerce.number().default(0),
+    revenue: z.coerce.number().default(0),
+    expenses: z.coerce.number().default(0),
+  }).passthrough()).default([]),
+  ordersByStatus: z.array(z.object({
+    status: z.string(),
+    count: z.coerce.number().default(0),
+  }).passthrough()).default([]),
+  ordersByType: z.array(z.object({
+    type: z.string(),
+    count: z.coerce.number().default(0),
+  }).passthrough()).default([]),
+  expensesByType: z.array(z.object({
+    name: z.string(),
+    total: z.coerce.number().default(0),
+  }).passthrough()).default([]),
+  topProducts: z.array(z.object({
+    name: z.string(),
+    qty: z.coerce.number().default(0),
+    total: z.coerce.number().default(0),
+  }).passthrough()).default([]),
+  topCustomers: z.array(z.object({
+    customerId: z.coerce.number(),
+    name: z.string(),
+    phone: z.string().nullable().optional(),
+    ordersCount: z.coerce.number().default(0),
+    totalSpent: z.coerce.number().default(0),
+  }).passthrough()).default([]),
+  recentOrders: z.array(z.object({
+    id: z.coerce.number(),
+    orderNumber: z.string(),
+    customer: z.string(),
+    type: z.string(),
+    status: z.string(),
+    total: z.coerce.number().default(0),
+    createdAt: z.coerce.string().optional(),
+  }).passthrough()).default([]),
+  workshopByStatus: z.array(z.object({
+    status: z.string(),
+    count: z.coerce.number().default(0),
+  }).passthrough()).default([]),
+  fabrics: z.array(z.object({
+    id: z.coerce.number(),
+    name: z.string(),
+    meters: z.coerce.number().default(0),
+    packageMeters: z.coerce.number().default(20),
+  }).passthrough()).default([]),
+}).passthrough()
+
 type Paginated<T> = {
   data: T[]
   meta: {
@@ -281,6 +356,11 @@ export const appApi = createApi({
     getDashboardTopCustomers: builder.query<z.infer<typeof topCustomerSchema>[], { limit?: number } | undefined>({
       query: (params) => ({ url: '/dashboard/top-customers', params: params || undefined }),
       transformResponse: (response) => parseMany(response, topCustomerSchema),
+    }),
+    getDashboardOverview: builder.query<z.infer<typeof dashboardOverviewSchema>, { from?: string; to?: string } | undefined>({
+      query: (params) => ({ url: '/dashboard/overview', params: params || undefined }),
+      transformResponse: (response) => parseOne(response, dashboardOverviewSchema),
+      keepUnusedDataFor: 30,
     }),
 
     getCustomers: builder.query<Paginated<z.infer<typeof customerSchema>>, { page?: number; limit?: number; search?: string; phone?: string } | undefined>({
@@ -691,6 +771,7 @@ export const {
   useGetDashboardSalesChartQuery,
   useGetDashboardTopProductsQuery,
   useGetDashboardTopCustomersQuery,
+  useGetDashboardOverviewQuery,
   useGetCustomersQuery,
   useGetCustomerByIdQuery,
   useCreateCustomerMutation,
