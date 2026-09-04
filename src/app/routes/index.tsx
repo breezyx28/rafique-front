@@ -8,11 +8,13 @@ import { ReadyPOSPage } from '@/features/orders/ready/ReadyPOSPage'
 import { CustomersPage } from '@/features/customers/CustomersPage'
 import { CustomerEditPage } from '@/features/customers/CustomerEditPage'
 import { InventoryPage } from '@/features/inventory/InventoryPage'
+import { ReadyProductsPage } from '@/features/inventory/ReadyProductsPage'
 import { ExpensesPage } from '@/features/expenses/ExpensesPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
 import { ProductConfigPage } from '@/features/settings/products/ProductConfigPage'
 import { InvoicesPage } from '@/features/invoices/InvoicesPage'
 import { InvoiceDetailsPage } from '@/features/invoices/InvoiceDetailsPage'
+import { NotificationsPage } from '@/features/notifications/NotificationsPage'
 import {
   DeliveredOrdersPage,
   SewingPricingPage,
@@ -33,9 +35,11 @@ export function AppRoutes() {
         <Route path="customers" element={<CustomersPage />} />
         <Route path="customers/:customerId/edit" element={<CustomerEditPage />} />
         <Route path="inventory" element={<InventoryPage />} />
+        <Route path="ready-products" element={<ReadyProductsPage />} />
         <Route path="expenses" element={<ExpensesPage />} />
         <Route path="invoices" element={<InvoicesPage />} />
         <Route path="invoices/:orderNumber" element={<InvoiceDetailsPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="settings/products" element={<ProductConfigPage />} />
         <Route path="workshop/orders" element={<DeliveredOrdersPage />} />

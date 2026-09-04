@@ -168,7 +168,7 @@ export function ProductConfigPage() {
                 </button>
                 <button
                   type="button"
-                  className="mr-2 rounded-md p-1 hover:bg-white"
+                  className="mr-2 cursor-pointer rounded-md p-1.5 text-text-secondary transition-colors hover:bg-white hover:text-primary"
                   onClick={() => setRenamingProduct({ id: p.id, name: p.name })}
                   aria-label={`Rename ${p.name}`}
                 >

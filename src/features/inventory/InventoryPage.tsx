@@ -17,6 +17,7 @@ import {
   useUpdateFabricMutation,
   useUpdateInventoryItemMutation,
 } from '@/features/api/appApi'
+import { remainingPackages, formatPackages, metersFromPackages } from '@/lib/fabricStock'
 
 type InventoryTab = 'ready' | 'fabrics'
 
@@ -24,7 +25,7 @@ const money = (v: number) => `${v.toLocaleString()} SDG`
 
 export function InventoryPage() {
   const { t } = useTranslation()
-  const [tab, setTab] = useState<InventoryTab>('ready')
+  const [tab, setTab] = useState<InventoryTab>('fabrics')
   const [search, setSearch] = useState('')
   const { data: readyData } = useGetInventoryItemsQuery({ page: 1, limit: 100 })
   const { data: fabricsData } = useGetInventoryFabricsQuery({ page: 1, limit: 100 })
@@ -167,7 +168,16 @@ export function InventoryPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3"><div className="flex items-center gap-1 text-text-secondary"><button type="button" onClick={() => setEditingReady({ ...r })} className="rounded-md p-1.5 hover:bg-[#F5F5F5]" aria-label="Edit ready item"><Pencil className="h-4 w-4" /></button><button type="button" onClick={() => setDeletingReady(r)} className="rounded-md p-1.5 hover:bg-[#F5F5F5]" aria-label="Delete ready item"><Trash2 className="h-4 w-4" /></button></div></td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1 text-text-secondary">
+                          <button type="button" onClick={() => setEditingReady({ ...r })} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-primary" aria-label="Edit ready item">
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button type="button" onClick={() => setDeletingReady(r)} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-danger" aria-label="Delete ready item">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -187,7 +197,10 @@ export function InventoryPage() {
                       {t('inventoryPage.fabricUnit', 'Unit')}
                     </th>
                     <th className="px-4 py-3">
-                      {t('inventoryPage.fabricQty', 'Qty')}
+                      {t('inventoryPage.fabricPackagesLeft', 'Packages left')}
+                    </th>
+                    <th className="px-4 py-3">
+                      {t('inventoryPage.fabricMetersLeft', 'Meters left')}
                     </th>
                     <th className="px-4 py-3">
                       {t('inventoryPage.fabricPackageMeters', 'Package meters')}
@@ -211,12 +224,28 @@ export function InventoryPage() {
                     <tr key={String(f.id)} className="border-t border-border text-[13px]">
                       <td className="px-4 py-3 font-semibold text-text-primary">{f.name}</td>
                       <td className="px-4 py-3 text-text-secondary">{f.unit}</td>
-                      <td className="px-4 py-3 text-text-primary">{f.qty}</td>
+                      <td className="px-4 py-3 text-text-primary">
+                        {formatPackages(remainingPackages(f.qty, f.packageMeters))}
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-text-primary">
+                        {Number(f.qty).toLocaleString()} m
+                      </td>
                       <td className="px-4 py-3 text-text-primary">{f.packageMeters}</td>
                       <td className="px-4 py-3 font-semibold text-text-primary">{money(f.packagePrice)}</td>
                       <td className="px-4 py-3 font-semibold text-text-primary">{money(f.sellingPricePerMeter)}</td>
-                      <td className="px-4 py-3 font-semibold text-primary">{money(f.qty * f.sellingPricePerMeter)}</td>
-                      <td className="px-4 py-3"><div className="flex items-center gap-1 text-text-secondary"><button type="button" onClick={() => setEditingFabric({ ...f })} className="rounded-md p-1.5 hover:bg-[#F5F5F5]" aria-label="Edit fabric item"><Pencil className="h-4 w-4" /></button><button type="button" onClick={() => setDeletingFabric(f)} className="rounded-md p-1.5 hover:bg-[#F5F5F5]" aria-label="Delete fabric item"><Trash2 className="h-4 w-4" /></button></div></td>
+                      <td className="px-4 py-3 font-semibold text-primary">
+                        {money(Number(f.qty) * Number(f.sellingPricePerMeter))}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1 text-text-secondary">
+                          <button type="button" onClick={() => setEditingFabric({ ...f, packageQty: remainingPackages(f.qty, f.packageMeters) })} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-primary" aria-label="Edit fabric item">
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button type="button" onClick={() => setDeletingFabric(f)} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-danger" aria-label="Delete fabric item">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -309,11 +338,11 @@ export function InventoryPage() {
                 placeholder={t('inventoryPage.unitPlaceholder', 'e.g. bale, meter')}
               />
               <NumberInput
-                label={t('inventoryPage.editFabricQty', 'Qty')}
+                label={t('inventoryPage.editFabricPackages', 'Number of packages')}
                 format="decimal"
                 min={0}
-                value={editingFabric.qty}
-                onValueChange={(qty) => setEditingFabric({ ...editingFabric, qty })}
+                value={editingFabric.packageQty ?? remainingPackages(editingFabric.qty, editingFabric.packageMeters)}
+                onValueChange={(packageQty) => setEditingFabric({ ...editingFabric, packageQty })}
                 placeholder={t('common.qtyPlaceholder', '0')}
               />
               <NumberInput
@@ -336,6 +365,19 @@ export function InventoryPage() {
                 }
                 placeholder={t('common.pricePlaceholder', 'e.g. 700,000')}
               />
+              <p className="md:col-span-2 rounded-[10px] bg-[#FAFAFA] px-3 py-2 text-[12px] text-text-secondary">
+                {t('inventoryPage.totalMetersPreview', 'Total meters')}
+                {': '}
+                <span className="font-semibold text-text-primary tabular-nums">
+                  {(
+                    Number(
+                      editingFabric.packageQty ??
+                        remainingPackages(editingFabric.qty, editingFabric.packageMeters),
+                    ) * Number(editingFabric.packageMeters ?? 20)
+                  ).toLocaleString()}{' '}
+                  m
+                </span>
+              </p>
             </div>
             <div className="mt-5 flex justify-end gap-2">
               <Button variant="outline" onClick={() => setEditingFabric(null)}>
@@ -348,7 +390,17 @@ export function InventoryPage() {
                     body: {
                       name: editingFabric.name,
                       unit: editingFabric.unit,
-                      qty: editingFabric.qty,
+                      packageQty: Number(
+                        editingFabric.packageQty ??
+                          remainingPackages(editingFabric.qty, editingFabric.packageMeters),
+                      ),
+                      qty: metersFromPackages(
+                        Number(
+                          editingFabric.packageQty ??
+                            remainingPackages(editingFabric.qty, editingFabric.packageMeters),
+                        ),
+                        editingFabric.packageMeters ?? 20,
+                      ),
                       packageMeters: editingFabric.packageMeters ?? 20,
                       packagePrice: editingFabric.packagePrice ?? editingFabric.costPerUnit,
                     },
@@ -547,7 +599,7 @@ export function InventoryPage() {
                 placeholder={t('inventoryPage.unitPlaceholder', 'e.g. bale, meter')}
               />
               <NumberInput
-                label={t('inventoryPage.editFabricQty', 'Qty')}
+                label={t('inventoryPage.editFabricPackages', 'Number of packages')}
                 format="decimal"
                 min={0}
                 value={createFabricQty}
@@ -570,6 +622,13 @@ export function InventoryPage() {
                 onValueChange={setCreateFabricPackagePrice}
                 placeholder={t('common.pricePlaceholder', 'e.g. 700,000')}
               />
+              <p className="md:col-span-2 rounded-[10px] bg-[#FAFAFA] px-3 py-2 text-[12px] text-text-secondary">
+                {t('inventoryPage.totalMetersPreview', 'Total meters')}
+                {': '}
+                <span className="font-semibold text-text-primary tabular-nums">
+                  {(createFabricQty * (createFabricPackageMeters || 20)).toLocaleString()} m
+                </span>
+              </p>
             </div>
             <div className="mt-5 flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsCreateFabricOpen(false)}>
@@ -582,7 +641,11 @@ export function InventoryPage() {
                     body: {
                       name: createFabricName.trim(),
                       unit: createFabricUnit || undefined,
-                      qty: createFabricQty,
+                      packageQty: createFabricQty,
+                      qty: metersFromPackages(
+                        createFabricQty,
+                        createFabricPackageMeters || 20,
+                      ),
                       packageMeters: createFabricPackageMeters || 20,
                       packagePrice: createFabricPackagePrice,
                     },

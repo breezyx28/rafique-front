@@ -10,6 +10,7 @@ import {
   Receipt,
   Settings,
   Ruler,
+  Shirt,
   LogOut,
   Printer,
   ChevronDown,
@@ -32,6 +33,7 @@ const mainNavItems = [
 
 const accountNavItems = [
   { to: '/inventory', icon: Boxes, key: 'inventory' },
+  { to: '/ready-products', icon: Shirt, key: 'readyProducts' },
   { to: '/expenses', icon: Receipt, key: 'expenses' },
   { to: '/settings/products', icon: Ruler, key: 'productConfig' },
 ]

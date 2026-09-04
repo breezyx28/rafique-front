@@ -1,24 +1,31 @@
 import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { cn } from '@/lib/utils'
 
 interface DialogProps {
   open: boolean
   onOpenChange?: (open: boolean) => void
   children: ReactNode
+  className?: string
 }
 
-export function Dialog({ open, onOpenChange, children }: DialogProps) {
+export function Dialog({ open, onOpenChange, children, className }: DialogProps) {
   if (!open) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/40"
         onClick={() => {
           onOpenChange?.(false)
         }}
       />
-      <div className="relative z-10 w-full max-w-sm rounded-[16px] border border-border bg-white p-5 shadow-card">
+      <div
+        className={cn(
+          'relative z-10 w-full max-w-sm rounded-[16px] border border-border bg-white p-5 shadow-card',
+          className,
+        )}
+      >
         {children}
       </div>
     </div>,

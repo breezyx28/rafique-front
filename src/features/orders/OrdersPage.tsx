@@ -8,6 +8,7 @@ import { NumberInput } from '@/components/ui/NumberInput'
 import { Button } from '@/components/ui/Button'
 import type { InvoicePayload } from '@/features/invoices/types'
 import { printInvoiceAndPickup } from '@/features/invoices/printInvoice'
+import { fabricStockLabel } from '@/lib/fabricStock'
 import {
   useDeleteOrderMutation,
   useDeliverOrderToWorkshopMutation,
@@ -489,7 +490,7 @@ export function OrdersPage() {
                       <option value="">{t('orders.new.selectFabric', 'Select fabric')}</option>
                       {(fabricsData?.data ?? []).map((fabric) => (
                         <option key={fabric.id} value={fabric.id}>
-                          {fabric.name} ({fabric.qty} m)
+                          {fabricStockLabel(fabric.name, fabric.qty, fabric.packageMeters)}
                         </option>
                       ))}
                     </select>

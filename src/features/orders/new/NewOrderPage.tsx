@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { NumberInput } from '@/components/ui/NumberInput'
+import { fabricStockLabel } from '@/lib/fabricStock'
 import type { InvoicePayload } from '@/features/invoices/types'
 import { persistLatestInvoiceOrder } from '@/features/invoices/invoiceStore'
 import {
@@ -467,7 +468,7 @@ export function NewOrderPage() {
                     <option value="">{tr('orders.new.selectFabric', 'Select fabric')}</option>
                     {(fabricsData?.data ?? []).map((fabric) => (
                       <option key={fabric.id} value={fabric.id}>
-                        {fabric.name} ({fabric.qty} m)
+                        {fabricStockLabel(fabric.name, fabric.qty, fabric.packageMeters)}
                       </option>
                     ))}
                   </select>
@@ -579,7 +580,7 @@ export function NewOrderPage() {
                         <option value="">{tr('orders.new.selectFabric', 'Select fabric')}</option>
                         {(fabricsData?.data ?? []).map((fabric) => (
                           <option key={fabric.id} value={fabric.id}>
-                            {fabric.name} ({fabric.qty} m)
+                            {fabricStockLabel(fabric.name, fabric.qty, fabric.packageMeters)}
                           </option>
                         ))}
                       </select>

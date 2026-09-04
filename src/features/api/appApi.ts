@@ -129,7 +129,14 @@ const inventoryItemSchema = z.object({
   size: z.string().nullable().optional().default(''),
   qty: z.coerce.number().default(0),
   price: z.coerce.number().default(0),
+  color: z.string().nullable().optional().default(''),
+  note: z.string().nullable().optional().default(''),
+  fabricId: z.coerce.number().nullable().optional(),
   product: productSchema.nullable().optional(),
+  fabric: z.object({
+    id: z.coerce.number(),
+    name: z.string(),
+  }).passthrough().nullable().optional(),
 }).passthrough()
 
 const fabricSchema = z.object({
@@ -507,13 +514,13 @@ export const appApi = createApi({
     }),
     createInventoryItem: builder.mutation<
       z.infer<typeof inventoryItemSchema>,
-      { body: { productId: number; size?: string; qty: number; price: number } }
+      { body: { productId: number; size?: string; qty: number; price: number; color?: string; note?: string; fabricId?: number } }
     >({
       query: ({ body }) => ({ url: '/inventory/items', method: 'POST', body }),
       transformResponse: (response) => parseOne(response, inventoryItemSchema),
       invalidatesTags: [{ type: 'InventoryItem', id: 'LIST' }],
     }),
-    updateInventoryItem: builder.mutation<z.infer<typeof inventoryItemSchema>, { id: number; body: { productId?: number; size?: string; qty?: number; price?: number } }>({
+    updateInventoryItem: builder.mutation<z.infer<typeof inventoryItemSchema>, { id: number; body: { productId?: number; size?: string; qty?: number; price?: number; color?: string; note?: string; fabricId?: number | null } }>({
       query: ({ id, body }) => ({ url: `/inventory/items/${id}`, method: 'PATCH', body }),
       transformResponse: (response) => parseOne(response, inventoryItemSchema),
       invalidatesTags: (_result, _error, { id }) => [{ type: 'InventoryItem', id }, { type: 'InventoryItem', id: 'LIST' }],
@@ -534,13 +541,13 @@ export const appApi = createApi({
     }),
     createFabric: builder.mutation<
       z.infer<typeof fabricSchema>,
-      { body: { name: string; unit?: string; qty: number; costPerUnit?: number; packageMeters?: number; packagePrice?: number; sewingRatePerMeter?: number } }
+      { body: { name: string; unit?: string; qty?: number; packageQty?: number; costPerUnit?: number; packageMeters?: number; packagePrice?: number; sewingRatePerMeter?: number } }
     >({
       query: ({ body }) => ({ url: '/inventory/fabrics', method: 'POST', body }),
       transformResponse: (response) => parseOne(response, fabricSchema),
       invalidatesTags: [{ type: 'Fabric', id: 'LIST' }],
     }),
-    updateFabric: builder.mutation<z.infer<typeof fabricSchema>, { id: number; body: { name?: string; unit?: string; qty?: number; costPerUnit?: number; packageMeters?: number; packagePrice?: number; sewingRatePerMeter?: number } }>({
+    updateFabric: builder.mutation<z.infer<typeof fabricSchema>, { id: number; body: { name?: string; unit?: string; qty?: number; packageQty?: number; costPerUnit?: number; packageMeters?: number; packagePrice?: number; sewingRatePerMeter?: number } }>({
       query: ({ id, body }) => ({ url: `/inventory/fabrics/${id}`, method: 'PATCH', body }),
       transformResponse: (response) => parseOne(response, fabricSchema),
       invalidatesTags: (_result, _error, { id }) => [{ type: 'Fabric', id }, { type: 'Fabric', id: 'LIST' }],
@@ -647,6 +654,14 @@ export const appApi = createApi({
             ]
           : [{ type: 'Notification' as const, id: 'LIST' }],
     }),
+    getNotificationUnreadCount: builder.query<{ unread: number }, void>({
+      query: () => '/notifications/unread-count',
+      transformResponse: (response) => {
+        const body = unwrapBody(response) as { unread?: number }
+        return { unread: Number(body?.unread ?? 0) }
+      },
+      providesTags: [{ type: 'Notification', id: 'LIST' }],
+    }),
     markNotificationRead: builder.mutation<{ ok: boolean }, number>({
       query: (id) => ({ url: `/notifications/${id}/read`, method: 'PATCH' }),
       transformResponse: () => ({ ok: true }),
@@ -719,6 +734,7 @@ export const {
   useGetExpensesSummaryQuery,
   useCreateExpenseMutation,
   useGetNotificationsQuery,
+  useGetNotificationUnreadCountQuery,
   useMarkNotificationReadMutation,
   useMarkAllNotificationsReadMutation,
   useGetSettingsQuery,

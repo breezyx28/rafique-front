@@ -4,6 +4,7 @@ const cashierPrefixes = [
   '/orders',
   '/customers',
   '/invoices',
+  '/notifications',
 ]
 
 export function isAdmin(role?: AppRole) {
@@ -20,7 +21,9 @@ export function isWorkshop(role?: AppRole) {
 
 export function canAccessPath(role: AppRole | undefined, pathname: string) {
   if (!role || role === 'Admin') return true
-  if (role === 'Workshop') return pathname === '/workshop/orders'
+  if (role === 'Workshop') {
+    return pathname === '/workshop/orders' || pathname === '/notifications'
+  }
   if (role === 'Cashier') {
     return cashierPrefixes.some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)

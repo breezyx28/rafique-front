@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Search } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { NumberInput } from '@/components/ui/NumberInput'
+import { FilterToolbar, SearchField } from '@/components/ui/DataToolbar'
 import {
   useCreateExpenseMutation,
   useCreateExpenseTypeMutation,
@@ -186,34 +187,30 @@ export function ExpensesPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-3 md:grid-cols-3">
-                <div className="relative md:col-span-2">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-                  <Input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder={t(
-                      'expensesPage.searchPlaceholder',
-                      'Search by type or note'
-                    )}
-                    className="pl-9"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    type="date"
-                    label={t('common.fromDate', 'From date')}
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                  />
-                  <Input
-                    type="date"
-                    label={t('common.toDate', 'To date')}
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                  />
-                </div>
-              </div>
+              <FilterToolbar className="md:grid-cols-4">
+                <SearchField
+                  className="md:col-span-2"
+                  label={t('common.search', 'Search')}
+                  value={search}
+                  onChange={setSearch}
+                  placeholder={t(
+                    'expensesPage.searchPlaceholder',
+                    'Search by type or note'
+                  )}
+                />
+                <Input
+                  type="date"
+                  label={t('common.fromDate', 'From date')}
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                />
+                <Input
+                  type="date"
+                  label={t('common.toDate', 'To date')}
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                />
+              </FilterToolbar>
 
               <div className="overflow-hidden rounded-[12px] border border-border">
                 <table className="w-full min-w-[640px]">
