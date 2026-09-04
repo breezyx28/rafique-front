@@ -4,6 +4,7 @@ import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { NumberInput } from '@/components/ui/NumberInput'
 import { useCreateReadyOrderMutation, useGetInventoryItemsQuery } from '@/features/api/appApi'
 
 type PaymentMethod = 'Cash' | 'MBOK'
@@ -177,7 +178,13 @@ export function ReadyPOSPage() {
                 <label className="text-[12px] text-text-secondary">
                   {t('orders.ready.receivedAmount', 'Received Amount')}
                 </label>
-                <Input type="number" min={0} value={receivedAmount} onChange={(e) => setReceivedAmount(Number(e.target.value))} />
+                <NumberInput
+                  format="money"
+                  min={0}
+                  value={receivedAmount}
+                  onValueChange={setReceivedAmount}
+                  placeholder={t('common.pricePlaceholder', 'e.g. 700,000')}
+                />
               </div>
               <div className="flex items-center justify-between text-[13px]">
                 <span className="text-text-secondary">{t('orders.ready.remaining', 'Remaining')}</span>

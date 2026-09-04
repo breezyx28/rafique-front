@@ -212,15 +212,27 @@ export function ProductConfigPage() {
                 <div className="grid gap-3 md:grid-cols-3">
                   <div>
                     <label className="mb-1 block text-[12px] font-medium text-text-secondary">Label (EN)</label>
-                    <Input value={field.en} onChange={(e) => updateField(field.id, { en: e.target.value })} />
+                    <Input
+                      value={field.en}
+                      onChange={(e) => updateField(field.id, { en: e.target.value })}
+                      placeholder="English label"
+                    />
                   </div>
                   <div>
                     <label className="mb-1 block text-[12px] font-medium text-text-secondary">Label (AR)</label>
-                    <Input value={field.ar} onChange={(e) => updateField(field.id, { ar: e.target.value })} />
+                    <Input
+                      value={field.ar}
+                      onChange={(e) => updateField(field.id, { ar: e.target.value })}
+                      placeholder="Arabic label"
+                    />
                   </div>
                   <div>
                     <label className="mb-1 block text-[12px] font-medium text-text-secondary">Label (BN)</label>
-                    <Input value={field.bn} onChange={(e) => updateField(field.id, { bn: e.target.value })} />
+                    <Input
+                      value={field.bn}
+                      onChange={(e) => updateField(field.id, { bn: e.target.value })}
+                      placeholder="Bengali label"
+                    />
                   </div>
                 </div>
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
@@ -306,6 +318,7 @@ export function ProductConfigPage() {
                 current ? { ...current, name: e.target.value } : current
               )
             }
+            placeholder="Product name"
             autoFocus
           />
         </div>

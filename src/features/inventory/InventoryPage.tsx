@@ -4,6 +4,7 @@ import { AlertTriangle, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { NumberInput } from '@/components/ui/NumberInput'
 import {
   useCreateFabricMutation,
   useCreateInventoryItemMutation,
@@ -188,9 +189,15 @@ export function InventoryPage() {
                     <th className="px-4 py-3">
                       {t('inventoryPage.fabricQty', 'Qty')}
                     </th>
-                    <th className="px-4 py-3">Package meters</th>
-                    <th className="px-4 py-3">Package price</th>
-                    <th className="px-4 py-3">Price / meter</th>
+                    <th className="px-4 py-3">
+                      {t('inventoryPage.fabricPackageMeters', 'Package meters')}
+                    </th>
+                    <th className="px-4 py-3">
+                      {t('inventoryPage.fabricPackagePrice', 'Package price')}
+                    </th>
+                    <th className="px-4 py-3">
+                      {t('inventoryPage.fabricPricePerMeter', 'Price / meter')}
+                    </th>
                     <th className="px-4 py-3">
                       {t('inventoryPage.fabricTotalValue', 'Total Value')}
                     </th>
@@ -226,41 +233,30 @@ export function InventoryPage() {
               {t('inventoryPage.editReadyTitle', 'Edit Ready Product')}
             </h3>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('inventoryPage.editReadySize', 'Size')}
-                </label>
-                <Input
-                  value={editingReady.size || ''}
-                  onChange={(e) =>
-                    setEditingReady({ ...editingReady, size: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('inventoryPage.editReadyQty', 'Qty')}
-                </label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={editingReady.qty}
-                  onChange={(e) =>
-                    setEditingReady({ ...editingReady, qty: Number(e.target.value) })
-                  }
-                />
-              </div>
+              <Input
+                label={t('inventoryPage.editReadySize', 'Size')}
+                value={editingReady.size || ''}
+                onChange={(e) =>
+                  setEditingReady({ ...editingReady, size: e.target.value })
+                }
+                placeholder={t('inventoryPage.sizePlaceholder', 'e.g. L / 54')}
+              />
+              <NumberInput
+                label={t('inventoryPage.editReadyQty', 'Qty')}
+                format="integer"
+                min={0}
+                value={editingReady.qty}
+                onValueChange={(qty) => setEditingReady({ ...editingReady, qty })}
+                placeholder={t('common.qtyPlaceholder', '0')}
+              />
               <div className="md:col-span-2">
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('inventoryPage.editReadyPrice', 'Selling Price')}
-                </label>
-                <Input
-                  type="number"
+                <NumberInput
+                  label={t('inventoryPage.editReadyPrice', 'Selling Price')}
+                  format="money"
                   min={0}
                   value={editingReady.price}
-                  onChange={(e) =>
-                    setEditingReady({ ...editingReady, price: Number(e.target.value) })
-                  }
+                  onValueChange={(price) => setEditingReady({ ...editingReady, price })}
+                  placeholder={t('common.pricePlaceholder', 'e.g. 700,000')}
                 />
               </div>
             </div>
@@ -296,69 +292,50 @@ export function InventoryPage() {
               {t('inventoryPage.editFabricTitle', 'Edit Fabric / Asset')}
             </h3>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('inventoryPage.editFabricName', 'Name')}
-                </label>
-                <Input
-                  value={editingFabric.name}
-                  onChange={(e) =>
-                    setEditingFabric({ ...editingFabric, name: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('inventoryPage.editFabricUnit', 'Unit')}
-                </label>
-                <Input
-                  value={editingFabric.unit}
-                  onChange={(e) =>
-                    setEditingFabric({ ...editingFabric, unit: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('inventoryPage.editFabricQty', 'Qty')}
-                </label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={editingFabric.qty}
-                  onChange={(e) =>
-                    setEditingFabric({ ...editingFabric, qty: Number(e.target.value) })
-                  }
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">Package meters</label>
-                <Input
-                  type="number"
-                  min={0.01}
-                  value={editingFabric.packageMeters ?? 20}
-                  onChange={(e) =>
-                    setEditingFabric({
-                      ...editingFabric,
-                      packageMeters: Number(e.target.value),
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">Package price</label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={editingFabric.packagePrice ?? editingFabric.costPerUnit}
-                  onChange={(e) =>
-                    setEditingFabric({
-                      ...editingFabric,
-                      packagePrice: Number(e.target.value),
-                    })
-                  }
-                />
-              </div>
+              <Input
+                label={t('inventoryPage.editFabricName', 'Name')}
+                value={editingFabric.name}
+                onChange={(e) =>
+                  setEditingFabric({ ...editingFabric, name: e.target.value })
+                }
+                placeholder={t('inventoryPage.namePlaceholder', 'Fabric name')}
+              />
+              <Input
+                label={t('inventoryPage.editFabricUnit', 'Unit')}
+                value={editingFabric.unit}
+                onChange={(e) =>
+                  setEditingFabric({ ...editingFabric, unit: e.target.value })
+                }
+                placeholder={t('inventoryPage.unitPlaceholder', 'e.g. bale, meter')}
+              />
+              <NumberInput
+                label={t('inventoryPage.editFabricQty', 'Qty')}
+                format="decimal"
+                min={0}
+                value={editingFabric.qty}
+                onValueChange={(qty) => setEditingFabric({ ...editingFabric, qty })}
+                placeholder={t('common.qtyPlaceholder', '0')}
+              />
+              <NumberInput
+                label={t('inventoryPage.editFabricPackageMeters', 'Package meters')}
+                format="decimal"
+                min={0.01}
+                value={editingFabric.packageMeters ?? 20}
+                onValueChange={(packageMeters) =>
+                  setEditingFabric({ ...editingFabric, packageMeters })
+                }
+                placeholder={t('inventoryPage.packageMetersPlaceholder', 'e.g. 20')}
+              />
+              <NumberInput
+                label={t('inventoryPage.editFabricPackagePrice', 'Package price')}
+                format="money"
+                min={0}
+                value={editingFabric.packagePrice ?? editingFabric.costPerUnit}
+                onValueChange={(packagePrice) =>
+                  setEditingFabric({ ...editingFabric, packagePrice })
+                }
+                placeholder={t('common.pricePlaceholder', 'e.g. 700,000')}
+              />
             </div>
             <div className="mt-5 flex justify-end gap-2">
               <Button variant="outline" onClick={() => setEditingFabric(null)}>
@@ -461,9 +438,10 @@ export function InventoryPage() {
                 <select
                   value={createReadyProductId}
                   onChange={(e) => setCreateReadyProductId(e.target.value ? Number(e.target.value) : '')}
+                  aria-label={t('inventoryPage.createReadyProduct', 'Product')}
                   className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
                 >
-                  <option value="">—</option>
+                  <option value="">{t('inventoryPage.selectProduct', 'Select a product')}</option>
                   {(readyProducts ?? []).map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
@@ -472,10 +450,8 @@ export function InventoryPage() {
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('inventoryPage.createReadyNewProduct', 'Or create a new ready product')}
-                </label>
                 <Input
+                  label={t('inventoryPage.createReadyNewProduct', 'Or create a new ready product')}
                   value={createReadyProductName}
                   onChange={(e) => {
                     setCreateReadyProductName(e.target.value)
@@ -484,32 +460,28 @@ export function InventoryPage() {
                   placeholder={t('inventoryPage.createReadyNewProductPlaceholder', 'Product name')}
                 />
               </div>
-              <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('inventoryPage.editReadySize', 'Size')}
-                </label>
-                <Input value={createReadySize} onChange={(e) => setCreateReadySize(e.target.value)} />
-              </div>
-              <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('inventoryPage.editReadyQty', 'Qty')}
-                </label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={createReadyQty}
-                  onChange={(e) => setCreateReadyQty(Number(e.target.value) || 0)}
-                />
-              </div>
+              <Input
+                label={t('inventoryPage.editReadySize', 'Size')}
+                value={createReadySize}
+                onChange={(e) => setCreateReadySize(e.target.value)}
+                placeholder={t('inventoryPage.sizePlaceholder', 'e.g. L / 54')}
+              />
+              <NumberInput
+                label={t('inventoryPage.editReadyQty', 'Qty')}
+                format="integer"
+                min={0}
+                value={createReadyQty}
+                onValueChange={setCreateReadyQty}
+                placeholder={t('common.qtyPlaceholder', '0')}
+              />
               <div className="md:col-span-2">
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('inventoryPage.editReadyPrice', 'Selling Price')}
-                </label>
-                <Input
-                  type="number"
+                <NumberInput
+                  label={t('inventoryPage.editReadyPrice', 'Selling Price')}
+                  format="money"
                   min={0}
-                  value={createReadyPrice || ''}
-                  onChange={(e) => setCreateReadyPrice(Number(e.target.value) || 0)}
+                  value={createReadyPrice}
+                  onValueChange={setCreateReadyPrice}
+                  placeholder={t('common.pricePlaceholder', 'e.g. 700,000')}
                 />
               </div>
             </div>
@@ -561,46 +533,43 @@ export function InventoryPage() {
             </h3>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <div className="md:col-span-2">
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('inventoryPage.editFabricName', 'Name')}
-                </label>
-                <Input value={createFabricName} onChange={(e) => setCreateFabricName(e.target.value)} />
-              </div>
-              <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('inventoryPage.editFabricUnit', 'Unit')}
-                </label>
-                <Input value={createFabricUnit} onChange={(e) => setCreateFabricUnit(e.target.value)} />
-              </div>
-              <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('inventoryPage.editFabricQty', 'Qty')}
-                </label>
                 <Input
-                  type="number"
-                  min={0}
-                  value={createFabricQty}
-                  onChange={(e) => setCreateFabricQty(Number(e.target.value) || 0)}
+                  label={t('inventoryPage.editFabricName', 'Name')}
+                  value={createFabricName}
+                  onChange={(e) => setCreateFabricName(e.target.value)}
+                  placeholder={t('inventoryPage.namePlaceholder', 'Fabric name')}
                 />
               </div>
-              <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">Package meters</label>
-                <Input
-                  type="number"
-                  min={0.01}
-                  value={createFabricPackageMeters}
-                  onChange={(e) => setCreateFabricPackageMeters(Number(e.target.value) || 20)}
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">Package price</label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={createFabricPackagePrice || ''}
-                  onChange={(e) => setCreateFabricPackagePrice(Number(e.target.value) || 0)}
-                />
-              </div>
+              <Input
+                label={t('inventoryPage.editFabricUnit', 'Unit')}
+                value={createFabricUnit}
+                onChange={(e) => setCreateFabricUnit(e.target.value)}
+                placeholder={t('inventoryPage.unitPlaceholder', 'e.g. bale, meter')}
+              />
+              <NumberInput
+                label={t('inventoryPage.editFabricQty', 'Qty')}
+                format="decimal"
+                min={0}
+                value={createFabricQty}
+                onValueChange={setCreateFabricQty}
+                placeholder={t('common.qtyPlaceholder', '0')}
+              />
+              <NumberInput
+                label={t('inventoryPage.editFabricPackageMeters', 'Package meters')}
+                format="decimal"
+                min={0.01}
+                value={createFabricPackageMeters}
+                onValueChange={setCreateFabricPackageMeters}
+                placeholder={t('inventoryPage.packageMetersPlaceholder', 'e.g. 20')}
+              />
+              <NumberInput
+                label={t('inventoryPage.editFabricPackagePrice', 'Package price')}
+                format="money"
+                min={0}
+                value={createFabricPackagePrice}
+                onValueChange={setCreateFabricPackagePrice}
+                placeholder={t('common.pricePlaceholder', 'e.g. 700,000')}
+              />
             </div>
             <div className="mt-5 flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsCreateFabricOpen(false)}>

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { Eye, FileText, Pencil, Printer, Search, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
+import { NumberInput } from '@/components/ui/NumberInput'
 import { Button } from '@/components/ui/Button'
 import type { InvoicePayload } from '@/features/invoices/types'
 import { printInvoiceAndPickup } from '@/features/invoices/printInvoice'
@@ -218,6 +219,7 @@ export function OrdersPage() {
                 setCustomer(e.target.value)
                 setPage(1)
               }}
+              aria-label={t('ordersPage.customerPlaceholder', 'Customer name')}
               placeholder={t('ordersPage.customerPlaceholder', 'Customer name')}
               className="min-w-0"
             />
@@ -227,6 +229,7 @@ export function OrdersPage() {
                 setPaymentMethod(e.target.value as 'all' | PaymentMethod)
                 setPage(1)
               }}
+              aria-label={t('orders.method', 'Method')}
               className="h-10 rounded-[6px] border border-border bg-surface px-3 text-[13px] text-text-primary"
             >
               <option value="all">{t('ordersPage.allMethods', 'All methods')}</option>
@@ -239,6 +242,7 @@ export function OrdersPage() {
                 setStatus(e.target.value as 'all' | OrderStatus)
                 setPage(1)
               }}
+              aria-label={t('orders.status', 'Status')}
               className="h-10 rounded-[6px] border border-border bg-surface px-3 text-[13px] text-text-primary"
             >
               <option value="all">{t('ordersPage.allStatus', 'All status')}</option>
@@ -250,9 +254,19 @@ export function OrdersPage() {
               <option value="delivered">{t('ordersPage.statusDelivered', 'delivered')}</option>
               <option value="cancelled">{t('ordersPage.statusCancelled', 'cancelled')}</option>
             </select>
-            <div className="flex min-w-0 items-center gap-2">
-              <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-              <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+            <div className="grid min-w-0 grid-cols-2 gap-2">
+              <Input
+                type="date"
+                label={t('common.fromDate', 'From date')}
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+              />
+              <Input
+                type="date"
+                label={t('common.toDate', 'To date')}
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+              />
             </div>
           </div>
 
@@ -434,17 +448,14 @@ export function OrdersPage() {
               {t('ordersPage.editTitle', 'Edit Order #{{id}}', { id: editingOrder.id })}
             </h3>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-[12px] text-text-secondary">
-                  {t('ordersPage.editPaidLabel', 'Paid')}
-                </label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={editingOrder.paid}
-                  onChange={(e) => setEditingOrder({ ...editingOrder, paid: Number(e.target.value) })}
-                />
-              </div>
+              <NumberInput
+                label={t('ordersPage.editPaidLabel', 'Paid')}
+                format="money"
+                min={0}
+                value={editingOrder.paid}
+                onValueChange={(paid) => setEditingOrder({ ...editingOrder, paid })}
+                placeholder={t('common.pricePlaceholder', 'e.g. 700,000')}
+              />
               {editingOrder.status === 'ready' && (
                 <div className="flex items-end">
                   <Button
@@ -472,25 +483,27 @@ export function OrdersPage() {
                         items[index] = { ...items[index], fabricId: Number(e.target.value) }
                         setEditingOrder({ ...editingOrder, items })
                       }}
+                      aria-label={t('orders.new.fabric', 'Fabric')}
                       className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
                     >
-                      <option value="">Select fabric</option>
+                      <option value="">{t('orders.new.selectFabric', 'Select fabric')}</option>
                       {(fabricsData?.data ?? []).map((fabric) => (
                         <option key={fabric.id} value={fabric.id}>
                           {fabric.name} ({fabric.qty} m)
                         </option>
                       ))}
                     </select>
-                    <Input
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      value={item.fabricMeters}
-                      onChange={(e) => {
+                    <NumberInput
+                      label={t('orders.new.fabricMeters', 'Total fabric meters')}
+                      format="decimal"
+                      min={0.01}
+                      value={Number(item.fabricMeters) || 0}
+                      onValueChange={(fabricMeters) => {
                         const items = [...editingOrder.items]
-                        items[index] = { ...items[index], fabricMeters: Number(e.target.value) }
+                        items[index] = { ...items[index], fabricMeters }
                         setEditingOrder({ ...editingOrder, items })
                       }}
+                      placeholder={t('common.metersPlaceholder', '0')}
                     />
                   </div>
                 ))}

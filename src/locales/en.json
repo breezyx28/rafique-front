@@ -12,7 +12,9 @@
     "loginTitle": "Login to your account",
     "loginSubtitle": "Sign in to manage orders, customers, and invoices in one place.",
     "heroSubtitle": "Get access to your personal hub for clarity and productivity.",
-    "footerHint": "Use your admin account to log in."
+    "footerHint": "Use your admin account to log in.",
+    "usernamePlaceholder": "Enter your username",
+    "passwordPlaceholder": "Enter your password"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -82,9 +84,16 @@
     "new": {
       "title": "New Custom Order",
       "subtitle": "Create a custom order in 4 steps with live cart and payment summary.",
+      "fabricTitle": "New Fabric Order",
+      "fabricSubtitle": "Register the customer, then sell fabric by the meter with the same checkout steps.",
+      "kindCustom": "Custom sewing",
+      "kindFabric": "Fabric sale",
+      "pricePerMeter": "Price per meter",
+      "addFabric": "Add fabric to cart",
       "steps": {
         "customerInfo": "Customer Info",
         "productsAndMeasurements": "Products & Measurements",
+        "fabricAndMeters": "Fabric & Meters",
         "paymentAndCheckout": "Payment & Checkout",
         "reviewAndConfirm": "Review & Confirm"
       },
@@ -99,6 +108,7 @@
         "phoneNumber": "Phone Number",
         "phoneNumberPlaceholder": "Phone number",
         "optional": "optional",
+        "nameRequired": "Customer name is required.",
         "phoneRequired": "Phone number is required.",
         "notes": "Customer Notes",
         "notesPlaceholder": "Optional customer notes"
@@ -181,7 +191,12 @@
     "confirm": "Confirm",
     "back": "Back",
     "next": "Next",
-    "previous": "Previous"
+    "previous": "Previous",
+    "fromDate": "From date",
+    "toDate": "To date",
+    "qtyPlaceholder": "0",
+    "metersPlaceholder": "0",
+    "pricePlaceholder": "e.g. 700,000"
   },
   "ordersPage": {
     "title": "Orders Report",
@@ -272,7 +287,17 @@
     "deleteFabricTitle": "Delete Fabric / Asset",
     "deleteFabricMessage": "Are you sure you want to delete {{name}}?",
     "deleteFabricCancel": "Cancel",
-    "deleteFabricConfirm": "Delete"
+    "deleteFabricConfirm": "Delete",
+    "fabricPackageMeters": "Package meters",
+    "fabricPackagePrice": "Package price",
+    "fabricPricePerMeter": "Price / meter",
+    "editFabricPackageMeters": "Package meters",
+    "editFabricPackagePrice": "Package price",
+    "namePlaceholder": "Fabric name",
+    "unitPlaceholder": "e.g. bale, meter",
+    "sizePlaceholder": "e.g. L / 54",
+    "packageMetersPlaceholder": "e.g. 20",
+    "selectProduct": "Select a product"
   },
   "expensesPage": {
     "title": "Expenses",
@@ -383,6 +408,23 @@
     "restore": "Restore",
     "languageEnglish": "English",
     "languageArabic": "Arabic",
-    "languageBengali": "Bengali"
+    "languageBengali": "Bengali",
+    "shopNamePlaceholder": "Shop or workshop name",
+    "phonePlaceholder": "Shop phone number",
+    "addressPlaceholder": "Shop address",
+    "currentPasswordPlaceholder": "Current password",
+    "newPasswordPlaceholder": "New password",
+    "confirmPasswordPlaceholder": "Confirm new password",
+    "usernamePlaceholder": "Login username",
+    "userPasswordPlaceholder": "Temporary password"
+  },
+  "fabricPos": {
+    "title": "Fabric Sales",
+    "subtitle": "Cut and sell fabric by meter directly from inventory.",
+    "available": "Available fabrics",
+    "cart": "Cut list",
+    "checkout": "Complete fabric sale",
+    "metersLabel": "Meters to cut",
+    "paidLabel": "Amount received"
   }
 }

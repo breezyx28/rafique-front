@@ -450,10 +450,12 @@ export const appApi = createApi({
     createFabricOrder: builder.mutation<
       z.infer<typeof orderSchema>,
       {
-        customerId?: number
-        items: Array<{ fabricId: number; meters: number }>
+        customerId: number
+        items: Array<{ fabricId: number; meters: number; unitPrice?: number }>
         paid: number
         paymentMethod?: 'cash' | 'mbok'
+        dueDate?: string
+        noteCustomer?: string
       }
     >({
       query: (body) => ({ url: '/orders/fabric', method: 'POST', body }),
@@ -461,6 +463,7 @@ export const appApi = createApi({
       invalidatesTags: [
         { type: 'Order', id: 'LIST' },
         { type: 'Fabric', id: 'LIST' },
+        { type: 'Customer', id: 'LIST-MIN' },
       ],
     }),
     updateOrder: builder.mutation<

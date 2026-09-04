@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Check, ChevronRight, Minus, Plus, Trash2, Ruler, Clock3 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { NumberInput } from '@/components/ui/NumberInput'
 import type { InvoicePayload } from '@/features/invoices/types'
 import { persistLatestInvoiceOrder } from '@/features/invoices/invoiceStore'
 import {
@@ -15,12 +16,15 @@ import {
   useGetProductsQuery,
   useGetProductFieldsQuery,
   useGetInventoryFabricsQuery,
+  useCreateFabricOrderMutation,
 } from '@/features/api/appApi'
 
 type PaymentMethod = 'Cash' | 'MBOK'
+type OrderKind = 'custom' | 'fabric'
 
 interface CartItem {
   id: string
+  kind: OrderKind
   productId: number
   productName: string
   qty: number
@@ -35,8 +39,10 @@ const money = (v: number) => `${v.toLocaleString()} SDG`
 
 export function NewOrderPage() {
   const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
   const selectedCustomer = (location.state as { selectedCustomer?: { id?: number; name?: string; phone?: string } } | null)?.selectedCustomer
   const navigate = useNavigate()
+  const orderKind: OrderKind = searchParams.get('kind') === 'fabric' ? 'fabric' : 'custom'
   const { t, i18n } = useTranslation()
   const tr = (key: string, defaultValue: string) => t(key, { defaultValue })
   const currentLang = (i18n.language || 'en').slice(0, 2) as 'en' | 'ar' | 'bn'
@@ -47,7 +53,9 @@ export function NewOrderPage() {
     field.fieldKey
   const stepTitles = [
     tr('orders.new.steps.customerInfo', 'Customer Info'),
-    tr('orders.new.steps.productsAndMeasurements', 'Products & Measurements'),
+    orderKind === 'fabric'
+      ? tr('orders.new.steps.fabricAndMeters', 'Fabric & Meters')
+      : tr('orders.new.steps.productsAndMeasurements', 'Products & Measurements'),
     tr('orders.new.steps.paymentAndCheckout', 'Payment & Checkout'),
     tr('orders.new.steps.reviewAndConfirm', 'Review & Confirm'),
   ]
@@ -72,6 +80,7 @@ export function NewOrderPage() {
   )
   const [fullName, setFullName] = useState(selectedCustomer?.name ?? '')
   const [phone, setPhone] = useState(selectedCustomer?.phone ?? '')
+  const customerReady = Boolean(fullName.trim() && phone.trim())
   const [customerNotes, setCustomerNotes] = useState('')
   const [workshopNotes, setWorkshopNotes] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
@@ -146,46 +155,65 @@ export function NewOrderPage() {
   const [productId, setProductId] = useState<number | null>(null)
   const activeProductId = productId ?? products?.[0]?.id ?? null
   const { data: productFields } = useGetProductFieldsQuery(activeProductId ?? 0, {
-    skip: !activeProductId,
+    skip: !activeProductId || orderKind === 'fabric',
   })
 
   const [qty, setQty] = useState(1)
   const [fabricId, setFabricId] = useState<number | null>(null)
-  const [fabricMeters, setFabricMeters] = useState('')
-  const [inputUnitPriceStr, setInputUnitPriceStr] = useState('')
+  const [fabricMeters, setFabricMeters] = useState(0)
+  const [unitPrice, setUnitPrice] = useState(0)
   const [cart, setCart] = useState<CartItem[]>([])
   const [measurementValuesByProduct, setMeasurementValuesByProduct] = useState<
     Record<number, Record<number, string>>
   >({})
+  const setOrderKind = (kind: OrderKind) => {
+    setCart([])
+    setFabricId(null)
+    setFabricMeters(0)
+    if (kind === 'fabric') setSearchParams({ kind: 'fabric' })
+    else setSearchParams({})
+  }
 
   const activeProduct = useMemo(
     () => (products ?? []).find((p) => p.id === activeProductId),
     [products, activeProductId]
   )
+  const selectedFabric = useMemo(
+    () => (fabricsData?.data ?? []).find((fabric) => fabric.id === fabricId),
+    [fabricsData?.data, fabricId]
+  )
   useEffect(() => {
+    if (orderKind === 'fabric') {
+      const price = selectedFabric?.sellingPricePerMeter
+      setUnitPrice(price != null && price > 0 ? Number(price) : 0)
+      return
+    }
     const base = activeProduct?.basePrice
-    setInputUnitPriceStr(base != null && base > 0 ? String(base) : '')
-  }, [activeProduct?.id, activeProduct?.basePrice])
+    setUnitPrice(base != null && base > 0 ? Number(base) : 0)
+  }, [activeProduct?.basePrice, activeProduct?.id, orderKind, selectedFabric?.id, selectedFabric?.sellingPricePerMeter])
 
-  const [receivedAmountStr, setReceivedAmountStr] = useState('')
+  const [receivedAmount, setReceivedAmount] = useState(0)
   const [dueDate, setDueDate] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash')
   const [createCustomer] = useCreateCustomerMutation()
-  const [createCustomOrder, { isLoading: isSubmitting }] = useCreateCustomOrderMutation()
+  const [createCustomOrder, { isLoading: isSubmittingCustom }] = useCreateCustomOrderMutation()
+  const [createFabricOrder, { isLoading: isSubmittingFabric }] = useCreateFabricOrderMutation()
+  const isSubmitting = isSubmittingCustom || isSubmittingFabric
 
   const totalPrice = useMemo(
-    () => cart.reduce((acc, item) => acc + item.qty * item.unitPrice, 0),
+    () =>
+      cart.reduce((acc, item) => {
+        if (item.kind === 'fabric') return acc + item.fabricMeters * item.unitPrice
+        return acc + item.qty * item.unitPrice
+      }, 0),
     [cart]
   )
-  const receivedAmount = Number(receivedAmountStr) || 0
   const remaining = Math.max(0, totalPrice - receivedAmount)
 
   const addToCart = () => {
-    if (!activeProductId) return
-    const selectedFabric = fabricsData?.data.find((fabric) => fabric.id === fabricId)
     const meters = Number(fabricMeters)
     const reservedMeters = cart
-      .filter((item) => item.fabricId === selectedFabric?.id)
+      .filter((item) => item.fabricId === fabricId)
       .reduce((sum, item) => sum + item.fabricMeters, 0)
     if (
       !selectedFabric ||
@@ -193,15 +221,37 @@ export function NewOrderPage() {
       meters + reservedMeters > selectedFabric.qty
     )
       return
+
+    if (orderKind === 'fabric') {
+      setCart((prev) => [
+        ...prev,
+        {
+          id: `fabric-${selectedFabric.id}-${Date.now()}`,
+          kind: 'fabric',
+          productId: 0,
+          productName: selectedFabric.name,
+          qty: 1,
+          unitPrice,
+          fabricId: selectedFabric.id,
+          fabricName: selectedFabric.name,
+          fabricMeters: meters,
+          measurements: [],
+        },
+      ])
+      setFabricMeters(0)
+      return
+    }
+
+    if (!activeProductId) return
     const product = activeProduct ?? (products ?? []).find((p) => p.id === activeProductId)
     if (!product) return
-    const unitPrice = Math.max(0, Number(inputUnitPriceStr) || 0)
     const fields = productFields ?? []
     const valuesForProduct = measurementValuesByProduct[activeProductId] ?? {}
     setCart((prev) => [
       ...prev,
       {
         id: `${product.id}-${Date.now()}`,
+        kind: 'custom',
         productId: product.id,
         productName: product.name,
         qty,
@@ -231,9 +281,39 @@ export function NewOrderPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-[28px] font-bold text-text-primary">{tr('orders.new.title', 'New Custom Order')}</h1>
-        <p className="text-[13px] text-text-secondary">{tr('orders.new.subtitle', 'Create a custom order in 4 steps with live cart and payment summary.')}</p>
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 className="text-[28px] font-bold text-text-primary">
+            {orderKind === 'fabric'
+              ? tr('orders.new.fabricTitle', 'New Fabric Order')
+              : tr('orders.new.title', 'New Custom Order')}
+          </h1>
+          <p className="text-[13px] text-text-secondary">
+            {orderKind === 'fabric'
+              ? tr('orders.new.fabricSubtitle', 'Register the customer, then sell fabric by the meter with the same checkout steps.')
+              : tr('orders.new.subtitle', 'Create a custom order in 4 steps with live cart and payment summary.')}
+          </p>
+        </div>
+        <div className="inline-flex rounded-full bg-[#F5F5F5] p-[3px]">
+          <button
+            type="button"
+            onClick={() => setOrderKind('custom')}
+            className={`rounded-full px-4 py-1.5 text-[12px] font-medium ${
+              orderKind === 'custom' ? 'bg-[#1A1A2E] text-white' : 'text-text-muted'
+            }`}
+          >
+            {tr('orders.new.kindCustom', 'Custom sewing')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setOrderKind('fabric')}
+            className={`rounded-full px-4 py-1.5 text-[12px] font-medium ${
+              orderKind === 'fabric' ? 'bg-[#1A1A2E] text-white' : 'text-text-muted'
+            }`}
+          >
+            {tr('orders.new.kindFabric', 'Fabric sale')}
+          </button>
+        </div>
       </div>
 
       <Card>
@@ -302,8 +382,10 @@ export function NewOrderPage() {
                           setFullName(c.name ?? '')
                           setPhone(c.phone ?? '')
                           setSearchQuery('')
-                          setOrdersModalCustomer({ id: c.id, name: c.name ?? '', phone: c.phone ?? '' })
-                          setOrdersModalOpen(true)
+                          if (orderKind === 'custom') {
+                            setOrdersModalCustomer({ id: c.id, name: c.name ?? '', phone: c.phone ?? '' })
+                            setOrdersModalOpen(true)
+                          }
                         }}
                       >
                         <span className="font-medium text-text-primary">{c.name || '—'}</span>
@@ -325,7 +407,7 @@ export function NewOrderPage() {
               <div className="grid gap-3 md:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-[12px] font-medium text-text-secondary">
-                    {tr('orders.new.customer.fullName', 'Full Name')}
+                    {tr('orders.new.customer.fullName', 'Full Name')} <span className="text-danger">*</span>
                   </label>
                   <Input
                     value={fullName}
@@ -358,6 +440,11 @@ export function NewOrderPage() {
                     placeholder={tr('orders.new.customer.notesPlaceholder', 'Optional customer notes')}
                   />
                 </div>
+                {!fullName.trim() && (
+                  <p className="md:col-span-2 text-[12px] text-danger">
+                    {tr('orders.new.customer.nameRequired', 'Customer name is required.')}
+                  </p>
+                )}
                 {!phone.trim() && (
                   <p className="md:col-span-2 text-[12px] text-danger">
                     {tr('orders.new.customer.phoneRequired', 'Phone number is required.')}
@@ -366,7 +453,54 @@ export function NewOrderPage() {
               </div>
             )}
 
-            {step === 2 && (
+            {step === 2 && orderKind === 'fabric' && (
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-text-secondary">
+                    {tr('orders.new.fabric', 'Fabric')}
+                  </label>
+                  <select
+                    value={fabricId ?? ''}
+                    onChange={(e) => setFabricId(e.target.value ? Number(e.target.value) : null)}
+                    className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                  >
+                    <option value="">{tr('orders.new.selectFabric', 'Select fabric')}</option>
+                    {(fabricsData?.data ?? []).map((fabric) => (
+                      <option key={fabric.id} value={fabric.id}>
+                        {fabric.name} ({fabric.qty} m)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <NumberInput
+                  label={tr('orders.new.fabricMeters', 'Total fabric meters')}
+                  format="decimal"
+                  min={0}
+                  value={fabricMeters}
+                  onValueChange={setFabricMeters}
+                  placeholder={tr('common.metersPlaceholder', '0')}
+                />
+                <NumberInput
+                  label={tr('orders.new.pricePerMeter', 'Price per meter')}
+                  format="money"
+                  min={0}
+                  value={unitPrice}
+                  onValueChange={setUnitPrice}
+                  placeholder={tr('common.pricePlaceholder', 'e.g. 700,000')}
+                />
+                <div className="flex items-end">
+                  <Button
+                    className="w-full"
+                    onClick={addToCart}
+                    disabled={!fabricId || Number(fabricMeters) <= 0}
+                  >
+                    {tr('orders.new.addFabric', 'Add fabric to cart')}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {step === 2 && orderKind === 'custom' && (
               <div className="space-y-4">
                 <div className="inline-flex rounded-full bg-[#F5F5F5] p-[3px]">
                   {(products ?? []).map((p) => (
@@ -425,17 +559,14 @@ export function NewOrderPage() {
                   </div>
                   <div className="space-y-2 rounded-[12px] border border-border bg-[#FAFAFA] p-3">
                     <p className="text-[12px] font-medium text-text-secondary">{tr('orders.new.addToCart', 'Add to cart')}</p>
-                    <div>
-                      <label className="mb-1 block text-[12px] font-medium text-text-secondary">{tr('orders.new.unitPrice', 'Unit price')}</label>
-                      <Input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        value={inputUnitPriceStr}
-                        onChange={(e) => setInputUnitPriceStr(e.target.value.replace(/\D/g, ''))}
-                        placeholder="0"
-                      />
-                    </div>
+                    <NumberInput
+                      label={tr('orders.new.unitPrice', 'Unit price')}
+                      format="money"
+                      min={0}
+                      value={unitPrice}
+                      onValueChange={setUnitPrice}
+                      placeholder={tr('common.pricePlaceholder', 'e.g. 700,000')}
+                    />
                     <div>
                       <label className="mb-1 block text-[12px] font-medium text-text-secondary">
                         {tr('orders.new.fabric', 'Fabric')}
@@ -453,18 +584,14 @@ export function NewOrderPage() {
                         ))}
                       </select>
                     </div>
-                    <div>
-                      <label className="mb-1 block text-[12px] font-medium text-text-secondary">
-                        {tr('orders.new.fabricMeters', 'Total fabric meters')}
-                      </label>
-                      <Input
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        value={fabricMeters}
-                        onChange={(e) => setFabricMeters(e.target.value)}
-                      />
-                    </div>
+                    <NumberInput
+                      label={tr('orders.new.fabricMeters', 'Total fabric meters')}
+                      format="decimal"
+                      min={0}
+                      value={fabricMeters}
+                      onValueChange={setFabricMeters}
+                      placeholder={tr('common.metersPlaceholder', '0')}
+                    />
                     <div className="flex items-center gap-2">
                       <Button variant="outline" size="sm" onClick={() => setQty((q) => Math.max(1, q - 1))}>
                         <Minus className="h-4 w-4" />
@@ -497,13 +624,12 @@ export function NewOrderPage() {
                 </div>
                 <div>
                   <label className="mb-1 block text-[12px] font-medium text-text-secondary">{tr('orders.new.payment.receivedAmount', 'Received Amount')}</label>
-                  <Input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={receivedAmountStr}
-                    onChange={(e) => setReceivedAmountStr(e.target.value.replace(/\D/g, ''))}
-                    placeholder="0"
+                  <NumberInput
+                    format="money"
+                    min={0}
+                    value={receivedAmount}
+                    onValueChange={setReceivedAmount}
+                    placeholder={tr('common.pricePlaceholder', 'e.g. 700,000')}
                   />
                 </div>
                 <div>
@@ -545,7 +671,7 @@ export function NewOrderPage() {
                 <Button
                   className="w-full"
                   onClick={() => setShowConfirm(true)}
-                  disabled={!phone.trim()}
+                  disabled={!customerReady || cart.length === 0}
                 >
                   {tr('orders.new.review.confirmSubmit', 'Confirm & Submit Order')}
                 </Button>
@@ -558,7 +684,11 @@ export function NewOrderPage() {
               </Button>
               <Button
                 onClick={() => setStep((s) => Math.min(4, s + 1))}
-                disabled={step === 4 || (step === 1 && !phone.trim())}
+                disabled={
+                  step === 4 ||
+                  (step === 1 && !customerReady) ||
+                  (step === 2 && cart.length === 0)
+                }
               >
                 {tr('common.next', 'Next')} <ChevronRight className="h-4 w-4" />
               </Button>
@@ -578,10 +708,18 @@ export function NewOrderPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-[13px] font-semibold text-text-primary">{item.productName}</p>
-                    <p className="text-[12px] text-text-muted">{money(item.unitPrice)} {tr('orders.new.cart.each', 'each')}</p>
-                    <p className="text-[12px] text-text-muted">
-                      {item.fabricName} · {item.fabricMeters} m
-                    </p>
+                    {item.kind === 'fabric' ? (
+                      <p className="text-[12px] text-text-muted">
+                        {item.fabricMeters} m · {money(item.unitPrice)} / m
+                      </p>
+                    ) : (
+                      <>
+                        <p className="text-[12px] text-text-muted">{money(item.unitPrice)} {tr('orders.new.cart.each', 'each')}</p>
+                        <p className="text-[12px] text-text-muted">
+                          {item.fabricName} · {item.fabricMeters} m
+                        </p>
+                      </>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -592,24 +730,28 @@ export function NewOrderPage() {
                   </button>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => updateQty(item.id, item.qty - 1)}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border"
-                    >
-                      <Minus className="h-3.5 w-3.5" />
-                    </button>
-                    <span className="w-6 text-center text-[13px] font-semibold">{item.qty}</span>
-                    <button
-                      type="button"
-                      onClick={() => updateQty(item.id, item.qty + 1)}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                  <p className="text-[13px] font-semibold text-text-primary">{money(item.qty * item.unitPrice)}</p>
+                  {item.kind === 'custom' && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => updateQty(item.id, item.qty - 1)}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border"
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="w-6 text-center text-[13px] font-semibold">{item.qty}</span>
+                      <button
+                        type="button"
+                        onClick={() => updateQty(item.id, item.qty + 1)}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
+                  <p className={`text-[13px] font-semibold text-text-primary ${item.kind === 'fabric' ? 'ml-auto' : ''}`}>
+                    {money(item.kind === 'fabric' ? item.fabricMeters * item.unitPrice : item.qty * item.unitPrice)}
+                  </p>
                 </div>
               </div>
             ))}
@@ -746,49 +888,63 @@ export function NewOrderPage() {
               <Button
                 disabled={isSubmitting}
                 onClick={async () => {
-                  if (!cart.length) return
+                  if (!cart.length || !fullName.trim() || !phone.trim()) return
                   let customerId = selectedCustomerFromSearch?.id ?? selectedCustomer?.id
-                  if (!customerId && !phone.trim()) {
-                    return
-                  }
                   setShowConfirm(false)
 
                   if (!customerId) {
                     const created = await createCustomer({
-                      name: fullName || phone || tr('orders.walkIn', 'Walk-in'),
+                      name: fullName.trim(),
                       phone: phone.trim(),
                       notes: customerNotes || undefined,
                     }).unwrap()
                     customerId = created.id
                   }
 
-                  const apiOrder = await createCustomOrder({
-                    customerId,
-                    items: cart.map((item) => ({
-                      productId: item.productId,
-                      qty: item.qty,
-                      unitPrice: item.unitPrice,
-                      fabricId: item.fabricId,
-                      fabricMeters: item.fabricMeters,
-                      measurements: item.measurements.map((m) => ({
-                        fieldId: m.fieldId,
-                        value: m.value,
-                      })),
-                    })),
-                    total: totalPrice,
-                    paid: receivedAmount,
-                    paymentMethod: paymentMethod === 'Cash' ? 'cash' : 'mbok',
-                    dueDate: dueDate || undefined,
-                    noteCustomer: customerNotes || undefined,
-                    noteWorkshop: workshopNotes || undefined,
-                  }).unwrap()
+                  const apiOrder =
+                    orderKind === 'fabric'
+                      ? await createFabricOrder({
+                          customerId,
+                          items: cart.map((item) => ({
+                            fabricId: item.fabricId,
+                            meters: item.fabricMeters,
+                            unitPrice: item.unitPrice,
+                          })),
+                          paid: receivedAmount,
+                          paymentMethod: paymentMethod === 'Cash' ? 'cash' : 'mbok',
+                          dueDate: dueDate || undefined,
+                          noteCustomer: customerNotes || undefined,
+                        }).unwrap()
+                      : await createCustomOrder({
+                          customerId,
+                          items: cart.map((item) => ({
+                            productId: item.productId,
+                            qty: item.qty,
+                            unitPrice: item.unitPrice,
+                            fabricId: item.fabricId,
+                            fabricMeters: item.fabricMeters,
+                            measurements: item.measurements.map((m) => ({
+                              fieldId: m.fieldId,
+                              value: m.value,
+                            })),
+                          })),
+                          total: totalPrice,
+                          paid: receivedAmount,
+                          paymentMethod: paymentMethod === 'Cash' ? 'cash' : 'mbok',
+                          dueDate: dueDate || undefined,
+                          noteCustomer: customerNotes || undefined,
+                          noteWorkshop: workshopNotes || undefined,
+                        }).unwrap()
 
                   const submittedAt = (apiOrder.createdAt ?? new Date().toISOString()).slice(0, 10)
                   const invoiceItems = cart.map((item) => ({
-                    product: item.productName,
-                    qty: item.qty,
+                    product: item.kind === 'fabric' ? item.fabricName : item.productName,
+                    qty: item.kind === 'fabric' ? item.fabricMeters : item.qty,
                     unitPrice: item.unitPrice,
-                    subtotal: item.qty * item.unitPrice,
+                    subtotal:
+                      item.kind === 'fabric'
+                        ? item.fabricMeters * item.unitPrice
+                        : item.qty * item.unitPrice,
                     measurements: item.measurements.map((m) => ({ label: m.label, value: m.value })),
                   }))
                   const orderPayload: InvoicePayload = {

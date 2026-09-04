@@ -71,6 +71,7 @@ export function InvoicesPage() {
                 setMethodFilter(e.target.value as 'all' | 'cash' | 'mbok')
                 setPage(1)
               }}
+              aria-label={t('orders.method', 'Method')}
               className="h-10 rounded-[6px] border border-border bg-white px-3 text-[13px]"
             >
               <option value="all">{t('invoicesPage.allMethods', 'All Methods')}</option>
@@ -83,20 +84,31 @@ export function InvoicesPage() {
                 setStatusFilter(e.target.value as 'all' | 'paid' | 'pending')
                 setPage(1)
               }}
+              aria-label={t('orders.status', 'Status')}
               className="h-10 rounded-[6px] border border-border bg-white px-3 text-[13px]"
             >
               <option value="all">{t('invoicesPage.allStatus', 'All Status')}</option>
               <option value="paid">{t('invoicesPage.paid', 'Paid')}</option>
               <option value="pending">{t('invoicesPage.pending', 'Pending')}</option>
             </select>
-            <Input type="date" value={fromDate} onChange={(e) => {
-              setFromDate(e.target.value)
-              setPage(1)
-            }} />
-            <Input type="date" value={toDate} onChange={(e) => {
-              setToDate(e.target.value)
-              setPage(1)
-            }} />
+            <Input
+              type="date"
+              label={t('common.fromDate', 'From date')}
+              value={fromDate}
+              onChange={(e) => {
+                setFromDate(e.target.value)
+                setPage(1)
+              }}
+            />
+            <Input
+              type="date"
+              label={t('common.toDate', 'To date')}
+              value={toDate}
+              onChange={(e) => {
+                setToDate(e.target.value)
+                setPage(1)
+              }}
+            />
           </div>
         </CardHeader>
         <CardContent>

@@ -103,6 +103,7 @@ export function LoginPage() {
               <Input
                 {...register('username')}
                 autoComplete="username"
+                placeholder={t('auth.usernamePlaceholder', 'Enter your username')}
                 className="h-10 rounded-[10px] border-border text-[13px] placeholder:text-text-muted"
               />
               {errors.username && (
@@ -119,6 +120,7 @@ export function LoginPage() {
                 type="password"
                 {...register('password')}
                 autoComplete="current-password"
+                placeholder={t('auth.passwordPlaceholder', 'Enter your password')}
                 className="h-10 rounded-[10px] border-border text-[13px] placeholder:text-text-muted"
               />
               {errors.password && (

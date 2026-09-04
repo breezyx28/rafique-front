@@ -4,6 +4,7 @@ import { Plus, Search } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { NumberInput } from '@/components/ui/NumberInput'
 import {
   useCreateExpenseMutation,
   useCreateExpenseTypeMutation,
@@ -102,7 +103,13 @@ export function ExpensesPage() {
               <label className="mb-1 block text-[12px] font-medium text-text-secondary">
                 {t('expensesPage.amountLabel', 'Amount')}
               </label>
-              <Input type="number" min={0} value={amount} onChange={(e) => setAmount(Number(e.target.value))} />
+              <NumberInput
+                format="money"
+                min={0}
+                value={amount}
+                onValueChange={setAmount}
+                placeholder={t('common.pricePlaceholder', 'e.g. 700,000')}
+              />
             </div>
             <div>
               <label className="mb-1 block text-[12px] font-medium text-text-secondary">
@@ -192,9 +199,19 @@ export function ExpensesPage() {
                     className="pl-9"
                   />
                 </div>
-                <div className="flex items-center gap-2">
-                  <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-                  <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    type="date"
+                    label={t('common.fromDate', 'From date')}
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                  />
+                  <Input
+                    type="date"
+                    label={t('common.toDate', 'To date')}
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                  />
                 </div>
               </div>
 

@@ -14,7 +14,6 @@ import {
   Printer,
   ChevronDown,
   Hammer,
-  Scissors,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -26,7 +25,6 @@ const mainNavItems = [
   { to: '/', icon: Home, key: 'dashboard' },
   { to: '/orders/new', icon: FileText, key: 'newOrder' },
   { to: '/orders/ready', icon: ShoppingCart, key: 'readyPOS' },
-  { to: '/orders/fabric', icon: Scissors, key: 'fabricSales' },
   { to: '/orders', icon: Package, key: 'orders' },
   { to: '/customers', icon: Users, key: 'customers' },
   { to: '/invoices', icon: Printer, key: 'invoices' },

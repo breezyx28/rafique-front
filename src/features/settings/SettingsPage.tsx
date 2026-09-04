@@ -99,19 +99,31 @@ export function SettingsPage() {
           <CardContent className="grid gap-3 md:grid-cols-2">
             <div>
               <label className="mb-1 block text-[12px] font-medium text-text-secondary">{t('settingsPage.shopName', 'Shop Name')}</label>
-              <Input value={shopName} onChange={(e) => setShopName(e.target.value)} />
+              <Input
+                value={shopName}
+                onChange={(e) => setShopName(e.target.value)}
+                placeholder={t('settingsPage.shopNamePlaceholder', 'Shop or workshop name')}
+              />
             </div>
             <div>
               <label className="mb-1 block text-[12px] font-medium text-text-secondary">{t('settingsPage.phone', 'Phone')}</label>
-              <Input value={shopPhone} onChange={(e) => setShopPhone(e.target.value)} />
+              <Input
+                value={shopPhone}
+                onChange={(e) => setShopPhone(e.target.value)}
+                placeholder={t('settingsPage.phonePlaceholder', 'Shop phone number')}
+              />
             </div>
             <div className="md:col-span-2">
               <label className="mb-1 block text-[12px] font-medium text-text-secondary">{t('settingsPage.address', 'Address')}</label>
-              <Input value={shopAddress} onChange={(e) => setShopAddress(e.target.value)} />
+              <Input
+                value={shopAddress}
+                onChange={(e) => setShopAddress(e.target.value)}
+                placeholder={t('settingsPage.addressPlaceholder', 'Shop address')}
+              />
             </div>
             <div className="md:col-span-2">
               <label className="mb-1 block text-[12px] font-medium text-text-secondary">{t('settingsPage.logo', 'Logo')}</label>
-              <Input type="file" />
+              <Input type="file" aria-label={t('settingsPage.logo', 'Logo')} />
             </div>
             <div className="md:col-span-2 flex justify-end">
               <Button
@@ -261,16 +273,31 @@ export function SettingsPage() {
           <CardContent className="grid gap-3 md:grid-cols-2">
             <div>
               <label className="mb-1 block text-[12px] font-medium text-text-secondary">{t('settingsPage.currentPassword', 'Current Password')}</label>
-              <Input type="password" value={securityCurrentPassword} onChange={(e) => setSecurityCurrentPassword(e.target.value)} />
+              <Input
+                type="password"
+                value={securityCurrentPassword}
+                onChange={(e) => setSecurityCurrentPassword(e.target.value)}
+                placeholder={t('settingsPage.currentPasswordPlaceholder', 'Current password')}
+              />
             </div>
             <div />
             <div>
               <label className="mb-1 block text-[12px] font-medium text-text-secondary">{t('settingsPage.newPassword', 'New Password')}</label>
-              <Input type="password" value={securityNewPassword} onChange={(e) => setSecurityNewPassword(e.target.value)} />
+              <Input
+                type="password"
+                value={securityNewPassword}
+                onChange={(e) => setSecurityNewPassword(e.target.value)}
+                placeholder={t('settingsPage.newPasswordPlaceholder', 'New password')}
+              />
             </div>
             <div>
               <label className="mb-1 block text-[12px] font-medium text-text-secondary">{t('settingsPage.confirmPassword', 'Confirm New Password')}</label>
-              <Input type="password" value={securityConfirmPassword} onChange={(e) => setSecurityConfirmPassword(e.target.value)} />
+              <Input
+                type="password"
+                value={securityConfirmPassword}
+                onChange={(e) => setSecurityConfirmPassword(e.target.value)}
+                placeholder={t('settingsPage.confirmPasswordPlaceholder', 'Confirm new password')}
+              />
             </div>
             {securityError && (
               <p className="md:col-span-2 text-[12px] text-danger">
@@ -358,6 +385,7 @@ export function SettingsPage() {
               <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
                 <Input
                   type="file"
+                  aria-label={t('settingsPage.importTitle', 'Import / Restore backup')}
                   onChange={async (e) => {
                     const file = e.target.files?.[0]
                     if (!file) return
@@ -396,11 +424,20 @@ export function SettingsPage() {
                 <label className="mb-1 block text-[12px] font-medium text-text-secondary">
                   {t('settingsPage.username', 'Username')}
                 </label>
-                <Input value={adminUsername} onChange={(e) => setAdminUsername(e.target.value)} />
+                <Input
+                  value={adminUsername}
+                  onChange={(e) => setAdminUsername(e.target.value)}
+                  placeholder={t('settingsPage.usernamePlaceholder', 'Login username')}
+                />
               </div>
               <div>
                 <label className="mb-1 block text-[12px] font-medium text-text-secondary">Password</label>
-                <Input type="password" value={userPassword} onChange={(e) => setUserPassword(e.target.value)} />
+                <Input
+                  type="password"
+                  value={userPassword}
+                  onChange={(e) => setUserPassword(e.target.value)}
+                  placeholder={t('settingsPage.userPasswordPlaceholder', 'Temporary password')}
+                />
               </div>
               <div>
                 <label className="mb-1 block text-[12px] font-medium text-text-secondary">Role</label>

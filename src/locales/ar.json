@@ -12,7 +12,9 @@
     "loginTitle": "تسجيل الدخول إلى حسابك",
     "loginSubtitle": "قم بتسجيل الدخول لإدارة الطلبات والعملاء والفواتير في مكان واحد.",
     "heroSubtitle": "وصول سريع إلى لوحة التحكم لتنظيم أعمال الخياطة بسهولة.",
-    "footerHint": "استخدم حساب المشرف لتسجيل الدخول."
+    "footerHint": "استخدم حساب المشرف لتسجيل الدخول.",
+    "usernamePlaceholder": "أدخل اسم المستخدم",
+    "passwordPlaceholder": "أدخل كلمة المرور"
   },
   "nav": {
     "dashboard": "لوحة التحكم",
@@ -82,9 +84,16 @@
     "new": {
       "title": "طلب مخصص جديد",
       "subtitle": "إنشاء طلب مخصص في 4 خطوات مع سلة حية وملخص الدفع.",
+      "fabricTitle": "طلب قماش جديد",
+      "fabricSubtitle": "سجّل العميل أولاً، ثم بِع القماش بالمتر بنفس خطوات الطلب.",
+      "kindCustom": "خياطة مخصصة",
+      "kindFabric": "بيع قماش",
+      "pricePerMeter": "السعر لكل متر",
+      "addFabric": "إضافة القماش للسلة",
       "steps": {
         "customerInfo": "بيانات العميل",
         "productsAndMeasurements": "المنتجات والقياسات",
+        "fabricAndMeters": "القماش والأمتار",
         "paymentAndCheckout": "الدفع والإتمام",
         "reviewAndConfirm": "المراجعة والتأكيد"
       },
@@ -99,6 +108,7 @@
         "phoneNumber": "رقم الهاتف",
         "phoneNumberPlaceholder": "رقم الهاتف",
         "optional": "اختياري",
+        "nameRequired": "اسم العميل مطلوب.",
         "phoneRequired": "رقم الهاتف مطلوب.",
         "notes": "ملاحظات العميل",
         "notesPlaceholder": "ملاحظات اختيارية للعميل"
@@ -181,7 +191,12 @@
     "confirm": "تأكيد",
     "back": "رجوع",
     "next": "التالي",
-    "previous": "السابق"
+    "previous": "السابق",
+    "fromDate": "من تاريخ",
+    "toDate": "إلى تاريخ",
+    "qtyPlaceholder": "0",
+    "metersPlaceholder": "0",
+    "pricePlaceholder": "مثال: 700,000"
   },
   "ordersPage": {
     "title": "تقرير الطلبات",
@@ -272,7 +287,17 @@
     "deleteFabricTitle": "حذف قماش / أصل",
     "deleteFabricMessage": "هل أنت متأكد أنك تريد حذف {{name}}؟",
     "deleteFabricCancel": "إلغاء",
-    "deleteFabricConfirm": "حذف"
+    "deleteFabricConfirm": "حذف",
+    "fabricPackageMeters": "أمتار البالة",
+    "fabricPackagePrice": "سعر البالة",
+    "fabricPricePerMeter": "السعر / متر",
+    "editFabricPackageMeters": "أمتار البالة",
+    "editFabricPackagePrice": "سعر البالة",
+    "namePlaceholder": "اسم القماش",
+    "unitPlaceholder": "مثال: بالة، متر",
+    "sizePlaceholder": "مثال: L / 54",
+    "packageMetersPlaceholder": "مثال: 20",
+    "selectProduct": "اختر منتجاً"
   },
   "expensesPage": {
     "title": "المصروفات",
@@ -383,6 +408,23 @@
     "restore": "استعادة",
     "languageEnglish": "الإنجليزية",
     "languageArabic": "العربية",
-    "languageBengali": "البنغالية"
+    "languageBengali": "البنغالية",
+    "shopNamePlaceholder": "اسم المتجر أو الورشة",
+    "phonePlaceholder": "رقم هاتف المتجر",
+    "addressPlaceholder": "عنوان المتجر",
+    "currentPasswordPlaceholder": "كلمة المرور الحالية",
+    "newPasswordPlaceholder": "كلمة المرور الجديدة",
+    "confirmPasswordPlaceholder": "تأكيد كلمة المرور الجديدة",
+    "usernamePlaceholder": "اسم المستخدم",
+    "userPasswordPlaceholder": "كلمة مرور مؤقتة"
+  },
+  "fabricPos": {
+    "title": "بيع الأقمشة",
+    "subtitle": "قص وبيع القماش بالمتر مباشرة من المخزون.",
+    "available": "الأقمشة المتوفرة",
+    "cart": "قائمة القص",
+    "checkout": "إتمام بيع القماش",
+    "metersLabel": "الأمتار المراد قصها",
+    "paidLabel": "المبلغ المستلم"
   }
 }

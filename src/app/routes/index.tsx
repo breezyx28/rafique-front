@@ -13,7 +13,6 @@ import { SettingsPage } from '@/features/settings/SettingsPage'
 import { ProductConfigPage } from '@/features/settings/products/ProductConfigPage'
 import { InvoicesPage } from '@/features/invoices/InvoicesPage'
 import { InvoiceDetailsPage } from '@/features/invoices/InvoiceDetailsPage'
-import { FabricPOSPage } from '@/features/orders/fabric/FabricPOSPage'
 import {
   DeliveredOrdersPage,
   SewingPricingPage,
@@ -30,7 +29,7 @@ export function AppRoutes() {
         <Route path="orders" element={<OrdersPage />} />
         <Route path="orders/new" element={<NewOrderPage />} />
         <Route path="orders/ready" element={<ReadyPOSPage />} />
-        <Route path="orders/fabric" element={<FabricPOSPage />} />
+        <Route path="orders/fabric" element={<Navigate to="/orders/new?kind=fabric" replace />} />
         <Route path="customers" element={<CustomersPage />} />
         <Route path="customers/:customerId/edit" element={<CustomerEditPage />} />
         <Route path="inventory" element={<InventoryPage />} />

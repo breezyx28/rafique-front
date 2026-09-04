@@ -12,7 +12,9 @@
     "loginTitle": "আপনার একাউন্টে লগইন করুন",
     "loginSubtitle": "এক জায়গা থেকে অর্ডার, গ্রাহক ও ইনভয়েস ম্যানেজ করুন।",
     "heroSubtitle": "পরিষ্কার ও সংগঠিত কাজের জন্য আপনার ব্যক্তিগত হাবে প্রবেশ করুন।",
-    "footerHint": "লগইন করতে অ্যাডমিন একাউন্ট ব্যবহার করুন।"
+    "footerHint": "লগইন করতে অ্যাডমিন একাউন্ট ব্যবহার করুন।",
+    "usernamePlaceholder": "আপনার ব্যবহারকারীর নাম লিখুন",
+    "passwordPlaceholder": "আপনার পাসওয়ার্ড লিখুন"
   },
   "nav": {
     "dashboard": "ড্যাশবোর্ড",
@@ -82,9 +84,16 @@
     "new": {
       "title": "নতুন কাস্টম অর্ডার",
       "subtitle": "লাইভ কার্ট এবং পেমেন্ট সামারি সহ ৪ ধাপে কাস্টম অর্ডার তৈরি করুন।",
+      "fabricTitle": "নতুন কাপড় অর্ডার",
+      "fabricSubtitle": "আগে গ্রাহক নিবন্ধন করুন, তারপর একই চেকআউট ধাপে মিটার অনুযায়ী কাপড় বিক্রি করুন।",
+      "kindCustom": "কাস্টম সেলাই",
+      "kindFabric": "কাপড় বিক্রি",
+      "pricePerMeter": "প্রতি মিটার মূল্য",
+      "addFabric": "কার্টে কাপড় যোগ করুন",
       "steps": {
         "customerInfo": "গ্রাহকের তথ্য",
         "productsAndMeasurements": "পণ্য ও মাপ",
+        "fabricAndMeters": "কাপড় ও মিটার",
         "paymentAndCheckout": "পেমেন্ট ও চেকআউট",
         "reviewAndConfirm": "রিভিউ ও নিশ্চিত করুন"
       },
@@ -99,6 +108,7 @@
         "phoneNumber": "ফোন নম্বর",
         "phoneNumberPlaceholder": "ফোন নম্বর",
         "optional": "ঐচ্ছিক",
+        "nameRequired": "গ্রাহকের নাম প্রয়োজন।",
         "phoneRequired": "ফোন নম্বর প্রয়োজন।",
         "notes": "গ্রাহকের নোট",
         "notesPlaceholder": "ঐচ্ছিক গ্রাহক নোট"
@@ -181,7 +191,12 @@
     "confirm": "নিশ্চিত করুন",
     "back": "পিছনে",
     "next": "পরবর্তী",
-    "previous": "পূর্ববর্তী"
+    "previous": "পূর্ববর্তী",
+    "fromDate": "শুরুর তারিখ",
+    "toDate": "শেষ তারিখ",
+    "qtyPlaceholder": "0",
+    "metersPlaceholder": "0",
+    "pricePlaceholder": "যেমন: 700,000"
   },
   "ordersPage": {
     "title": "অর্ডার রিপোর্ট",
@@ -272,7 +287,17 @@
     "deleteFabricTitle": "কাপড় / অ্যাসেট মুছুন",
     "deleteFabricMessage": "আপনি কি সত্যিই {{name}} মুছতে চান?",
     "deleteFabricCancel": "বাতিল",
-    "deleteFabricConfirm": "মুছুন"
+    "deleteFabricConfirm": "মুছুন",
+    "fabricPackageMeters": "প্যাকেজ মিটার",
+    "fabricPackagePrice": "প্যাকেজ মূল্য",
+    "fabricPricePerMeter": "মূল্য / মিটার",
+    "editFabricPackageMeters": "প্যাকেজ মিটার",
+    "editFabricPackagePrice": "প্যাকেজ মূল্য",
+    "namePlaceholder": "কাপড়ের নাম",
+    "unitPlaceholder": "যেমন: বেল, মিটার",
+    "sizePlaceholder": "যেমন: L / 54",
+    "packageMetersPlaceholder": "যেমন: 20",
+    "selectProduct": "একটি পণ্য নির্বাচন করুন"
   },
   "expensesPage": {
     "title": "খরচ",
@@ -383,6 +408,23 @@
     "restore": "পুনরুদ্ধার",
     "languageEnglish": "ইংরেজি",
     "languageArabic": "আরবি",
-    "languageBengali": "বাংলা"
+    "languageBengali": "বাংলা",
+    "shopNamePlaceholder": "দোকান বা ওয়ার্কশপের নাম",
+    "phonePlaceholder": "দোকানের ফোন নম্বর",
+    "addressPlaceholder": "দোকানের ঠিকানা",
+    "currentPasswordPlaceholder": "বর্তমান পাসওয়ার্ড",
+    "newPasswordPlaceholder": "নতুন পাসওয়ার্ড",
+    "confirmPasswordPlaceholder": "নতুন পাসওয়ার্ড নিশ্চিত করুন",
+    "usernamePlaceholder": "লগইন নাম",
+    "userPasswordPlaceholder": "অস্থায়ী পাসওয়ার্ড"
+  },
+  "fabricPos": {
+    "title": "কাপড় বিক্রি",
+    "subtitle": "ইনভেন্টরি থেকে সরাসরি মিটার অনুযায়ী কাপড় কেটে বিক্রি করুন।",
+    "available": "উপলব্ধ কাপড়",
+    "cart": "কাট লিস্ট",
+    "checkout": "কাপড় বিক্রি সম্পন্ন করুন",
+    "metersLabel": "কাটার মিটার",
+    "paidLabel": "প্রাপ্ত অর্থ"
   }
 }

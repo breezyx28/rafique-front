@@ -1,6 +1,7 @@
+import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Input } from '@/components/ui/Input'
+import { NumberInput } from '@/components/ui/NumberInput'
 import {
   useGetInventoryFabricsQuery,
   useGetWorkshopOrdersQuery,
@@ -163,8 +164,22 @@ function WorkshopShell({ title, children }: { title: string; children: React.Rea
 }
 
 function PricingRow({ label, value, onSave }: { label: string; value: number; onSave: (value: number) => unknown }) {
-  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    void onSave(Number(event.target.value))
-  }
-  return <label className="grid grid-cols-[1fr_160px] items-center gap-3 text-[13px]"><span className="font-medium">{label}</span><Input type="number" min={0} defaultValue={value} onBlur={handleBlur} /></label>
+  const [local, setLocal] = React.useState(value)
+  React.useEffect(() => {
+    setLocal(value)
+  }, [value])
+  return (
+    <label className="grid grid-cols-[1fr_160px] items-center gap-3 text-[13px]">
+      <span className="font-medium">{label}</span>
+      <NumberInput
+        format="money"
+        min={0}
+        value={local}
+        onValueChange={setLocal}
+        onBlur={() => void onSave(local)}
+        aria-label={`${label} sewing rate`}
+        placeholder="0"
+      />
+    </label>
+  )
 }

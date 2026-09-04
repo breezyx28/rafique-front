@@ -85,13 +85,21 @@ export function CustomerEditPage() {
         <CardContent className="grid gap-3 md:grid-cols-2">
           <div>
             <label className="mb-1 block text-[12px] font-medium text-text-secondary">Full Name</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Customer full name"
+            />
           </div>
           <div>
             <label className="mb-1 block text-[12px] font-medium text-text-secondary">
               Phone number <span className="text-danger">*</span>
             </label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <Input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Phone number"
+            />
             {phoneError && <p className="mt-1 text-[12px] text-danger">{phoneError}</p>}
           </div>
           <div className="md:col-span-2">
