@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/Button'
 import type { InvoicePayload } from '@/features/invoices/types'
 import { printInvoiceAndPickup } from '@/features/invoices/printInvoice'
 import { fabricStockLabel } from '@/lib/fabricStock'
+import { formatDate, formatMoney as money } from '@/lib/localeFormat'
+import { translateApiMessage } from '@/lib/apiErrors'
+import { formatOrderStatus, formatPaymentMethod, getFieldLabel } from '@/lib/displayLabels'
 import {
   useDeleteOrderMutation,
   useDeliverOrderToWorkshopMutation,
@@ -29,8 +32,6 @@ const statusClassMap: Record<OrderStatus, string> = {
   delivered: 'bg-successBg text-[#15803D]',
   cancelled: 'bg-dangerBg text-danger',
 }
-
-const money = (v: number) => `${v.toLocaleString()} SDG`
 
 export function OrdersPage() {
   const navigate = useNavigate()
@@ -76,10 +77,16 @@ export function OrdersPage() {
   const filteredOrders = useMemo(() => {
     const q = search.trim().toLowerCase()
     return (data?.data ?? []).filter((o) => {
-      const customerName = o.customer?.name ?? 'Walk-in'
+      const customerName = o.customer?.name ?? t('orders.walkIn')
       const products = [
-        ...(o.items ?? []).map((item) => item.product?.name || `Item ${item.productId ?? ''}`),
-        ...(o.fabricSales ?? []).map((item) => `${item.fabric?.name ?? 'Fabric'} (${item.meters}m)`),
+        ...(o.items ?? []).map((item) => item.product?.name || t('orders.unnamedItem', { id: item.productId ?? '' })),
+        ...(o.fabricSales ?? []).map((item) =>
+          t('orders.fabricSaleLine', {
+            name: item.fabric?.name ?? t('orders.new.fabric'),
+            meters: item.meters,
+            unit: t('common.metersShort'),
+          })
+        ),
       ].join(', ')
       const method = o.paymentMethod ?? 'cash'
       const matchesSearch =
@@ -93,7 +100,7 @@ export function OrdersPage() {
       const matchesMethod = paymentMethod === 'all' || method === paymentMethod
       return matchesSearch && matchesCustomer && matchesMethod
     })
-  }, [customer, data?.data, paymentMethod, search])
+  }, [customer, data?.data, paymentMethod, search, t])
 
   const totalPages = Math.max(1, Math.ceil((data?.meta.total ?? filteredOrders.length) / (data?.meta.limit ?? 20)))
 
@@ -101,21 +108,24 @@ export function OrdersPage() {
     orderNumber: row.orderNumber,
     receiptNumber: row.receiptNumber,
     submittedAt: (row.createdAt ?? '').slice(0, 10),
-    customerName: row.customer?.name ?? 'Walk-in',
+    customerName: row.customer?.name ?? t('orders.walkIn'),
     customerPhone: row.customer?.phone ?? '—',
     dueDate: (row.dueDate ?? '').slice(0, 10) || '—',
     customerNote: row.noteCustomer ?? '',
     workshopNote: row.noteWorkshop ?? '',
-    paymentMethod: (row.paymentMethod ?? 'cash').toUpperCase() as 'Cash' | 'MBOK',
+    paymentMethod: row.paymentMethod ?? 'cash',
     total: row.total,
     paid: row.paid,
     remaining: Math.max(0, row.total - row.paid),
     items: (row.items ?? []).map((item: any) => ({
-      product: item.product?.name ?? `Product ${item.productId ?? ''}`,
+      product: item.product?.name ?? t('orders.unnamedItem', { id: item.productId ?? '' }),
       qty: item.qty,
       unitPrice: item.unitPrice,
       subtotal: item.qty * item.unitPrice,
-      measurements: (item.measurements ?? []).map((m: any) => ({ label: m.field?.fieldKey ?? 'Measurement', value: m.value ?? '' })),
+      measurements: (item.measurements ?? []).map((m: any) => ({
+        label: getFieldLabel(m.field),
+        value: m.value ?? '',
+      })),
     })),
   })
 
@@ -124,7 +134,7 @@ export function OrdersPage() {
       {undoToast && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] bg-warningBg px-4 py-3 text-[13px] text-[#B45309]">
           <p>
-            Order #{undoToast.orderNumber} was sent to the workshop. Undo available for {undoSeconds}s.
+            {t('orders.undoToast', { orderNumber: undoToast.orderNumber, seconds: undoSeconds })}
           </p>
           <Button
             size="sm"
@@ -135,12 +145,12 @@ export function OrdersPage() {
                 setUndoToast(null)
               } catch (error) {
                 const apiError = error as { data?: { message?: string } }
-                window.alert(apiError.data?.message ?? 'Undo window expired.')
+                window.alert(apiError.data?.message ? translateApiMessage(apiError.data.message) : t('orders.undoExpired'))
                 setUndoToast(null)
               }
             }}
           >
-            Undo
+            {t('orders.undo')}
           </Button>
         </div>
       )}
@@ -202,7 +212,7 @@ export function OrdersPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <div className="sm:col-span-2 lg:col-span-3 xl:col-span-2 min-w-0">
               <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
                 <Input
                   value={search}
                   onChange={(e) => {
@@ -210,7 +220,7 @@ export function OrdersPage() {
                     setPage(1)
                   }}
                   placeholder={t('ordersPage.searchPlaceholder', 'Search order #, customer, product')}
-                  className="pl-9"
+                  className="ps-9"
                 />
               </div>
             </div>
@@ -247,13 +257,11 @@ export function OrdersPage() {
               className="h-10 rounded-[6px] border border-border bg-surface px-3 text-[13px] text-text-primary"
             >
               <option value="all">{t('ordersPage.allStatus', 'All status')}</option>
-              <option value="pending">{t('ordersPage.statusPending', 'pending')}</option>
-              <option value="in_progress">
-                {t('ordersPage.statusInProgress', 'in_progress')}
-              </option>
-              <option value="ready">{t('ordersPage.statusReady', 'ready')}</option>
-              <option value="delivered">{t('ordersPage.statusDelivered', 'delivered')}</option>
-              <option value="cancelled">{t('ordersPage.statusCancelled', 'cancelled')}</option>
+              <option value="pending">{t('dashboard.status.pending')}</option>
+              <option value="in_progress">{t('dashboard.status.in_progress')}</option>
+              <option value="ready">{t('dashboard.status.ready')}</option>
+              <option value="delivered">{t('dashboard.status.delivered')}</option>
+              <option value="cancelled">{t('dashboard.status.cancelled')}</option>
             </select>
             <div className="grid min-w-0 grid-cols-2 gap-2">
               <Input
@@ -275,7 +283,7 @@ export function OrdersPage() {
             <div className="overflow-x-auto">
               <table className="min-w-[980px] w-full">
                 <thead className="bg-[#FAFAFA]">
-                  <tr className="text-left text-[12px] font-medium text-text-muted">
+                  <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">{t('orders.orderNumber', 'Order #')}</th>
                     <th className="px-4 py-3">{t('orders.receiptNumber', 'Receipt #')}</th>
                     <th className="px-4 py-3">{t('orders.customer', 'Customer')}</th>
@@ -295,10 +303,16 @@ export function OrdersPage() {
                   {filteredOrders.map((row) => {
                     const remaining = row.remaining ?? row.total - row.paid
                     const products = [
-                      ...(row.items ?? []).map((item: any) => item.product?.name || `Item ${item.productId ?? ''}`),
-                      ...(row.fabricSales ?? []).map((item: any) => `${item.fabric?.name ?? 'Fabric'} (${item.meters}m)`),
+                      ...(row.items ?? []).map((item: any) => item.product?.name || t('orders.unnamedItem', { id: item.productId ?? '' })),
+                      ...(row.fabricSales ?? []).map((item: any) =>
+                        t('orders.fabricSaleLine', {
+                          name: item.fabric?.name ?? t('orders.new.fabric'),
+                          meters: item.meters,
+                          unit: t('common.metersShort'),
+                        })
+                      ),
                     ].join(', ')
-                    const method = (row.paymentMethod ?? 'cash').toUpperCase()
+                    const method = formatPaymentMethod(row.paymentMethod)
                     return (
                       <tr key={String(row.id)} className="border-t border-border text-[13px]">
                         <td className="px-4 py-3 font-semibold text-text-primary">#{row.orderNumber}</td>
@@ -307,8 +321,8 @@ export function OrdersPage() {
                           {row.customer?.name ?? t('orders.walkIn', 'Walk-in')}
                         </td>
                         <td className="px-4 py-3 text-text-secondary">{products || '—'}</td>
-                        <td className="px-4 py-3 text-text-secondary">{(row.createdAt ?? '').slice(0, 10) || '—'}</td>
-                        <td className="px-4 py-3 text-text-secondary">{(row.dueDate ?? '').slice(0, 10) || '—'}</td>
+                        <td className="px-4 py-3 text-text-secondary">{formatDate(row.createdAt)}</td>
+                        <td className="px-4 py-3 text-text-secondary">{formatDate(row.dueDate)}</td>
                         <td className="px-4 py-3 font-semibold text-text-primary">{money(row.total)}</td>
                         <td className="px-4 py-3 font-semibold text-text-primary">{money(row.paid)}</td>
                         <td className={`px-4 py-3 font-semibold ${remaining > 0 ? 'text-danger' : 'text-success'}`}>
@@ -316,7 +330,7 @@ export function OrdersPage() {
                         </td>
                         <td className="px-4 py-3">
                           <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${statusClassMap[row.status as OrderStatus]}`}>
-                            {row.status}
+                            {formatOrderStatus(row.status)}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-text-primary">{method}</td>
@@ -333,7 +347,7 @@ export function OrdersPage() {
                                     if (!row.workshopDeliveredAt) setConfirmDeliver(row)
                                   }}
                                 />
-                                {row.workshopDeliveredAt ? 'In workshop' : 'Deliver'}
+                                {row.workshopDeliveredAt ? t('orders.inWorkshop') : t('orders.deliver')}
                               </label>
                               {row.status === 'ready' && (
                                 <Button
@@ -343,7 +357,7 @@ export function OrdersPage() {
                                     await updateOrder({ id: row.id, body: { status: 'delivered' } }).unwrap()
                                   }}
                                 >
-                                  Customer collected
+                                  {t('orders.customerCollected')}
                                 </Button>
                               )}
                             </div>
@@ -355,7 +369,7 @@ export function OrdersPage() {
                               type="button"
                               onClick={() => navigate(`/invoices/${String(row.id)}?type=customer`, { state: { order: toInvoicePayload(row) } })}
                               className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
-                              aria-label="View"
+                              aria-label={t('orders.view')}
                             >
                               <Eye className="h-4 w-4" />
                             </button>
@@ -372,7 +386,7 @@ export function OrdersPage() {
                                 })
                               }
                               className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
-                              aria-label="Edit"
+                              aria-label={t('orders.edit')}
                             >
                               <Pencil className="h-4 w-4" />
                             </button>
@@ -388,7 +402,7 @@ export function OrdersPage() {
                                 await deleteOrder(row.id)
                               }}
                               className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
-                              aria-label="Delete"
+                              aria-label={t('orders.delete')}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -396,7 +410,7 @@ export function OrdersPage() {
                               type="button"
                               onClick={() => printInvoiceAndPickup(toInvoicePayload(row))}
                               className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
-                              aria-label="Print"
+                              aria-label={t('orders.printInvoice')}
                             >
                               <Printer className="h-4 w-4" />
                             </button>
@@ -466,17 +480,17 @@ export function OrdersPage() {
                       setEditingOrder(null)
                     }}
                   >
-                    Customer collected
+                    {t('orders.customerCollected')}
                   </Button>
                 </div>
               )}
             </div>
             {editingOrder.type === 'custom' && !editingOrder.workshopDeliveredAt && (
               <div className="mt-4 space-y-3">
-                <p className="text-[12px] font-semibold text-text-secondary">Fabric and meters</p>
+                <p className="text-[12px] font-semibold text-text-secondary">{t('orders.new.steps.fabricAndMeters')}</p>
                 {(editingOrder.items ?? []).map((item: any, index: number) => (
                   <div key={item.id ?? index} className="grid gap-2 rounded-[10px] border border-border p-3 md:grid-cols-2">
-                    <p className="md:col-span-2 text-[13px] font-semibold">{item.product?.name ?? `Item ${item.id}`}</p>
+                    <p className="md:col-span-2 text-[13px] font-semibold">{item.product?.name ?? t('orders.unnamedItem', { id: item.id })}</p>
                     <select
                       value={item.fabricId}
                       onChange={(e) => {
@@ -544,14 +558,13 @@ export function OrdersPage() {
       {confirmDeliver && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.32)] p-4">
           <div className="w-full max-w-md rounded-[14px] bg-white p-5 shadow-lg">
-            <h3 className="text-[18px] font-semibold text-text-primary">Deliver to workshop?</h3>
+            <h3 className="text-[18px] font-semibold text-text-primary">{t('orders.deliverToWorkshop')}</h3>
             <p className="mt-2 text-[13px] text-text-secondary">
-              This will cut fabric meters from inventory for order #{confirmDeliver.orderNumber}.
-              You can undo for 30 seconds after confirming.
+              {t('orders.deliverConfirm', { orderNumber: confirmDeliver.orderNumber })}
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <Button variant="outline" onClick={() => setConfirmDeliver(null)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={async () => {
@@ -567,18 +580,12 @@ export function OrdersPage() {
                     const apiError = error as { data?: { message?: string | string[] } }
                     const message = apiError.data?.message
                     window.alert(
-                      Array.isArray(message)
-                        ? message.join(', ')
-                        : message ??
-                            t(
-                              'orders.deliverError',
-                              'Could not deliver this order. Fabric quantity may not be enough.'
-                            )
+                      message ? translateApiMessage(message) : t('orders.deliverError')
                     )
                   }
                 }}
               >
-                Confirm deliver
+                {t('orders.confirmDeliver')}
               </Button>
             </div>
           </div>

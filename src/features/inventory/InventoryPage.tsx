@@ -18,10 +18,9 @@ import {
   useUpdateInventoryItemMutation,
 } from '@/features/api/appApi'
 import { remainingPackages, formatPackages, metersFromPackages } from '@/lib/fabricStock'
+import { formatCount, formatMoney as money } from '@/lib/localeFormat'
 
 type InventoryTab = 'ready' | 'fabrics'
-
-const money = (v: number) => `${v.toLocaleString()} SDG`
 
 export function InventoryPage() {
   const { t } = useTranslation()
@@ -114,12 +113,12 @@ export function InventoryPage() {
             </button>
           </div>
           <div className="relative w-full max-w-sm">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('inventoryPage.searchPlaceholder', 'Search inventory')}
-              className="pl-9"
+              className="ps-9"
             />
           </div>
         </CardHeader>
@@ -128,7 +127,7 @@ export function InventoryPage() {
             <div className="overflow-hidden rounded-[12px] border border-border">
               <table className="w-full min-w-[720px]">
                 <thead className="bg-[#FAFAFA]">
-                  <tr className="text-left text-[12px] font-medium text-text-muted">
+                  <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">
                       {t('inventoryPage.readyName', 'Name')}
                     </th>
@@ -170,10 +169,10 @@ export function InventoryPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 text-text-secondary">
-                          <button type="button" onClick={() => setEditingReady({ ...r })} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-primary" aria-label="Edit ready item">
+                          <button type="button" onClick={() => setEditingReady({ ...r })} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-primary" aria-label={t('inventoryPage.editReadyItem')}>
                             <Pencil className="h-4 w-4" />
                           </button>
-                          <button type="button" onClick={() => setDeletingReady(r)} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-danger" aria-label="Delete ready item">
+                          <button type="button" onClick={() => setDeletingReady(r)} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-danger" aria-label={t('inventoryPage.deleteReadyItem')}>
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -189,7 +188,7 @@ export function InventoryPage() {
             <div className="overflow-hidden rounded-[12px] border border-border">
               <table className="w-full min-w-[720px]">
                 <thead className="bg-[#FAFAFA]">
-                  <tr className="text-left text-[12px] font-medium text-text-muted">
+                  <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">
                       {t('inventoryPage.fabricName', 'Fabric / Asset')}
                     </th>
@@ -228,7 +227,7 @@ export function InventoryPage() {
                         {formatPackages(remainingPackages(f.qty, f.packageMeters))}
                       </td>
                       <td className="px-4 py-3 font-semibold text-text-primary">
-                        {Number(f.qty).toLocaleString()} m
+                        {formatCount(Number(f.qty))} {t('common.metersShort')}
                       </td>
                       <td className="px-4 py-3 text-text-primary">{f.packageMeters}</td>
                       <td className="px-4 py-3 font-semibold text-text-primary">{money(f.packagePrice)}</td>
@@ -238,10 +237,10 @@ export function InventoryPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 text-text-secondary">
-                          <button type="button" onClick={() => setEditingFabric({ ...f, packageQty: remainingPackages(f.qty, f.packageMeters) })} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-primary" aria-label="Edit fabric item">
+                          <button type="button" onClick={() => setEditingFabric({ ...f, packageQty: remainingPackages(f.qty, f.packageMeters) })} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-primary" aria-label={t('inventoryPage.editFabricItem')}>
                             <Pencil className="h-4 w-4" />
                           </button>
-                          <button type="button" onClick={() => setDeletingFabric(f)} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-danger" aria-label="Delete fabric item">
+                          <button type="button" onClick={() => setDeletingFabric(f)} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-danger" aria-label={t('inventoryPage.deleteFabricItem')}>
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -369,13 +368,13 @@ export function InventoryPage() {
                 {t('inventoryPage.totalMetersPreview', 'Total meters')}
                 {': '}
                 <span className="font-semibold text-text-primary tabular-nums">
-                  {(
+                  {formatCount(
                     Number(
                       editingFabric.packageQty ??
                         remainingPackages(editingFabric.qty, editingFabric.packageMeters),
                     ) * Number(editingFabric.packageMeters ?? 20)
-                  ).toLocaleString()}{' '}
-                  m
+                  )}{' '}
+                  {t('common.metersShort')}
                 </span>
               </p>
             </div>
@@ -626,7 +625,7 @@ export function InventoryPage() {
                 {t('inventoryPage.totalMetersPreview', 'Total meters')}
                 {': '}
                 <span className="font-semibold text-text-primary tabular-nums">
-                  {(createFabricQty * (createFabricPackageMeters || 20)).toLocaleString()} m
+                  {formatCount(createFabricQty * (createFabricPackageMeters || 20))} {t('common.metersShort')}
                 </span>
               </p>
             </div>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { NumberInput } from '@/components/ui/NumberInput'
 import { fabricStockLabel } from '@/lib/fabricStock'
+import { formatDate, formatMoney as money } from '@/lib/localeFormat'
 import type { InvoicePayload } from '@/features/invoices/types'
 import { persistLatestInvoiceOrder } from '@/features/invoices/invoiceStore'
 import {
@@ -35,8 +36,6 @@ interface CartItem {
   fabricMeters: number
   measurements: Array<{ fieldId: number; label: string; value: string }>
 }
-
-const money = (v: number) => `${v.toLocaleString()} SDG`
 
 export function NewOrderPage() {
   const location = useLocation()
@@ -286,12 +285,12 @@ export function NewOrderPage() {
         <div>
           <h1 className="text-[28px] font-bold text-text-primary">
             {orderKind === 'fabric'
-              ? tr('orders.new.fabricTitle', 'New Fabric Order')
+              ? tr('fabricPos.title', 'Fabric Sales')
               : tr('orders.new.title', 'New Custom Order')}
           </h1>
           <p className="text-[13px] text-text-secondary">
             {orderKind === 'fabric'
-              ? tr('orders.new.fabricSubtitle', 'Register the customer, then sell fabric by the meter with the same checkout steps.')
+              ? tr('fabricPos.subtitle', 'Cut and sell fabric by meter directly from inventory.')
               : tr('orders.new.subtitle', 'Create a custom order in 4 steps with live cart and payment summary.')}
           </p>
         </div>
@@ -329,7 +328,7 @@ export function NewOrderPage() {
                   key={title}
                   type="button"
                   onClick={() => setStep(current)}
-                  className={`flex items-center gap-2 rounded-[10px] border px-3 py-2 text-left ${
+                  className={`flex items-center gap-2 rounded-[10px] border px-3 py-2 text-start ${
                     isActive
                       ? 'border-primary bg-primary-light'
                       : isDone
@@ -361,7 +360,7 @@ export function NewOrderPage() {
           {step === 1 && (
             <div className="relative rounded-[12px] border border-border bg-white px-4 py-3">
               <label className="mb-1 block text-[12px] font-medium text-text-secondary">
-                {tr('orders.new.customer.searchLabel', 'Search customer')}
+                {tr('orders.new.customer.phoneLookup', 'Phone Lookup')}
               </label>
               <Input
                 value={searchQuery}
@@ -371,12 +370,12 @@ export function NewOrderPage() {
                 placeholder={tr('orders.new.customer.phoneLookupPlaceholder', 'Search by phone or name')}
               />
               {searchFocused && searchQuery.trim() && searchResults.length > 0 && (
-                <ul className="absolute left-4 right-4 top-full z-20 mt-1 max-h-48 overflow-auto rounded-[10px] border border-border bg-white py-1 shadow-lg">
+                <ul className="absolute inset-x-4 top-full z-20 mt-1 max-h-48 overflow-auto rounded-[10px] border border-border bg-white py-1 shadow-lg">
                   {searchResults.map((c) => (
                     <li key={c.id}>
                       <button
                         type="button"
-                        className="w-full px-4 py-2 text-left text-[13px] hover:bg-[#F5F5F5]"
+                        className="w-full px-4 py-2 text-start text-[13px] hover:bg-[#F5F5F5]"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
                           setSelectedCustomerFromSearch({ id: c.id, name: c.name ?? '', phone: c.phone ?? '' })
@@ -390,7 +389,7 @@ export function NewOrderPage() {
                         }}
                       >
                         <span className="font-medium text-text-primary">{c.name || '—'}</span>
-                        {c.phone && <span className="ml-2 text-text-muted">{c.phone}</span>}
+                        {c.phone && <span className="ms-2 text-text-muted">{c.phone}</span>}
                       </button>
                     </li>
                   ))}
@@ -421,7 +420,7 @@ export function NewOrderPage() {
                 </div>
                 <div>
                   <label className="mb-1 block text-[12px] font-medium text-text-secondary">
-                    {tr('orders.new.customer.phoneLabel', 'Phone')} <span className="text-danger">*</span>
+                    {tr('orders.new.customer.phoneNumber', 'Phone Number')} <span className="text-danger">*</span>
                   </label>
                   <Input
                     value={phone}
@@ -433,7 +432,10 @@ export function NewOrderPage() {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="mb-1 block text-[12px] font-medium text-text-secondary">{tr('orders.new.customer.notes', 'Customer Notes')}</label>
+                  <label className="mb-1 block text-[12px] font-medium text-text-secondary">
+                    {tr('orders.new.customer.notes', 'Customer Notes')}{' '}
+                    <span className="text-text-muted">({tr('orders.new.customer.optional', 'optional')})</span>
+                  </label>
                   <textarea
                     value={customerNotes}
                     onChange={(e) => setCustomerNotes(e.target.value)}
@@ -458,7 +460,7 @@ export function NewOrderPage() {
               <div className="grid gap-3 md:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-[12px] font-medium text-text-secondary">
-                    {tr('orders.new.fabric', 'Fabric')}
+                    {tr('fabricPos.available', 'Available fabrics')}
                   </label>
                   <select
                     value={fabricId ?? ''}
@@ -474,7 +476,7 @@ export function NewOrderPage() {
                   </select>
                 </div>
                 <NumberInput
-                  label={tr('orders.new.fabricMeters', 'Total fabric meters')}
+                  label={tr('fabricPos.metersLabel', 'Meters to cut')}
                   format="decimal"
                   min={0}
                   value={fabricMeters}
@@ -624,7 +626,11 @@ export function NewOrderPage() {
                   <Input value={money(totalPrice)} readOnly />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[12px] font-medium text-text-secondary">{tr('orders.new.payment.receivedAmount', 'Received Amount')}</label>
+                  <label className="mb-1 block text-[12px] font-medium text-text-secondary">
+                    {orderKind === 'fabric'
+                      ? tr('fabricPos.paidLabel', 'Amount received')
+                      : tr('orders.new.payment.receivedAmount', 'Received Amount')}
+                  </label>
                   <NumberInput
                     format="money"
                     min={0}
@@ -666,7 +672,7 @@ export function NewOrderPage() {
                     <p><span className="text-text-muted">{tr('orders.new.review.total', 'Total')}:</span> {money(totalPrice)}</p>
                     <p><span className="text-text-muted">{tr('orders.new.review.paid', 'Paid')}:</span> {money(receivedAmount)}</p>
                     <p><span className="text-text-muted">{tr('orders.new.review.remaining', 'Remaining')}:</span> {money(remaining)}</p>
-                    <p><span className="text-text-muted">{tr('orders.new.review.dueDate', 'Due date')}:</span> {dueDate || '—'}</p>
+                    <p><span className="text-text-muted">{tr('orders.new.review.dueDate', 'Due date')}:</span> {formatDate(dueDate)}</p>
                   </div>
                 </div>
                 <Button
@@ -674,7 +680,9 @@ export function NewOrderPage() {
                   onClick={() => setShowConfirm(true)}
                   disabled={!customerReady || cart.length === 0}
                 >
-                  {tr('orders.new.review.confirmSubmit', 'Confirm & Submit Order')}
+                  {orderKind === 'fabric'
+                    ? tr('fabricPos.checkout', 'Complete fabric sale')
+                    : tr('orders.new.review.confirmSubmit', 'Confirm & Submit Order')}
                 </Button>
               </div>
             )}
@@ -691,7 +699,7 @@ export function NewOrderPage() {
                   (step === 2 && cart.length === 0)
                 }
               >
-                {tr('common.next', 'Next')} <ChevronRight className="h-4 w-4" />
+                {tr('common.next', 'Next')} <ChevronRight className="h-4 w-4 rtl:rotate-180" />
               </Button>
             </div>
             </CardContent>
@@ -700,7 +708,11 @@ export function NewOrderPage() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle>{tr('orders.new.cart.title', 'Live Cart')}</CardTitle>
+            <CardTitle>
+              {orderKind === 'fabric'
+                ? tr('fabricPos.cart', 'Cut list')
+                : tr('orders.new.cart.title', 'Live Cart')}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {cart.length === 0 && <p className="text-[13px] text-text-muted">{tr('orders.new.cart.empty', 'No products added yet.')}</p>}
@@ -711,13 +723,13 @@ export function NewOrderPage() {
                     <p className="text-[13px] font-semibold text-text-primary">{item.productName}</p>
                     {item.kind === 'fabric' ? (
                       <p className="text-[12px] text-text-muted">
-                        {item.fabricMeters} m · {money(item.unitPrice)} / m
+                        {item.fabricMeters} {tr('common.metersShort', 'm')} · {money(item.unitPrice)} / {tr('common.metersShort', 'm')}
                       </p>
                     ) : (
                       <>
                         <p className="text-[12px] text-text-muted">{money(item.unitPrice)} {tr('orders.new.cart.each', 'each')}</p>
                         <p className="text-[12px] text-text-muted">
-                          {item.fabricName} · {item.fabricMeters} m
+                          {item.fabricName} · {item.fabricMeters} {tr('common.metersShort', 'm')}
                         </p>
                       </>
                     )}
@@ -750,7 +762,7 @@ export function NewOrderPage() {
                       </button>
                     </div>
                   )}
-                  <p className={`text-[13px] font-semibold text-text-primary ${item.kind === 'fabric' ? 'ml-auto' : ''}`}>
+                  <p className={`text-[13px] font-semibold text-text-primary ${item.kind === 'fabric' ? 'ms-auto' : ''}`}>
                     {money(item.kind === 'fabric' ? item.fabricMeters * item.unitPrice : item.qty * item.unitPrice)}
                   </p>
                 </div>
@@ -789,7 +801,7 @@ export function NewOrderPage() {
                     <button
                       key={`${item.orderId}-${item.productName}-${item.createdAt}`}
                       type="button"
-                      className="group w-full rounded-[12px] border border-primary bg-secondary p-3 text-left shadow-sm transition-colors hover:border-primary hover:bg-primary/50 cursor-pointer"
+                      className="group w-full rounded-[12px] border border-primary bg-secondary p-3 text-start shadow-sm transition-colors hover:border-primary hover:bg-primary/50 cursor-pointer"
                       onClick={() => {
                         const matchingProduct = (products ?? []).find((p) => p.name === item.productName)
                         const targetProductId = matchingProduct?.id ?? activeProductId
@@ -818,7 +830,7 @@ export function NewOrderPage() {
                         </span>
                         <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 text-[11px] font-medium text-text-secondary group-hover:bg-white">
                           <Clock3 className="h-3 w-3" />
-                          #{item.orderId} · {createdDate}
+                          #{item.orderId} · {formatDate(createdDate)}
                         </span>
                       </div>
                       <div className="mt-2 grid gap-1 text-[12px] text-text-secondary">
@@ -854,7 +866,7 @@ export function NewOrderPage() {
                 }}
                 className='text-[12px]'
               >
-             {tr('common.close', 'Close')}
+             {tr('orders.new.ordersModal.continueWithout', 'Continue without copying')}
               </Button>
             </div>
           </div>

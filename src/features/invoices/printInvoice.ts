@@ -1,13 +1,22 @@
+import i18n from '@/lib/i18n'
+import { formatDate, formatMoney } from '@/lib/localeFormat'
+import { formatPaymentMethod } from '@/lib/displayLabels'
 import type { InvoicePayload, InvoiceType } from './types'
-import { money } from './types'
 
 function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
   const isCustomer = type === 'customer'
   const isPickup = type === 'pickup'
-  const title = isPickup ? 'Pickup Slip' : isCustomer ? 'Customer Invoice' : 'Workshop Invoice'
+  const title = isPickup
+    ? i18n.t('invoiceDetailsPage.pickupSlip')
+    : isCustomer
+      ? i18n.t('invoiceDetailsPage.customerInvoice')
+      : i18n.t('invoiceDetailsPage.workshopInvoice')
+  const lang = (i18n.language || 'en').split('-')[0]
+  const dir = lang === 'ar' ? 'rtl' : 'ltr'
+  const paymentMethod = formatPaymentMethod(order.paymentMethod)
   return `
 <!doctype html>
-<html>
+<html lang="${lang}" dir="${dir}">
   <head>
     <meta charset="utf-8" />
     <title>${title} #${order.orderNumber}</title>
@@ -27,7 +36,7 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
         padding: 0;
         background: #fff;
         color: #111827;
-        font-family: "Courier New", Courier, monospace;
+        font-family: ${lang === 'ar' ? 'Cairo, Tahoma, sans-serif' : '"Courier New", Courier, monospace'};
         font-size: 11px;
         line-height: 1.35;
       }
@@ -68,7 +77,7 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
       }
 
       th, td {
-        text-align: left;
+        text-align: start;
         border-bottom: 1px dashed #d1d5db;
         padding: 3px 0;
         font-size: 10px;
@@ -93,23 +102,23 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
   <body>
     <div class="receipt">
       <div class="center">
-        <h1>Rafique Tailors</h1>
-        <p class="muted">${isPickup ? 'PICKUP SLIP' : isCustomer ? 'CUSTOMER INVOICE' : 'WORKSHOP INVOICE'}</p>
+        <h1>${i18n.t('app.shopName')}</h1>
+        <p class="muted">${title}</p>
       </div>
       <div class="sep"></div>
-      ${order.receiptNumber ? `<p><strong>Receipt #${order.receiptNumber}</strong></p>` : ''}
-      <p>Order #${order.orderNumber}</p>
-      <p>Date: ${order.submittedAt}</p>
-      <p>Due: ${order.dueDate}</p>
-      ${isCustomer || isPickup ? `<p>Customer: ${order.customerName}</p><p>Phone: ${order.customerPhone}</p>` : ''}
+      ${order.receiptNumber ? `<p><strong>${i18n.t('invoiceDetailsPage.receiptNumber', { number: order.receiptNumber })}</strong></p>` : ''}
+      <p>${i18n.t('invoiceDetailsPage.orderNumber', { orderNumber: order.orderNumber })}</p>
+      <p>${i18n.t('invoiceDetailsPage.dateLabel', { date: formatDate(order.submittedAt) })}</p>
+      <p>${i18n.t('invoiceDetailsPage.dueLabel', { dueDate: formatDate(order.dueDate) })}</p>
+      ${isCustomer || isPickup ? `<p>${i18n.t('invoiceDetailsPage.customerLabel')}: ${order.customerName}</p><p>${i18n.t('invoiceDetailsPage.phoneLabel', { phone: order.customerPhone })}</p>` : ''}
       <div class="sep"></div>
     ${order.items
       .map(
         (item) => `
       <div class="block">
-        <strong>${item.product} (qty: ${item.qty})</strong>
+        <strong>${item.product} ${i18n.t('invoiceDetailsPage.qtyWithCount', { qty: item.qty })}</strong>
         <table>
-          <thead><tr><th>Measurement</th><th>Value</th></tr></thead>
+          <thead><tr><th>${i18n.t('invoiceDetailsPage.measurement')}</th><th>${i18n.t('invoiceDetailsPage.value')}</th></tr></thead>
           <tbody>
             ${item.measurements
               .map((m) => `<tr><td>${m.label}</td><td>${m.value || '—'}</td></tr>`)
@@ -124,20 +133,20 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
       isCustomer || isPickup
         ? `<div class="totals">
       <div class="sep"></div>
-      <p>Total: ${money(order.total)}</p>
-      <p>Paid: ${money(order.paid)}</p>
-      <p>Remaining: ${money(order.remaining)}</p>
-      <p>Payment Method: ${order.paymentMethod}</p>
-      <p>Note: ${order.customerNote || 'Please bring this receipt when collecting.'}</p>
+      <p>${i18n.t('invoiceDetailsPage.total')}: ${formatMoney(order.total)}</p>
+      <p>${i18n.t('invoiceDetailsPage.paid')}: ${formatMoney(order.paid)}</p>
+      <p>${i18n.t('invoiceDetailsPage.remaining')}: ${formatMoney(order.remaining)}</p>
+      <p>${i18n.t('invoiceDetailsPage.paymentMethod')}: ${paymentMethod}</p>
+      <p>${i18n.t('invoiceDetailsPage.noteLabel')}: ${order.customerNote || i18n.t('invoiceDetailsPage.customerNoteDefault')}</p>
     </div>`
         : `<div class="totals">
       <div class="sep"></div>
-      <p>Workshop Note: ${order.workshopNote || 'No workshop note.'}</p>
-      <p>No price, no customer contacts.</p>
+      <p>${i18n.t('invoiceDetailsPage.workshopNoteLabel')}: ${order.workshopNote || i18n.t('invoiceDetailsPage.workshopNoteDefault')}</p>
+      <p>${i18n.t('invoiceDetailsPage.noPriceContacts')}</p>
     </div>`
     }
       <div class="sep"></div>
-      <p class="center muted">Thank you</p>
+      <p class="center muted">${i18n.t('invoiceDetailsPage.thankYou')}</p>
     </div>
   </body>
 </html>
@@ -177,4 +186,3 @@ export function printInvoice(order: InvoicePayload, type: InvoiceType) {
     }
   }
 }
-

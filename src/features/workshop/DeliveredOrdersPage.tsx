@@ -13,6 +13,7 @@ import {
   useGetWorkshopOrdersQuery,
   useSetWorkshopItemReadinessMutation,
 } from '@/features/api/appApi'
+import { formatDate } from '@/lib/localeFormat'
 
 const PAGE_SIZE = 10
 
@@ -132,7 +133,7 @@ export function DeliveredOrdersPage() {
             <div className="overflow-x-auto">
               <table className="min-w-[980px] w-full">
                 <thead className="bg-[#FAFAFA]">
-                  <tr className="text-left text-[12px] font-medium text-text-muted">
+                  <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">{t('workshop.colOrder', 'Order')}</th>
                     <th className="px-4 py-3">{t('workshop.colCustomer', 'Customer')}</th>
                     <th className="px-4 py-3">{t('workshop.colProduct', 'Product')}</th>
@@ -162,7 +163,7 @@ export function DeliveredOrdersPage() {
                         <td className="px-4 py-3 text-text-primary">{row.customer}</td>
                         <td className="px-4 py-3 text-text-primary">{row.product}</td>
                         <td className="px-4 py-3 text-text-secondary">{row.fabric || '—'}</td>
-                        <td className="px-4 py-3 text-text-secondary">{row.deliveredAt || '—'}</td>
+                        <td className="px-4 py-3 text-text-secondary">{formatDate(row.deliveredAt)}</td>
                         <td className="px-4 py-3">
                           <span
                             className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${

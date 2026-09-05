@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { store } from '../store'
 import { ToastContainer } from '@/components/ui/ToastContainer'
+import { PreferencesSync } from './PreferencesSync'
 import '@/lib/i18n'
 
 const queryClient = new QueryClient({
@@ -18,6 +19,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <Provider store={store}>
         <BrowserRouter>
           <ToastContainer />
+          <PreferencesSync />
           {children}
         </BrowserRouter>
       </Provider>

@@ -15,6 +15,7 @@ import { usePreferenceStore } from '@/store/usePreferenceStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { API_BASE } from '@/lib/api'
 import { setLanguage as applyLanguage } from '@/lib/i18n'
+import i18n from '@/lib/i18n'
 
 type SettingsTab = 'general' | 'preferences' | 'users' | 'security' | 'backup'
 
@@ -58,9 +59,10 @@ export function SettingsPage() {
     setShopPhone(String(settings.workshopPhone ?? ''))
     setShopAddress(String(settings.workshopAddress ?? ''))
 
-    setLanguage(String(settings.language ?? 'en'))
-    setCurrency(String(settings.currency ?? 'SDG'))
-    setDateFormat(String(settings.dateFormat ?? 'YYYY-MM-DD'))
+    const uiLanguage = (i18n.language || '').split('-')[0]
+    setLanguage(uiLanguage === 'ar' || uiLanguage === 'bn' || uiLanguage === 'en' ? uiLanguage : String(settings.language ?? 'en'))
+    setCurrency(String(settings.currency ?? prefStore.currency ?? 'SDG'))
+    setDateFormat(String(settings.dateFormat ?? prefStore.dateFormat ?? 'YYYY-MM-DD'))
     setPrinter(String(settings.printer ?? ''))
     setShowOrderConfirm(Boolean(settings.showOrderSubmitConfirm ?? true))
 
@@ -210,6 +212,8 @@ export function SettingsPage() {
                     applyLanguage(language)
                   }
                   prefStore.setConfirmOrderDialog(showOrderConfirm)
+                  prefStore.setDateFormat(dateFormat === 'DD/MM/YYYY' ? 'DD/MM/YYYY' : 'YYYY-MM-DD')
+                  prefStore.setCurrency(currency)
                 }}
               >
                 <Save className="h-4 w-4" />{t('settingsPage.savePreferences', 'Save Preferences')}
@@ -240,7 +244,7 @@ export function SettingsPage() {
             <div className="overflow-hidden rounded-[12px] border border-border">
               <table className="w-full min-w-[620px]">
                 <thead className="bg-[#FAFAFA]">
-                  <tr className="text-left text-[12px] font-medium text-text-muted">
+                  <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">{t('settingsPage.user', 'User')}</th>
                     <th className="px-4 py-3">{t('settingsPage.username', 'Username')}</th>
                     <th className="px-4 py-3">{t('settingsPage.role', 'Role')}</th>
@@ -253,7 +257,15 @@ export function SettingsPage() {
                       <td className="px-4 py-3 font-semibold text-text-primary">{u.username}</td>
                       <td className="px-4 py-3 text-text-secondary">{u.username}</td>
                       <td className="px-4 py-3">
-                        <span className="rounded-full bg-primary-light px-2.5 py-0.5 text-[11px] font-semibold text-primary">{u.role?.name ?? '—'}</span>
+                        <span className="rounded-full bg-primary-light px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+                          {u.role?.name === 'Admin'
+                            ? t('settingsPage.roleAdmin')
+                            : u.role?.name === 'Cashier'
+                              ? t('settingsPage.roleCashier')
+                              : u.role?.name === 'Workshop'
+                                ? t('settingsPage.roleWorkshop')
+                                : u.role?.name ?? '—'}
+                        </span>
                       </td>
                       <td className="px-4 py-3">
                         <span className="rounded-full bg-successBg px-2.5 py-0.5 text-[11px] font-semibold text-success">{t('settingsPage.active', 'Active')}</span>
@@ -431,7 +443,7 @@ export function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[12px] font-medium text-text-secondary">Password</label>
+                <label className="mb-1 block text-[12px] font-medium text-text-secondary">{t('settingsPage.password')}</label>
                 <Input
                   type="password"
                   value={userPassword}
@@ -440,15 +452,15 @@ export function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[12px] font-medium text-text-secondary">Role</label>
+                <label className="mb-1 block text-[12px] font-medium text-text-secondary">{t('settingsPage.role')}</label>
                 <select
                   value={userRole}
                   onChange={(e) => setUserRole(e.target.value as typeof userRole)}
                   className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
                 >
-                  <option value="Workshop">Workshop</option>
-                  <option value="Cashier">Cashier</option>
-                  <option value="Admin">Admin</option>
+                  <option value="Workshop">{t('settingsPage.roleWorkshop')}</option>
+                  <option value="Cashier">{t('settingsPage.roleCashier')}</option>
+                  <option value="Admin">{t('settingsPage.roleAdmin')}</option>
                 </select>
               </div>
             </div>

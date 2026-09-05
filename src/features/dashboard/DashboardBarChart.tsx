@@ -3,6 +3,7 @@ import { CalendarDays } from 'lucide-react'
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { cn } from '@/lib/utils'
+import { formatCount } from '@/lib/localeFormat'
 
 export type DashboardBarPoint = {
   name: string
@@ -107,7 +108,7 @@ export function DashboardBarChart({
                     fontSize: 12,
                     color: '#1A1A2E',
                   }}
-                  formatter={(value) => [Number(value ?? 0).toLocaleString(), title]}
+                  formatter={(value) => [formatCount(Number(value ?? 0)), title]}
                   labelStyle={{ color: '#6B7280' }}
                 />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={16}>

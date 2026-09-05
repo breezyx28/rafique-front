@@ -3,8 +3,10 @@ import { useDispatch, useSelector } from 'react-redux'
 import type { RootState, AppDispatch } from '@/app/store'
 import { removeToast } from '@/features/ui/toastSlice'
 import { AlertTriangle, Info } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export function ToastContainer() {
+  const { t } = useTranslation()
   const toasts = useSelector((state: RootState) => state.toast.toasts)
   const dispatch = useDispatch<AppDispatch>()
 
@@ -55,9 +57,9 @@ export function ToastContainer() {
               <button
                 type="button"
                 onClick={() => dispatch(removeToast(toast.id))}
-                className="ml-1 text-[11px] font-medium text-text-primary/80 hover:underline"
+                className="ms-1 text-[11px] font-medium text-text-primary/80 hover:underline"
               >
-                Dismiss
+                {t('common.dismiss')}
               </button>
             </div>
           )

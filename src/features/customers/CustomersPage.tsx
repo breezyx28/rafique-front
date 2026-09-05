@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useDeleteCustomerMutation, useGetCustomerByIdQuery, useGetCustomersQuery } from '@/features/api/appApi'
-
-const money = (v: number) => `${v.toLocaleString()} SDG`
+import { formatDate, formatMoney as money } from '@/lib/localeFormat'
+import { formatOrderStatus, formatOrderType } from '@/lib/displayLabels'
 
 export function CustomersPage() {
   const navigate = useNavigate()
@@ -74,7 +74,7 @@ export function CustomersPage() {
         <CardContent className="space-y-4">
           <div className="grid gap-3 md:grid-cols-3">
             <div className="relative md:col-span-2">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -82,7 +82,7 @@ export function CustomersPage() {
                   'customersPage.searchByName',
                   'Search customer by name'
                 )}
-                className="pl-9"
+                className="ps-9"
               />
             </div>
             <Input
@@ -96,7 +96,7 @@ export function CustomersPage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[780px]">
                 <thead className="bg-[#FAFAFA]">
-                  <tr className="text-left text-[12px] font-medium text-text-muted">
+                  <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">
                       {t('customersPage.name', 'Name')}
                     </th>
@@ -124,7 +124,7 @@ export function CustomersPage() {
                       <td className="px-4 py-3 text-text-secondary">{c.phone}</td>
                       <td className="px-4 py-3 text-text-primary">{c.ordersCount}</td>
                       <td className="px-4 py-3 font-semibold text-text-primary">{money(c.totalSpent)}</td>
-                      <td className="px-4 py-3 text-text-secondary">{c.lastOrderDate}</td>
+                      <td className="px-4 py-3 text-text-secondary">{formatDate(c.lastOrderDate)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 text-text-secondary">
                           <Button
@@ -143,7 +143,7 @@ export function CustomersPage() {
                             type="button"
                             onClick={() => navigate(`/customers/${String(c.id)}/edit`)}
                             className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
-                            aria-label="Edit customer"
+                            aria-label={t('customersPage.editCustomer')}
                           >
                             <Pencil className="h-4 w-4" />
                           </button>
@@ -151,7 +151,7 @@ export function CustomersPage() {
                             type="button"
                             onClick={() => setHistoryCustomerId(c.id)}
                             className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
-                            aria-label="View history"
+                            aria-label={t('customersPage.viewHistory')}
                           >
                             <Eye className="h-4 w-4" />
                           </button>
@@ -159,7 +159,7 @@ export function CustomersPage() {
                             type="button"
                             onClick={() => setDeletingCustomerId(c.id)}
                             className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
-                            aria-label="Delete"
+                            aria-label={t('common.delete')}
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -196,9 +196,9 @@ export function CustomersPage() {
             <div className="mt-4 space-y-2">
               {(historyCustomer.orders ?? []).map((order: any) => (
                 <div key={String(order.id)} className="rounded-[10px] border border-border p-3">
-                  <p className="text-[13px] font-semibold text-text-primary">Order #{order.id}</p>
-                  <p className="text-[12px] text-text-muted">{(order.type ?? 'custom').toUpperCase()} · {(order.status ?? 'pending')}</p>
-                  <p className="mt-1 text-[12px] text-text-secondary">{(order.createdAt ?? '').slice(0, 10) || '—'}</p>
+                  <p className="text-[13px] font-semibold text-text-primary">{t('customersPage.orderLabel', { id: order.orderNumber || order.id })}</p>
+                  <p className="text-[12px] text-text-muted">{formatOrderType(order.type)} · {formatOrderStatus(order.status)}</p>
+                  <p className="mt-1 text-[12px] text-text-secondary">{formatDate(order.createdAt)}</p>
                 </div>
               ))}
               {!historyCustomer.orders?.length && (

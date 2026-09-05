@@ -11,8 +11,8 @@ import { Input } from '@/components/ui/Input'
 import { languages, setLanguage, type LangCode } from '@/lib/i18n'
 
 const schema = z.object({
-  username: z.string().min(1, 'Required'),
-  password: z.string().min(1, 'Required'),
+  username: z.string().min(1),
+  password: z.string().min(1),
 })
 
 type FormData = z.infer<typeof schema>
@@ -49,7 +49,7 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-app px-4 py-8">
-      <div className="absolute right-6 top-6 flex gap-2">
+      <div className="absolute end-6 top-6 flex gap-2">
         {languages.map((l) => (
           <button
             key={l.code}
@@ -108,7 +108,7 @@ export function LoginPage() {
               />
               {errors.username && (
                 <p className="text-[11px] font-medium text-danger">
-                  {errors.username.message}
+                  {t('auth.required')}
                 </p>
               )}
             </div>
@@ -125,7 +125,7 @@ export function LoginPage() {
               />
               {errors.password && (
                 <p className="text-[11px] font-medium text-danger">
-                  {errors.password.message}
+                  {t('auth.required')}
                 </p>
               )}
             </div>

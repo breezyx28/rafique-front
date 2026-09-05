@@ -1,3 +1,6 @@
+import i18n from './i18n'
+import { formatCount } from './localeFormat'
+
 export function remainingPackages(meters: number, packageMeters: number) {
   const perPackage = Number(packageMeters) || 20
   if (perPackage <= 0) return 0
@@ -10,11 +13,9 @@ export function metersFromPackages(packages: number, packageMeters: number) {
 
 export function formatPackages(value: number) {
   if (!Number.isFinite(value)) return '0'
-  return Number.isInteger(value)
-    ? String(value)
-    : value.toLocaleString('en-US', { maximumFractionDigits: 2 })
+  return Number.isInteger(value) ? String(value) : formatCount(Number(value.toFixed(2)))
 }
 
 export function fabricStockLabel(name: string, meters: number, packageMeters: number) {
-  return `${name} (${Number(meters).toLocaleString()} m · ${formatPackages(remainingPackages(meters, packageMeters))} pkg)`
+  return `${name} (${formatCount(meters)} ${i18n.t('common.metersShort')} · ${formatPackages(remainingPackages(meters, packageMeters))} ${i18n.t('common.packagesShort')})`
 }

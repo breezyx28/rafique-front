@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/Input'
 import { toolbarSelectClass } from '@/components/ui/DataToolbar'
 import { useGetDashboardOverviewQuery } from '@/features/api/appApi'
 import { formatPackages, remainingPackages } from '@/lib/fabricStock'
+import { formatCount, formatDate, formatMoney as money, formatShortMonth } from '@/lib/localeFormat'
+import { formatOrderStatus, formatOrderType } from '@/lib/displayLabels'
 import { DashboardBarChart } from './DashboardBarChart'
 
 type Preset = 'today' | 'week' | 'month' | 'year' | 'custom'
-
-const money = (value: number) => `${Number(value || 0).toLocaleString()} SDG`
 
 function isoDate(date: Date) {
   const year = date.getFullYear()
@@ -38,8 +38,9 @@ function rangeForPreset(preset: Preset): { from: string; to: string } {
 function timelineLabel(date: string, grain: 'day' | 'week' | 'month') {
   if (grain === 'month') {
     const [year, month] = date.split('-').map(Number)
-    return new Date(year, month - 1, 1).toLocaleString('en-US', { month: 'short' })
+    return formatShortMonth(year, month)
   }
+  if (grain === 'day') return formatDate(date)
   return date.slice(5)
 }
 
@@ -138,26 +139,26 @@ export function DashboardPage() {
   const exportData = () => {
     if (!data) return
     const rows: Array<Array<string | number>> = [
-      ['Metric', 'Value'],
-      ['Period from', data.period.from],
-      ['Period to', data.period.to],
-      ['Orders', stats?.orders ?? 0],
-      ['Custom orders', stats?.customOrders ?? 0],
-      ['Ready orders', stats?.readyOrders ?? 0],
-      ['Fabric orders', stats?.fabricOrders ?? 0],
-      ['Revenue', stats?.revenue ?? 0],
-      ['Paid', stats?.paid ?? 0],
-      ['Remaining', stats?.remaining ?? 0],
-      ['Expenses', stats?.expenses ?? 0],
-      ['Customers', stats?.customers ?? 0],
-      ['New customers', stats?.newCustomers ?? 0],
-      ['Ready stock', stats?.readyStock ?? 0],
-      ['Fabric meters', stats?.fabricMeters ?? 0],
-      ['Workshop ready', stats?.workshopReady ?? 0],
-      ['Workshop not ready', stats?.workshopNotReady ?? 0],
+      [t('dashboard.export.metric'), t('dashboard.export.value')],
+      [t('dashboard.export.periodFrom'), formatDate(data.period.from)],
+      [t('dashboard.export.periodTo'), formatDate(data.period.to)],
+      [t('dashboard.totalOrders'), stats?.orders ?? 0],
+      [t('dashboard.export.customOrders'), stats?.customOrders ?? 0],
+      [t('dashboard.export.readyOrders'), stats?.readyOrders ?? 0],
+      [t('dashboard.export.fabricOrders'), stats?.fabricOrders ?? 0],
+      [t('dashboard.export.revenue'), stats?.revenue ?? 0],
+      [t('dashboard.paid'), stats?.paid ?? 0],
+      [t('dashboard.remaining'), stats?.remaining ?? 0],
+      [t('dashboard.expenses'), stats?.expenses ?? 0],
+      [t('dashboard.export.customers'), stats?.customers ?? 0],
+      [t('dashboard.export.newCustomers'), stats?.newCustomers ?? 0],
+      [t('dashboard.readyStock'), stats?.readyStock ?? 0],
+      [t('dashboard.fabricMeters'), stats?.fabricMeters ?? 0],
+      [t('dashboard.export.workshopReady'), stats?.workshopReady ?? 0],
+      [t('dashboard.export.workshopNotReady'), stats?.workshopNotReady ?? 0],
       [],
-      ['Date', 'Orders', 'Revenue', 'Expenses'],
-      ...data.timeline.map((row) => [row.date, row.orders, row.revenue, row.expenses]),
+      [t('dashboard.export.date'), t('dashboard.ordersVolume'), t('dashboard.export.revenue'), t('dashboard.expenses')],
+      ...data.timeline.map((row) => [formatDate(row.date), row.orders, row.revenue, row.expenses]),
     ]
     downloadCsv(`rafique-dashboard-${from}-to-${to}.csv`, rows)
   }
@@ -221,15 +222,15 @@ export function DashboardPage() {
         <StatCard tint="sky" label={t('dashboard.expenses', 'Expenses')} value={isLoading ? '—' : money(stats?.expenses ?? 0)} hint={t('dashboard.expensesHint', 'Shop spending in this period')} onClick={() => navigate('/expenses')} />
         <StatCard tint="peach" label={t('dashboard.activeCustomers', 'Active customers')} value={isLoading ? '—' : stats?.customers ?? 0} hint={t('dashboard.newCustomersHint', '{{count}} new in this period', { count: stats?.newCustomers ?? 0 })} onClick={() => navigate('/customers')} />
         <StatCard tint="mint" label={t('dashboard.readyStock', 'Ready stock')} value={isLoading ? '—' : stats?.readyStock ?? 0} hint={t('dashboard.lowStockHint', '{{count}} low-stock items', { count: stats?.lowStock ?? 0 })} onClick={() => navigate('/ready-products')} />
-        <StatCard tint="lavender" label={t('dashboard.fabricMeters', 'Fabric meters left')} value={isLoading ? '—' : `${Number(stats?.fabricMeters ?? 0).toLocaleString()} m`} hint={t('dashboard.fabricHint', 'Current inventory after consumption')} onClick={() => navigate('/inventory')} />
+        <StatCard tint="lavender" label={t('dashboard.fabricMeters', 'Fabric meters left')} value={isLoading ? '—' : `${formatCount(stats?.fabricMeters ?? 0)} ${t('common.metersShort')}`} hint={t('dashboard.fabricHint', 'Current inventory after consumption')} onClick={() => navigate('/inventory')} />
         <StatCard tint="sky" label={t('dashboard.workshop', 'Workshop')} value={isLoading ? '—' : `${stats?.workshopReady ?? 0} / ${stats?.workshopNotReady ?? 0}`} hint={t('dashboard.workshopHint', 'Ready / not ready pieces')} onClick={() => navigate('/workshop/productivity')} />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-3">
         <DashboardBarChart
           className="xl:col-span-2"
-          title={t('dashboard.salesChart', 'Spending')}
-          total={`${timelineTotal.toLocaleString()} SDG`}
+          title={t('dashboard.timeline', 'Revenue vs expenses')}
+          total={money(timelineTotal)}
           badge={grainLabel}
           chip={periodChip}
           data={timelineBars}
@@ -292,7 +293,7 @@ export function DashboardPage() {
         />
         <DashboardBarChart
           title={t('dashboard.fabricStock', 'Fabric remaining')}
-          total={`${formatPackages(fabricTotal)} pkg`}
+          total={`${formatPackages(fabricTotal)} ${t('common.packagesShort')}`}
           chip={t('dashboard.fabricMeters', 'Fabric meters left')}
           data={fabricBars}
           emptyLabel={t('dashboard.noFabric', 'No fabric stock yet.')}
@@ -323,12 +324,12 @@ export function DashboardPage() {
                   key={order.id}
                   type="button"
                   onClick={() => navigate(`/invoices/${order.id}?type=customer`)}
-                  className="flex w-full cursor-pointer items-center justify-between py-2.5 text-left text-[13px] hover:bg-[#FAFAFA]"
+                  className="flex w-full cursor-pointer items-center justify-between py-2.5 text-start text-[13px] hover:bg-[#FAFAFA]"
                 >
                   <div>
                     <p className="font-semibold text-text-primary">#{order.orderNumber}</p>
                     <p className="text-[11px] text-text-muted">
-                      {order.customer} · {order.type} · {order.status}
+                      {order.customer} · {formatOrderType(order.type)} · {formatOrderStatus(order.status)}
                     </p>
                   </div>
                   <p className="font-semibold text-text-primary">{money(order.total)}</p>
@@ -362,13 +363,13 @@ export function DashboardPage() {
                     key={customer.customerId}
                     type="button"
                     onClick={() => navigate(`/customers/${customer.customerId}/edit`)}
-                    className="flex w-full cursor-pointer items-center justify-between py-2.5 text-left text-[13px] hover:bg-[#FAFAFA]"
+                    className="flex w-full cursor-pointer items-center justify-between py-2.5 text-start text-[13px] hover:bg-[#FAFAFA]"
                   >
                     <div>
                       <p className="font-semibold text-text-primary">{customer.name}</p>
                       <p className="text-[11px] text-text-muted">{customer.phone || '—'}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="font-semibold text-text-primary">{money(customer.totalSpent)}</p>
                       <p className="text-[11px] text-success">{customer.ordersCount} {t('dashboard.orders', 'orders')}</p>
                     </div>
@@ -449,7 +450,7 @@ function StatCard({
   }[tint]
   return (
     <Card className={`border-none shadow-none ${bg}`}>
-      <button type="button" onClick={onClick} className="w-full cursor-pointer text-left">
+      <button type="button" onClick={onClick} className="w-full cursor-pointer text-start">
         <CardContent className="pt-5">
           <p className="text-[12px] text-text-secondary">{label}</p>
           <p className="mt-1 text-[22px] font-bold tabular-nums text-text-primary">{value}</p>

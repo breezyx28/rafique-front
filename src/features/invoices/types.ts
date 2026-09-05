@@ -22,5 +22,5 @@ export interface InvoicePayload {
 
 export type InvoiceType = 'customer' | 'workshop' | 'pickup'
 
-export const money = (v: number) => `${v.toLocaleString()} SDG`
+export { formatMoney as money } from '@/lib/localeFormat'
 

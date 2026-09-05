@@ -3,6 +3,8 @@ import { setupListeners } from '@reduxjs/toolkit/query'
 import { authApi } from '@/features/auth/authApi'
 import { appApi } from '@/features/api/appApi'
 import { toastReducer, addToast } from '@/features/ui/toastSlice'
+import i18n from '@/lib/i18n'
+import { translateApiMessage } from '@/lib/apiErrors'
 
 const errorToastMiddleware: Middleware = (storeApi) => (next) => (action) => {
   const result = next(action)
@@ -15,11 +17,11 @@ const errorToastMiddleware: Middleware = (storeApi) => (next) => (action) => {
         'Request'
       const payload = action.payload as any
       const errorData = payload?.data ?? payload
-      const message =
+      const rawMessage =
         errorData?.message ??
         payload?.error ??
-        action.error?.message ??
-        'Something went wrong. Please try again.'
+        action.error?.message
+      const message = translateApiMessage(rawMessage)
 
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
 
@@ -27,7 +29,7 @@ const errorToastMiddleware: Middleware = (storeApi) => (next) => (action) => {
         addToast({
           id,
           variant: 'error',
-          title: `${endpointName} failed`,
+          title: i18n.t('errors.requestFailedGeneric', { defaultValue: i18n.t('errors.requestFailed', { name: endpointName }) }),
           message,
         })
       )

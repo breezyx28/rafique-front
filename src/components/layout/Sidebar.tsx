@@ -71,7 +71,7 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
         <Icon className="h-[18px] w-[18px] shrink-0" />
         {!collapsed && <span className="truncate">{label}</span>}
         {!collapsed && badge && (
-          <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-white">
+          <span className="ms-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-white">
             {badge}
           </span>
         )}
@@ -97,7 +97,7 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
         {!workshopOnly && (
           <>
             <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">
-              {!collapsed ? 'MAIN MENU' : ''}
+              {!collapsed ? t('nav.mainMenu') : ''}
             </p>
             <nav className="space-y-1">
               {mainNavItems
@@ -128,11 +128,11 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
             <Hammer className="h-[18px] w-[18px]" />
             {!collapsed && <span>{t('nav.workshop', 'Workshop')}</span>}
             {!collapsed && (
-              <ChevronDown className={cn('ml-auto h-4 w-4 transition-transform', workshopOpen && 'rotate-180')} />
+              <ChevronDown className={cn('ms-auto h-4 w-4 transition-transform', workshopOpen && 'rotate-180')} />
             )}
           </button>
           {!collapsed && workshopOpen && (
-            <div className="mt-1 space-y-1 pl-11">
+            <div className="mt-1 space-y-1 ps-11">
               {[
                 ['/workshop/orders', t('nav.deliveredOrders', 'Delivered Orders')],
                 ['/workshop/pricing', t('nav.sewingPricing', 'Sewing Pricing')],
@@ -160,7 +160,7 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
         {adminUser && (
           <>
             <p className="mt-6 px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">
-              {!collapsed ? 'ACCOUNT MANAGEMENT' : ''}
+              {!collapsed ? t('nav.accountManagement') : ''}
             </p>
             <nav className="space-y-1">
               {accountNavItems.map(({ to, icon: Icon, key }) =>

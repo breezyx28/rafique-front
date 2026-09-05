@@ -14,7 +14,7 @@ import {
   useGetExpensesSummaryQuery,
 } from '@/features/api/appApi'
 
-const money = (v: number) => `${v.toLocaleString()} SDG`
+import { formatDate, formatMoney as money } from '@/lib/localeFormat'
 
 export function ExpensesPage() {
   const { t } = useTranslation()
@@ -215,7 +215,7 @@ export function ExpensesPage() {
               <div className="overflow-hidden rounded-[12px] border border-border">
                 <table className="w-full min-w-[640px]">
                   <thead className="bg-[#FAFAFA]">
-                    <tr className="text-left text-[12px] font-medium text-text-muted">
+                    <tr className="text-start text-[12px] font-medium text-text-muted">
                       <th className="px-4 py-3">
                         {t('expensesPage.tableType', 'Type')}
                       </th>
@@ -235,7 +235,7 @@ export function ExpensesPage() {
                       <tr key={String(e.id)} className="border-t border-border text-[13px]">
                         <td className="px-4 py-3 font-semibold text-text-primary">{e.type?.name ?? '—'}</td>
                         <td className="px-4 py-3 font-semibold text-danger">{money(e.amount)}</td>
-                        <td className="px-4 py-3 text-text-secondary">{e.date.slice(0, 10)}</td>
+                        <td className="px-4 py-3 text-text-secondary">{formatDate(e.date)}</td>
                         <td className="px-4 py-3 text-text-secondary">{e.note || '—'}</td>
                       </tr>
                     ))}

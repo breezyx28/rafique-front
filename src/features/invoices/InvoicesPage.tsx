@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { money } from './types'
+import { formatDate } from '@/lib/localeFormat'
+import { formatPaymentMethod } from '@/lib/displayLabels'
 import { useGetOrdersQuery } from '@/features/api/appApi'
 
 export function InvoicesPage() {
@@ -54,7 +56,7 @@ export function InvoicesPage() {
           <CardTitle>{t('invoicesPage.cardTitle', 'Orders Invoices')}</CardTitle>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
             <div className="relative xl:col-span-2">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
               <Input
                 value={query}
                 onChange={(e) => {
@@ -62,7 +64,7 @@ export function InvoicesPage() {
                   setPage(1)
                 }}
                 placeholder={t('invoicesPage.searchPlaceholder', 'Search by order #, customer, phone')}
-                className="pl-9"
+                className="ps-9"
               />
             </div>
             <select
@@ -115,7 +117,7 @@ export function InvoicesPage() {
           <div className="overflow-hidden rounded-[12px] border border-border">
             <table className="w-full min-w-[760px]">
               <thead className="bg-[#FAFAFA]">
-                <tr className="text-left text-[12px] font-medium text-text-muted">
+                <tr className="text-start text-[12px] font-medium text-text-muted">
                   <th className="px-4 py-3">{t('orders.orderNumber', 'Order #')}</th>
                   <th className="px-4 py-3">{t('orders.customer', 'Customer')}</th>
                   <th className="px-4 py-3">{t('orders.date', 'Date')}</th>
@@ -137,13 +139,13 @@ export function InvoicesPage() {
                   >
                     <td className="px-4 py-3 font-semibold text-text-primary">#{row.id}</td>
                     <td className="px-4 py-3 text-text-primary">{row.customer?.name ?? t('orders.walkIn', 'Walk-in')}</td>
-                    <td className="px-4 py-3 text-text-secondary">{(row.createdAt ?? '').slice(0, 10)}</td>
-                    <td className="px-4 py-3 text-text-secondary">{(row.dueDate ?? '').slice(0, 10) || '—'}</td>
+                    <td className="px-4 py-3 text-text-secondary">{formatDate(row.createdAt)}</td>
+                    <td className="px-4 py-3 text-text-secondary">{formatDate(row.dueDate)}</td>
                     <td className="px-4 py-3 font-semibold text-text-primary">{money(row.total)}</td>
                     <td className={`px-4 py-3 font-semibold ${remaining > 0 ? 'text-danger' : 'text-success'}`}>
                       {money(remaining)}
                     </td>
-                    <td className="px-4 py-3 text-text-primary">{(row.paymentMethod ?? 'cash').toUpperCase()}</td>
+                    <td className="px-4 py-3 text-text-primary">{formatPaymentMethod(row.paymentMethod)}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${

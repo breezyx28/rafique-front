@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { NumberInput } from '@/components/ui/NumberInput'
 import { useCreateReadyOrderMutation, useGetInventoryItemsQuery } from '@/features/api/appApi'
+import { formatMoney as money } from '@/lib/localeFormat'
 
 type PaymentMethod = 'Cash' | 'MBOK'
 
@@ -21,8 +22,6 @@ interface ReadyProduct {
 interface CartItem extends ReadyProduct {
   qty: number
 }
-
-const money = (v: number) => `${v.toLocaleString()} SDG`
 
 export function ReadyPOSPage() {
   const { t } = useTranslation()
@@ -104,7 +103,7 @@ export function ReadyPOSPage() {
                   key={p.id}
                   type="button"
                   onClick={() => addToCart(p)}
-                  className="rounded-[12px] border border-border p-3 text-left transition hover:shadow-card"
+                  className="rounded-[12px] border border-border p-3 text-start transition hover:shadow-card"
                 >
                   <div
                     className="mb-2 flex h-24 items-center justify-center rounded-[10px]"

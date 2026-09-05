@@ -6,24 +6,12 @@ import { Button } from '@/components/ui/Button'
 import type { InvoicePayload, InvoiceType } from './types'
 import { money } from './types'
 import { printInvoice } from './printInvoice'
-import { useGetOrderByIdQuery } from '@/features/api/appApi'
-
-function getFieldLabelForLang(
-  field: { fieldKey: string; i18n?: Array<{ lang: string; label: string }> } | undefined,
-  lang: string
-): string {
-  if (!field) return 'Measurement'
-  const current = (lang || 'en').slice(0, 2)
-  const entry =
-    field.i18n?.find((i) => i.lang === current) ??
-    field.i18n?.find((i) => i.lang === 'en') ??
-    field.i18n?.[0]
-  return entry?.label ?? field.fieldKey ?? 'Measurement'
-}
+import { formatDate } from '@/lib/localeFormat'
+import { formatPaymentMethod, getFieldLabel } from '@/lib/displayLabels'
+import { useGetOrderByIdQuery, useGetSettingsQuery } from '@/features/api/appApi'
 
 export function InvoiceDetailsPage() {
-  const { t, i18n } = useTranslation()
-  const currentLang = (i18n.language || 'en').slice(0, 2)
+  const { t } = useTranslation()
   const { orderNumber = '' } = useParams()
   const [searchParams] = useSearchParams()
   const location = useLocation()
@@ -33,28 +21,32 @@ export function InvoiceDetailsPage() {
     typeParam === 'workshop' ? 'workshop' : typeParam === 'pickup' ? 'pickup' : 'customer'
   const orderId = Number(orderNumber)
   const { data: apiOrder } = useGetOrderByIdQuery(orderId, { skip: Number.isNaN(orderId) })
+  const { data: settings } = useGetSettingsQuery()
+  const shopName = String(settings?.workshopName || t('app.shopName'))
+  const shopAddress = String(settings?.workshopAddress || t('invoiceDetailsPage.defaultAddress'))
+  const shopPhone = String(settings?.workshopPhone || t('invoiceDetailsPage.defaultPhone'))
 
   const order: InvoicePayload | undefined = apiOrder
     ? {
         orderNumber: apiOrder.orderNumber,
         receiptNumber: apiOrder.receiptNumber,
         submittedAt: (apiOrder.createdAt ?? '').slice(0, 10),
-        customerName: apiOrder.customer?.name ?? 'Walk-in',
+        customerName: apiOrder.customer?.name ?? t('orders.walkIn'),
         customerPhone: apiOrder.customer?.phone ?? '—',
         dueDate: (apiOrder.dueDate ?? '').slice(0, 10) || '—',
         customerNote: apiOrder.noteCustomer ?? '',
         workshopNote: apiOrder.noteWorkshop ?? '',
-        paymentMethod: (apiOrder.paymentMethod ?? 'cash').toUpperCase() as 'Cash' | 'MBOK',
+        paymentMethod: apiOrder.paymentMethod ?? 'cash',
         total: apiOrder.total,
         paid: apiOrder.paid,
         remaining: apiOrder.remaining ?? Math.max(0, apiOrder.total - apiOrder.paid),
         items: (apiOrder.items ?? []).map((item) => ({
-          product: item.product?.name ?? `Product ${item.productId ?? ''}`,
+          product: item.product?.name ?? t('orders.unnamedItem', { id: item.productId ?? '' }),
           qty: item.qty,
           unitPrice: item.unitPrice,
           subtotal: item.subtotal ?? item.qty * item.unitPrice,
           measurements: (item.measurements ?? []).map((m) => ({
-            label: getFieldLabelForLang(m.field, currentLang),
+            label: getFieldLabel(m.field),
             value: m.value ?? '',
           })),
         })),
@@ -73,7 +65,7 @@ export function InvoiceDetailsPage() {
           </p>
           <Button asChild variant="outline">
             <Link to="/invoices">
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
               {t('invoiceDetailsPage.backToInvoices', 'Back to invoices')}
             </Link>
           </Button>
@@ -94,13 +86,13 @@ export function InvoiceDetailsPage() {
                 : t('invoiceDetailsPage.customerInvoice', 'Customer Invoice')}
           </h1>
           <p className="text-[13px] text-text-secondary">
-            {t('invoiceDetailsPage.orderDue', 'Order #{{orderNumber}} · Due: {{dueDate}}', { orderNumber: order.orderNumber, dueDate: order.dueDate })}
+            {t('invoiceDetailsPage.orderDue', { orderNumber: order.orderNumber, dueDate: formatDate(order.dueDate) })}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button asChild variant="outline">
             <Link to="/invoices">
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
               {t('invoiceDetailsPage.back', 'Back')}
             </Link>
           </Button>
@@ -158,18 +150,18 @@ export function InvoiceDetailsPage() {
           <p className="text-[12px] text-text-secondary">
             {t('invoiceDetailsPage.orderDateDue', 'Order #{{orderNumber}} · Date: {{date}} · Due: {{dueDate}}', {
               orderNumber: order.orderNumber,
-              date: order.submittedAt,
-              dueDate: order.dueDate,
+              date: formatDate(order.submittedAt),
+              dueDate: formatDate(order.dueDate),
             })}
-            {order.receiptNumber ? ` · Receipt #${order.receiptNumber}` : ''}
+            {order.receiptNumber ? ` · ${t('invoiceDetailsPage.receiptNumber', { number: order.receiptNumber })}` : ''}
           </p>
         </CardHeader>
         <CardContent className="space-y-4 pt-4">
           {type !== 'workshop' ? (
             <>
               <div className="text-[13px]">
-                <p className="font-semibold text-text-primary">{t('app.shopName', 'Rafique Tailors')}</p>
-                <p className="text-text-secondary">Khartoum, Sudan · 0912345678</p>
+                <p className="font-semibold text-text-primary">{shopName}</p>
+                <p className="text-text-secondary">{t('invoiceDetailsPage.addressLine', { address: shopAddress, phone: shopPhone })}</p>
                 <p className="mt-2 text-text-secondary">
                   {t('invoiceDetailsPage.customerLabel', 'Customer')}: {order.customerName} · {order.customerPhone}
                 </p>
@@ -182,7 +174,7 @@ export function InvoiceDetailsPage() {
                   <div className="overflow-hidden rounded-[10px] border border-border">
                     <table className="w-full">
                       <thead className="bg-[#FAFAFA]">
-                        <tr className="text-left text-[12px] font-medium text-text-muted">
+                        <tr className="text-start text-[12px] font-medium text-text-muted">
                           <th className="px-4 py-2">{t('invoiceDetailsPage.measurement', 'Measurement')}</th>
                           <th className="px-4 py-2">{t('invoiceDetailsPage.value', 'Value')}</th>
                         </tr>
@@ -203,7 +195,7 @@ export function InvoiceDetailsPage() {
                 <p><span className="text-text-muted">{t('invoiceDetailsPage.total', 'Total')}:</span> {money(order.total)}</p>
                 <p><span className="text-text-muted">{t('invoiceDetailsPage.paid', 'Paid')}:</span> {money(order.paid)}</p>
                 <p><span className="text-text-muted">{t('invoiceDetailsPage.remaining', 'Remaining')}:</span> {money(order.remaining)}</p>
-                <p><span className="text-text-muted">{t('invoiceDetailsPage.paymentMethod', 'Payment Method')}:</span> {order.paymentMethod}</p>
+                <p><span className="text-text-muted">{t('invoiceDetailsPage.paymentMethod', 'Payment Method')}:</span> {formatPaymentMethod(order.paymentMethod)}</p>
               </div>
               <p className="text-[12px] text-text-secondary">
                 {t('invoiceDetailsPage.noteLabel', 'Note')}: {order.customerNote || t('invoiceDetailsPage.customerNoteDefault', 'Please bring this receipt when collecting.')}
@@ -213,7 +205,7 @@ export function InvoiceDetailsPage() {
             <>
               <div className="text-[13px] text-text-secondary">
                 <p>
-                  {t('invoiceDetailsPage.orderDueLabel', 'ORDER #{{orderNumber}} · DUE: {{dueDate}}', { orderNumber: order.orderNumber, dueDate: order.dueDate })}
+                  {t('invoiceDetailsPage.orderDueLabel', { orderNumber: order.orderNumber, dueDate: formatDate(order.dueDate) })}
                 </p>
               </div>
               {order.items.map((item) => (
@@ -232,6 +224,9 @@ export function InvoiceDetailsPage() {
               ))}
               <p className="text-[12px] text-text-secondary">
                 {t('invoiceDetailsPage.workshopNoteLabel', 'Workshop Note')}: {order.workshopNote || t('invoiceDetailsPage.workshopNoteDefault', 'No workshop note.')}
+              </p>
+              <p className="text-[12px] text-text-muted">
+                {t('invoiceDetailsPage.workshopNoteDisclaimer')}
               </p>
             </>
           )}

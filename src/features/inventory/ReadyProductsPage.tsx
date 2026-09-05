@@ -23,8 +23,9 @@ import {
   useUpdateInventoryItemMutation,
 } from '@/features/api/appApi'
 
+import { formatMoney as money } from '@/lib/localeFormat'
+
 const PAGE_SIZE = 10
-const money = (value: number) => `${value.toLocaleString()} SDG`
 
 type ReadyForm = {
   productId: number | ''
@@ -289,7 +290,7 @@ export function ReadyProductsPage() {
             <div className="overflow-x-auto">
               <table className="min-w-[980px] w-full">
                 <thead className="bg-[#FAFAFA]">
-                  <tr className="text-left text-[12px] font-medium text-text-muted">
+                  <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">{t('readyProductsPage.name', 'Product name')}</th>
                     <th className="px-4 py-3">{t('readyProductsPage.size', 'Size')}</th>
                     <th className="px-4 py-3">{t('readyProductsPage.fabric', 'Fabric')}</th>

@@ -27,6 +27,7 @@ import {
   useGetInventoryFabricsQuery,
   useGetWorkshopOrdersQuery,
 } from '@/features/api/appApi'
+import { formatCount, formatDate } from '@/lib/localeFormat'
 
 const PAGE_SIZE = 10
 const STATUS_COLORS = { ready: '#0B9E8E', notReady: '#F59E0B' }
@@ -56,7 +57,7 @@ export function WorkshopProductivityPage() {
           fabrics: item.fabricConsumptions.map((row) => row.fabric?.name).filter(Boolean).join(', '),
           consumed: item.fabricConsumptions.reduce((sum, row) => sum + Number(row.meters), 0),
           remainingStock: item.fabricConsumptions
-            .map((row) => `${Number(row.fabric?.qty ?? 0).toLocaleString()} m`)
+            .map((row) => `${formatCount(Number(row.fabric?.qty ?? 0))} ${t('common.metersShort')}`)
             .join(', '),
         })),
       ),
@@ -178,22 +179,22 @@ export function WorkshopProductivityPage() {
         <StatCard
           tint="sky"
           label={t('workshop.statConsumed', 'Consumed fabric')}
-          value={`${stats.consumedMeters.toLocaleString()} m`}
+          value={`${formatCount(stats.consumedMeters)} ${t('common.metersShort')}`}
           hint={t('workshop.statConsumedHint', {
-            meters: stats.processedMeters.toLocaleString(),
+            meters: formatCount(stats.processedMeters),
             defaultValue: '{{meters}} m sewn on ready pieces',
           })}
         />
         <StatCard
           tint="peach"
           label={t('workshop.statProcessed', 'Processed fabric')}
-          value={`${stats.processedMeters.toLocaleString()} m`}
+          value={`${formatCount(stats.processedMeters)} ${t('common.metersShort')}`}
           hint={t('workshop.statProcessedHint', 'Meters on pieces marked ready')}
         />
         <StatCard
           tint="mint"
           label={t('workshop.statRemaining', 'Stock remaining')}
-          value={`${stats.remainingMeters.toLocaleString()} m`}
+          value={`${formatCount(stats.remainingMeters)} ${t('common.metersShort')}`}
           hint={t('workshop.statRemainingHint', {
             packages: formatPackages(stats.remainingPkg),
             defaultValue: '{{packages}} packages left',
@@ -290,7 +291,7 @@ export function WorkshopProductivityPage() {
             <CardTitle>{t('workshop.remainingPackages', 'Remaining packages')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="max-h-[228px] space-y-2 overflow-auto pr-1">
+            <div className="max-h-[228px] space-y-2 overflow-auto pe-1">
               {(fabricsData?.data ?? []).map((fabric) => {
                 const packages = remainingPackages(fabric.qty, fabric.packageMeters)
                 return (
@@ -304,12 +305,12 @@ export function WorkshopProductivityPage() {
                         {fabric.packageMeters} {t('workshop.metersPerPackage', 'm / package')}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-[13px] font-semibold tabular-nums">
                         {formatPackages(packages)} {t('workshop.pkg', 'pkg')}
                       </p>
                       <p className="text-[11px] text-text-muted tabular-nums">
-                        {Number(fabric.qty).toLocaleString()} {t('workshop.metersLeft', 'm left')}
+                        {formatCount(Number(fabric.qty))} {t('workshop.metersLeft', 'm left')}
                       </p>
                     </div>
                   </div>
@@ -377,7 +378,7 @@ export function WorkshopProductivityPage() {
             <div className="overflow-x-auto">
               <table className="min-w-[920px] w-full">
                 <thead className="bg-[#FAFAFA]">
-                  <tr className="text-left text-[12px] font-medium text-text-muted">
+                  <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">{t('workshop.colOrder', 'Order')}</th>
                     <th className="px-4 py-3">{t('workshop.colProduct', 'Product')}</th>
                     <th className="px-4 py-3">{t('workshop.status', 'Status')}</th>
@@ -402,9 +403,9 @@ export function WorkshopProductivityPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-text-secondary">{row.fabrics || '—'}</td>
-                      <td className="px-4 py-3 tabular-nums">{row.consumed} m</td>
+                      <td className="px-4 py-3 tabular-nums">{row.consumed} {t('common.metersShort')}</td>
                       <td className="px-4 py-3 text-text-secondary">{row.remainingStock || '—'}</td>
-                      <td className="px-4 py-3 text-text-secondary">{row.readyAt || '—'}</td>
+                      <td className="px-4 py-3 text-text-secondary">{formatDate(row.readyAt)}</td>
                     </tr>
                   ))}
                   {pageRows.length === 0 && (

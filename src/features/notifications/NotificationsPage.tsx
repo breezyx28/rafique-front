@@ -15,6 +15,8 @@ import {
   useMarkAllNotificationsReadMutation,
   useMarkNotificationReadMutation,
 } from '@/features/api/appApi'
+import { formatDateTime } from '@/lib/localeFormat'
+import { localizeNotification } from '@/lib/displayLabels'
 
 const PAGE_SIZE = 10
 
@@ -32,10 +34,13 @@ export function NotificationsPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return notifications.filter((row) => {
+      const localized = localizeNotification(row)
       const matchesSearch =
         !q ||
         row.title.toLowerCase().includes(q) ||
-        (row.subtitle ?? '').toLowerCase().includes(q)
+        localized.title.toLowerCase().includes(q) ||
+        (row.subtitle ?? '').toLowerCase().includes(q) ||
+        localized.subtitle.toLowerCase().includes(q)
       const matchesKind = kind === 'all' || row.kind === kind
       const matchesStatus =
         status === 'all' || (status === 'unread' ? !row.isRead : row.isRead)
@@ -120,7 +125,7 @@ export function NotificationsPage() {
             <div className="overflow-x-auto">
               <table className="min-w-[760px] w-full">
                 <thead className="bg-[#FAFAFA]">
-                  <tr className="text-left text-[12px] font-medium text-text-muted">
+                  <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">{t('notificationsPage.colTitle', 'Notification')}</th>
                     <th className="px-4 py-3">{t('notificationsPage.type', 'Type')}</th>
                     <th className="px-4 py-3">{t('notificationsPage.status', 'Status')}</th>
@@ -140,8 +145,8 @@ export function NotificationsPage() {
                     pageRows.map((row) => (
                       <tr key={row.id} className="border-t border-border text-[13px]">
                         <td className="px-4 py-3">
-                          <p className="font-semibold text-text-primary">{row.title}</p>
-                          <p className="text-[12px] text-text-muted">{row.subtitle || '—'}</p>
+                          <p className="font-semibold text-text-primary">{localizeNotification(row).title}</p>
+                          <p className="text-[12px] text-text-muted">{localizeNotification(row).subtitle || '—'}</p>
                         </td>
                         <td className="px-4 py-3">
                           <span
@@ -164,7 +169,7 @@ export function NotificationsPage() {
                           )}
                         </td>
                         <td className="px-4 py-3 text-text-secondary">
-                          {row.createdAt ? new Date(row.createdAt).toLocaleString() : '—'}
+                          {formatDateTime(row.createdAt)}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">

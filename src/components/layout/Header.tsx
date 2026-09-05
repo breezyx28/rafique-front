@@ -17,6 +17,7 @@ import {
   useMarkAllNotificationsReadMutation,
   useMarkNotificationReadMutation,
 } from '@/features/api/appApi'
+import { localizeNotification } from '@/lib/displayLabels'
 
 const POLL_MS = 20_000
 
@@ -24,7 +25,7 @@ export function Header() {
   const { user } = useAuthStore()
   const lang = usePreferenceStore((s) => s.language)
   const { t } = useTranslation()
-  const username = user?.username ?? 'User'
+  const username = user?.username ?? t('common.user')
   const avatarInitial = username.slice(0, 1).toUpperCase()
   const [isLangOpen, setIsLangOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
@@ -106,7 +107,7 @@ export function Header() {
           <ChevronDown className="h-3.5 w-3.5" />
         </button>
         {isLangOpen && (
-          <div className="absolute left-0 top-11 z-30 w-40 rounded-[12px] border border-border bg-white p-1 shadow-lg">
+          <div className="absolute start-0 top-11 z-30 w-40 rounded-[12px] border border-border bg-white p-1 shadow-lg">
             {languages.map((l) => (
               <button
                 key={l.code}
@@ -115,7 +116,7 @@ export function Header() {
                   setLanguage(l.code as LangCode)
                   setIsLangOpen(false)
                 }}
-                className={`w-full rounded-[8px] px-3 py-2 text-left text-[13px] ${
+                  className={`w-full rounded-[8px] px-3 py-2 text-start text-[13px] ${
                   lang === l.code
                     ? 'bg-primary-light font-semibold text-primary'
                     : 'text-text-secondary hover:bg-[#F5F5F5]'
@@ -149,13 +150,13 @@ export function Header() {
           >
             <Bell className="h-[16px] w-[16px]" />
             {unreadCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-white">
+              <span className="absolute -end-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-white">
                 {badgeLabel}
               </span>
             )}
           </button>
           {isNotificationOpen && (
-            <div className="absolute right-0 top-11 z-30 w-[320px] rounded-[12px] border border-border bg-white p-2 shadow-lg">
+            <div className="absolute end-0 top-11 z-30 w-[320px] rounded-[12px] border border-border bg-white p-2 shadow-lg">
               <div className="mb-1 flex items-center justify-between px-2 py-1">
                 <p className="text-[13px] font-semibold text-text-primary">
                   {t('header.latestAlerts', 'Latest Alerts')}
@@ -182,7 +183,9 @@ export function Header() {
                     {t('header.noAlerts', 'No alerts yet.')}
                   </p>
                 )}
-                {notifications.map((a) => (
+                {notifications.map((a) => {
+                  const copy = localizeNotification(a)
+                  return (
                   <button
                     key={a.id}
                     type="button"
@@ -191,13 +194,13 @@ export function Header() {
                         markNotificationRead(a.id)
                       }
                     }}
-                    className={`w-full cursor-pointer rounded-[10px] px-3 py-2 text-left hover:bg-[#F5F5F5] ${
+                    className={`w-full cursor-pointer rounded-[10px] px-3 py-2 text-start hover:bg-[#F5F5F5] ${
                       a.isRead ? '' : 'bg-primary-light/50'
                     }`}
                   >
-                    <p className="text-[12px] font-medium text-text-primary">{a.title}</p>
-                    {a.subtitle && (
-                      <p className="text-[11px] text-text-muted">{a.subtitle}</p>
+                    <p className="text-[12px] font-medium text-text-primary">{copy.title}</p>
+                    {copy.subtitle && (
+                      <p className="text-[11px] text-text-muted">{copy.subtitle}</p>
                     )}
                     <span
                       className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
@@ -209,7 +212,8 @@ export function Header() {
                         : t('header.stock', 'Stock')}
                     </span>
                   </button>
-                ))}
+                  )
+                })}
               </div>
               <div className="mt-2 border-t border-border px-2 pt-2">
                 <Link
