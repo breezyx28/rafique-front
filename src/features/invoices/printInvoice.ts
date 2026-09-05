@@ -1,6 +1,7 @@
 import i18n from '@/lib/i18n'
 import { formatDate, formatMoney } from '@/lib/localeFormat'
 import { formatPaymentMethod } from '@/lib/displayLabels'
+import { usePreferenceStore } from '@/store/usePreferenceStore'
 import type { InvoicePayload, InvoiceType } from './types'
 
 function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
@@ -14,6 +15,10 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
   const lang = (i18n.language || 'en').split('-')[0]
   const dir = lang === 'ar' ? 'rtl' : 'ltr'
   const paymentMethod = formatPaymentMethod(order.paymentMethod)
+  const shop = usePreferenceStore.getState()
+  const shopName = shop.workshopName || i18n.t('app.shopName')
+  const shopAddress = shop.workshopAddress
+  const shopPhone = shop.workshopPhone
   return `
 <!doctype html>
 <html lang="${lang}" dir="${dir}">
@@ -102,8 +107,10 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
   <body>
     <div class="receipt">
       <div class="center">
-        <h1>${i18n.t('app.shopName')}</h1>
+        <h1>${shopName}</h1>
         <p class="muted">${title}</p>
+        ${shopAddress ? `<p class="muted">${shopAddress}</p>` : ''}
+        ${shopPhone ? `<p class="muted">${shopPhone}</p>` : ''}
       </div>
       <div class="sep"></div>
       ${order.receiptNumber ? `<p><strong>${i18n.t('invoiceDetailsPage.receiptNumber', { number: order.receiptNumber })}</strong></p>` : ''}

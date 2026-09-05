@@ -14,10 +14,14 @@ interface PreferenceState {
   confirmOrderDialog: boolean
   dateFormat: DateFormat
   currency: string
+  workshopName: string
+  workshopAddress: string
+  workshopPhone: string
   setLanguage: (code: LangCode) => void
   setConfirmOrderDialog: (value: boolean) => void
   setDateFormat: (value: DateFormat) => void
   setCurrency: (value: string) => void
+  setShopProfile: (value: { workshopName?: string; workshopAddress?: string; workshopPhone?: string }) => void
 }
 
 export const usePreferenceStore = create<PreferenceState>()(
@@ -27,6 +31,9 @@ export const usePreferenceStore = create<PreferenceState>()(
       confirmOrderDialog: true,
       dateFormat: 'YYYY-MM-DD',
       currency: 'SDG',
+      workshopName: '',
+      workshopAddress: '',
+      workshopPhone: '',
       setLanguage: (code) => {
         localStorage.setItem('language', code)
         set({ language: code })
@@ -34,6 +41,12 @@ export const usePreferenceStore = create<PreferenceState>()(
       setConfirmOrderDialog: (value) => set({ confirmOrderDialog: value }),
       setDateFormat: (value) => set({ dateFormat: value === 'DD/MM/YYYY' ? 'DD/MM/YYYY' : 'YYYY-MM-DD' }),
       setCurrency: (value) => set({ currency: value || 'SDG' }),
+      setShopProfile: (value) =>
+        set({
+          workshopName: value.workshopName ?? '',
+          workshopAddress: value.workshopAddress ?? '',
+          workshopPhone: value.workshopPhone ?? '',
+        }),
     }),
     {
       name: 'jelabeya-prefs',

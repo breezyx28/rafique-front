@@ -463,6 +463,12 @@ export function OrdersPage() {
               {t('ordersPage.editTitle', 'Edit Order #{{id}}', { id: editingOrder.id })}
             </h3>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-[12px] font-medium text-text-secondary">
+                  {t('ordersPage.editStatusLabel')}
+                </label>
+                <Input value={formatOrderStatus(editingOrder.status)} readOnly />
+              </div>
               <NumberInput
                 label={t('ordersPage.editPaidLabel', 'Paid')}
                 format="money"

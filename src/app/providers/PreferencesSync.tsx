@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useGetSettingsQuery } from '@/features/api/appApi'
-import { setLanguage, type LangCode } from '@/lib/i18n'
+import { applyDocumentTitle, setLanguage, type LangCode } from '@/lib/i18n'
 import { usePreferenceStore, type DateFormat } from '@/store/usePreferenceStore'
 import { useAuthStore } from '@/store/useAuthStore'
 
@@ -14,6 +14,12 @@ export function PreferencesSync() {
     const currency = String(settings.currency ?? 'SDG')
     usePreferenceStore.getState().setDateFormat(dateFormat)
     usePreferenceStore.getState().setCurrency(currency)
+    usePreferenceStore.getState().setShopProfile({
+      workshopName: String(settings.workshopName ?? ''),
+      workshopAddress: String(settings.workshopAddress ?? ''),
+      workshopPhone: String(settings.workshopPhone ?? ''),
+    })
+    applyDocumentTitle()
 
     const stored = localStorage.getItem('language')
     const shopLanguage = String(settings.language ?? '')

@@ -18,6 +18,11 @@ function getStoredLanguage(): LangCode {
   return stored === 'ar' || stored === 'bn' ? stored : 'en'
 }
 
+export function applyDocumentTitle() {
+  const shopName = usePreferenceStore.getState().workshopName
+  document.title = shopName || i18n.t('app.shopName')
+}
+
 function applyDocumentLanguage(code: LangCode) {
   document.documentElement.dir = code === 'ar' ? 'rtl' : 'ltr'
   document.documentElement.lang = code
@@ -32,13 +37,14 @@ i18n.use(initReactI18next).init({
   fallbackLng: 'en',
   interpolation: { escapeValue: false },
 })
+applyDocumentTitle()
 
 export function setLanguage(code: LangCode) {
   const lang = languages.find((l) => l.code === code)
   if (lang) {
     applyDocumentLanguage(code)
     usePreferenceStore.getState().setLanguage(code)
-    void i18n.changeLanguage(code)
+    void i18n.changeLanguage(code).then(() => applyDocumentTitle())
   }
 }
 

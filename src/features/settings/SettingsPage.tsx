@@ -14,7 +14,7 @@ import {
 import { usePreferenceStore } from '@/store/usePreferenceStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { API_BASE } from '@/lib/api'
-import { setLanguage as applyLanguage } from '@/lib/i18n'
+import { applyDocumentTitle, setLanguage as applyLanguage } from '@/lib/i18n'
 import i18n from '@/lib/i18n'
 
 type SettingsTab = 'general' | 'preferences' | 'users' | 'security' | 'backup'
@@ -130,7 +130,15 @@ export function SettingsPage() {
             <div className="md:col-span-2 flex justify-end">
               <Button
                 className="gap-1"
-                onClick={() => patchSettings({ workshopName: shopName, workshopPhone: shopPhone, workshopAddress: shopAddress })}
+                onClick={async () => {
+                  await patchSettings({ workshopName: shopName, workshopPhone: shopPhone, workshopAddress: shopAddress })
+                  prefStore.setShopProfile({
+                    workshopName: shopName,
+                    workshopPhone: shopPhone,
+                    workshopAddress: shopAddress,
+                  })
+                  applyDocumentTitle()
+                }}
                 disabled={isLoading}
               >
                 <Save className="h-4 w-4" />{t('settingsPage.saveGeneral', 'Save General Settings')}

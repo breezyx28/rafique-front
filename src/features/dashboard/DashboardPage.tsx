@@ -126,7 +126,7 @@ export function DashboardPage() {
   const statusTotal = statusChart.reduce((sum, row) => sum + row.value, 0)
   const workshopTotal = workshopChart.reduce((sum, row) => sum + row.value, 0)
   const fabricTotal = fabricBars.reduce((sum, row) => sum + row.value, 0)
-  const periodChip = `${data?.timeline.length ?? 0} ${grainLabel}`
+  const periodChip = `${stats?.workingDays ?? data?.timeline.length ?? 0} ${t('dashboard.workingDays')}`
 
   const applyPreset = (next: Preset) => {
     setPreset(next)
