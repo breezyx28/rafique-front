@@ -53,22 +53,25 @@ export function TailorPaymentPage() {
             <thead>
               <tr className="text-[12px] text-text-muted">
                 <th className="px-3 py-3">{t('workshop.product')}</th>
-                <th className="px-3 py-3">{t('workshop.metersCompleted')}</th>
+                <th className="px-3 py-3">{t('workshop.pieces')}</th>
                 <th className="px-3 py-3">{t('workshop.rate')}</th>
                 <th className="px-3 py-3">{t('workshop.amount')}</th>
+                <th className="px-3 py-3">{t('workshop.metersCompleted')}</th>
               </tr>
             </thead>
             <tbody>
               {(data?.breakdown ?? []).map((row) => (
                 <tr key={`${row.productId}-${row.rate}`} className="border-t border-border">
                   <td className="px-3 py-3 font-semibold">{row.productName}</td>
-                  <td className="px-3 py-3">{row.meters}</td>
+                  <td className="px-3 py-3">{row.pieces}</td>
                   <td className="px-3 py-3">{formatMoney(row.rate)}</td>
                   <td className="px-3 py-3 font-semibold">{formatMoney(row.amount)}</td>
+                  <td className="px-3 py-3 text-text-secondary">{row.meters}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <p className="mt-3 text-[12px] text-text-muted">{t('workshop.metersNote')}</p>
           <div className="mt-4 rounded-[10px] bg-primary-light p-4 text-end">
             <span className="text-[12px] text-text-secondary">{t('workshop.totalAccrued')} </span>
             <span className="text-[20px] font-bold text-primary">{formatMoney(data?.total ?? 0)}</span>

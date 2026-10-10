@@ -773,12 +773,12 @@ export const appApi = createApi({
       ],
     }),
     getWorkshopPayroll: builder.query<
-      { breakdown: Array<{ productId: number; productName: string; meters: number; rate: number; amount: number }>; total: number },
+      { breakdown: Array<{ productId: number; productName: string; pieces: number; meters: number; rate: number; amount: number }>; total: number },
       void
     >({
       query: () => '/workshop/payroll',
       transformResponse: (response) => unwrapBody(response) as {
-        breakdown: Array<{ productId: number; productName: string; meters: number; rate: number; amount: number }>
+        breakdown: Array<{ productId: number; productName: string; pieces: number; meters: number; rate: number; amount: number }>
         total: number
       },
       providesTags: [{ type: 'Workshop', id: 'PAYROLL' }],
