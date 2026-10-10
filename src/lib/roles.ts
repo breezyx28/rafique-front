@@ -4,6 +4,7 @@ const cashierPrefixes = [
   '/orders',
   '/customers',
   '/invoices',
+  '/debts',
   '/notifications',
 ]
 

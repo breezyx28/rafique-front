@@ -67,7 +67,7 @@ export function SettingsPage() {
     setShowOrderConfirm(Boolean(settings.showOrderSubmitConfirm ?? true))
 
     setAdminUsername(String(settings.adminUsername ?? ''))
-  }, [settings])
+  }, [settings, prefStore.currency, prefStore.dateFormat])
 
   return (
     <div className="space-y-5">

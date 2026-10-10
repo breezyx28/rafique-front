@@ -48,10 +48,12 @@ export function InventoryPage() {
   const [createFabricQty, setCreateFabricQty] = useState(0)
   const [createFabricPackageMeters, setCreateFabricPackageMeters] = useState(20)
   const [createFabricPackagePrice, setCreateFabricPackagePrice] = useState(0)
-  const [editingReady, setEditingReady] = useState<any | null>(null)
-  const [editingFabric, setEditingFabric] = useState<any | null>(null)
-  const [deletingReady, setDeletingReady] = useState<any | null>(null)
-  const [deletingFabric, setDeletingFabric] = useState<any | null>(null)
+  type ReadyRow = NonNullable<typeof readyData>['data'][number]
+  type FabricRow = NonNullable<typeof fabricsData>['data'][number] & { packageQty?: number }
+  const [editingReady, setEditingReady] = useState<ReadyRow | null>(null)
+  const [editingFabric, setEditingFabric] = useState<FabricRow | null>(null)
+  const [deletingReady, setDeletingReady] = useState<ReadyRow | null>(null)
+  const [deletingFabric, setDeletingFabric] = useState<FabricRow | null>(null)
 
   const readyRows = useMemo(() => {
     const q = search.toLowerCase().trim()
@@ -297,7 +299,7 @@ export function InventoryPage() {
                   await updateInventoryItem({
                     id: editingReady.id,
                     body: {
-                      size: editingReady.size,
+                      size: editingReady.size ?? undefined,
                       qty: editingReady.qty,
                       price: editingReady.price,
                       productId: editingReady.product?.id,
@@ -330,7 +332,7 @@ export function InventoryPage() {
               />
               <Input
                 label={t('inventoryPage.editFabricUnit', 'Unit')}
-                value={editingFabric.unit}
+                value={editingFabric.unit ?? ''}
                 onChange={(e) =>
                   setEditingFabric({ ...editingFabric, unit: e.target.value })
                 }
@@ -388,7 +390,7 @@ export function InventoryPage() {
                     id: editingFabric.id,
                     body: {
                       name: editingFabric.name,
-                      unit: editingFabric.unit,
+                      unit: editingFabric.unit ?? undefined,
                       packageQty: Number(
                         editingFabric.packageQty ??
                           remainingPackages(editingFabric.qty, editingFabric.packageMeters),

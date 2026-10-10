@@ -40,16 +40,25 @@ export function InvoiceDetailsPage() {
         total: apiOrder.total,
         paid: apiOrder.paid,
         remaining: apiOrder.remaining ?? Math.max(0, apiOrder.total - apiOrder.paid),
-        items: (apiOrder.items ?? []).map((item) => ({
-          product: item.product?.name ?? t('orders.unnamedItem', { id: item.productId ?? '' }),
-          qty: item.qty,
-          unitPrice: item.unitPrice,
-          subtotal: item.subtotal ?? item.qty * item.unitPrice,
-          measurements: (item.measurements ?? []).map((m) => ({
-            label: getFieldLabel(m.field),
-            value: m.value ?? '',
+        items: [
+          ...(apiOrder.items ?? []).map((item) => ({
+            product: item.product?.name ?? t('orders.unnamedItem', { id: item.productId ?? '' }),
+            qty: item.qty,
+            unitPrice: item.unitPrice,
+            subtotal: item.subtotal ?? item.qty * item.unitPrice,
+            measurements: (item.measurements ?? []).map((m) => ({
+              label: getFieldLabel(m.field),
+              value: m.value ?? '',
+            })),
           })),
-        })),
+          ...(apiOrder.fabricSales ?? []).map((sale) => ({
+            product: sale.fabric?.name ?? t('orders.new.fabric'),
+            qty: sale.meters,
+            unitPrice: sale.unitPrice,
+            subtotal: sale.subtotal,
+            measurements: [],
+          })),
+        ],
       }
     : incomingOrder
 
@@ -86,7 +95,9 @@ export function InvoiceDetailsPage() {
                 : t('invoiceDetailsPage.customerInvoice', 'Customer Invoice')}
           </h1>
           <p className="text-[13px] text-text-secondary">
-            {t('invoiceDetailsPage.orderDue', { orderNumber: order.orderNumber, dueDate: formatDate(order.dueDate) })}
+            {type === 'pickup'
+              ? t('invoiceDetailsPage.orderNumber', { orderNumber: order.orderNumber })
+              : t('invoiceDetailsPage.orderDue', { orderNumber: order.orderNumber, dueDate: formatDate(order.dueDate) })}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -148,16 +159,46 @@ export function InvoiceDetailsPage() {
                 : t('invoiceDetailsPage.customerInvoice', 'Customer Invoice')}
           </CardTitle>
           <p className="text-[12px] text-text-secondary">
-            {t('invoiceDetailsPage.orderDateDue', 'Order #{{orderNumber}} · Date: {{date}} · Due: {{dueDate}}', {
-              orderNumber: order.orderNumber,
-              date: formatDate(order.submittedAt),
-              dueDate: formatDate(order.dueDate),
-            })}
-            {order.receiptNumber ? ` · ${t('invoiceDetailsPage.receiptNumber', { number: order.receiptNumber })}` : ''}
+            {type === 'pickup'
+              ? t('invoiceDetailsPage.orderDate', {
+                  orderNumber: order.orderNumber,
+                  date: formatDate(order.submittedAt),
+                })
+              : t('invoiceDetailsPage.orderDateDue', {
+                  orderNumber: order.orderNumber,
+                  date: formatDate(order.submittedAt),
+                  dueDate: formatDate(order.dueDate),
+                })}
+            {type === 'pickup'
+              ? ` · ${
+                  order.receiptNumber
+                    ? t('invoiceDetailsPage.receiptNumber', { number: order.receiptNumber })
+                    : t('invoiceDetailsPage.receiptNotIssued')
+                }`
+              : order.receiptNumber
+                ? ` · ${t('invoiceDetailsPage.receiptNumber', { number: order.receiptNumber })}`
+                : ''}
           </p>
         </CardHeader>
         <CardContent className="space-y-4 pt-4">
-          {type !== 'workshop' ? (
+          {type === 'pickup' ? (
+            <>
+              <div className="text-[13px]">
+                <p className="font-semibold text-text-primary">{shopName}</p>
+                <p className="mt-2 text-text-secondary">
+                  {t('invoiceDetailsPage.customerLabel', 'Customer')}: {order.customerName} · {order.customerPhone}
+                </p>
+                <p className="text-text-secondary">
+                  {t('invoiceDetailsPage.paymentMethod', 'Payment Method')}: {formatPaymentMethod(order.paymentMethod)}
+                </p>
+              </div>
+              <ul className="space-y-1 text-[13px] font-semibold text-text-primary">
+                {order.items.map((item) => (
+                  <li key={`${item.product}-${item.qty}`}>{item.product}</li>
+                ))}
+              </ul>
+            </>
+          ) : type === 'customer' ? (
             <>
               <div className="text-[13px]">
                 <p className="font-semibold text-text-primary">{shopName}</p>
@@ -171,6 +212,7 @@ export function InvoiceDetailsPage() {
                   <p className="text-[13px] font-semibold text-text-primary">
                     {item.product} ({t('invoiceDetailsPage.qty', 'qty')}: {item.qty})
                   </p>
+                  {item.measurements.length > 0 && (
                   <div className="overflow-hidden rounded-[10px] border border-border">
                     <table className="w-full">
                       <thead className="bg-[#FAFAFA]">
@@ -189,6 +231,7 @@ export function InvoiceDetailsPage() {
                       </tbody>
                     </table>
                   </div>
+                  )}
                 </div>
               ))}
               <div className="grid gap-2 text-[13px] sm:grid-cols-2">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
@@ -21,13 +21,14 @@ export function CustomerEditPage() {
   const [phone, setPhone] = useState('')
   const [notes, setNotes] = useState('')
   const [phoneError, setPhoneError] = useState('')
+  const [loadedCustomerId, setLoadedCustomerId] = useState<number | null>(null)
 
-  useEffect(() => {
-    if (!customer) return
+  if (customer && customer.id !== loadedCustomerId) {
+    setLoadedCustomerId(customer.id)
     setName(customer.name ?? '')
     setPhone(customer.phone ?? '')
     setNotes(customer.notes ?? '')
-  }, [customer])
+  }
 
   if (!isLoading && !customer) {
     return (

@@ -204,12 +204,18 @@ export function Header() {
                     )}
                     <span
                       className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                        a.kind === 'due' ? 'bg-warningBg text-[#B45309]' : 'bg-dangerBg text-danger'
+                        a.kind === 'due'
+                          ? 'bg-warningBg text-[#B45309]'
+                          : a.kind === 'balance'
+                            ? 'bg-primary-light text-primary'
+                            : 'bg-dangerBg text-danger'
                       }`}
                     >
                       {a.kind === 'due'
                         ? t('header.dueDate', 'Due date')
-                        : t('header.stock', 'Stock')}
+                        : a.kind === 'balance'
+                          ? t('header.balance')
+                          : t('header.stock', 'Stock')}
                     </span>
                   </button>
                   )

@@ -1,4 +1,5 @@
 import i18n from './i18n'
+import { formatMoney } from './localeFormat'
 
 export function formatPaymentMethod(method?: string | null): string {
   const value = String(method ?? 'cash').toLowerCase()
@@ -70,12 +71,47 @@ function isFollowUp(subtitle?: string | null): boolean {
   ].some((pattern) => pattern.test(subtitle))
 }
 
+function isNeedsCustomer(subtitle?: string | null): boolean {
+  if (!subtitle) return false
+  return [
+    /needs a customer name and phone/i,
+    /يحتاج اسم العميل وهاتفه/,
+    /গ্রাহকের নাম ও ফোন/,
+  ].some((pattern) => pattern.test(subtitle))
+}
+
+function extractAmount(title: string, orderNumber: string | null) {
+  const numbers = title.match(/\d+(?:\.\d+)?/g) ?? []
+  return numbers.find((value) => value !== orderNumber) ?? numbers[0] ?? ''
+}
+
 export function localizeNotification(input: {
   title: string
   subtitle?: string | null
-  kind: 'due' | 'stock'
+  kind: 'due' | 'stock' | 'balance'
   window?: string | null
 }): { title: string; subtitle: string } {
+  if (input.kind === 'balance') {
+    const orderNumber = extractOrderNumber(input.title)
+    const amount = extractAmount(input.title, orderNumber)
+    const titleKey =
+      input.window === 'balance_overdue'
+        ? 'notifications.balanceOverdue'
+        : 'notifications.balanceOpen'
+    const customer = extractCustomer(input.subtitle)
+    return {
+      title:
+        orderNumber && amount
+          ? i18n.t(titleKey, { orderNumber, amount: formatMoney(Number(amount)) })
+          : input.title,
+      subtitle: customer
+        ? i18n.t('notifications.customer', { name: customer })
+        : isNeedsCustomer(input.subtitle)
+          ? i18n.t('notifications.needsCustomer')
+          : input.subtitle ?? i18n.t('notifications.needsCustomer'),
+    }
+  }
+
   if (input.kind === 'stock') {
     const stock = extractStock(input.title)
     return {

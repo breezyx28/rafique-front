@@ -32,8 +32,16 @@ export const authApi = createApi({
         method: 'POST',
         body,
       }),
-      transformResponse: (response: any): LoginResponse => {
-        const data = response?.data ?? response
+      transformResponse: (response: unknown): LoginResponse => {
+        const body = (response && typeof response === 'object' ? response : {}) as {
+          data?: LoginResponse
+          accessToken?: string
+          user?: LoginResponse['user']
+        }
+        const data = body.data ?? body
+        if (!data.accessToken || !data.user) {
+          throw new Error('Invalid login response')
+        }
         return {
           accessToken: data.accessToken,
           user: data.user,

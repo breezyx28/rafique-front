@@ -27,7 +27,7 @@ export function NotificationsPage() {
   const [markRead] = useMarkNotificationReadMutation()
   const [markAllRead] = useMarkAllNotificationsReadMutation()
   const [search, setSearch] = useState('')
-  const [kind, setKind] = useState<'all' | 'due' | 'stock'>('all')
+  const [kind, setKind] = useState<'all' | 'due' | 'stock' | 'balance'>('all')
   const [status, setStatus] = useState<'all' | 'unread' | 'read'>('all')
   const [page, setPage] = useState(1)
 
@@ -103,6 +103,7 @@ export function NotificationsPage() {
                 <option value="all">{t('notificationsPage.allTypes', 'All types')}</option>
                 <option value="due">{t('header.dueDate', 'Due date')}</option>
                 <option value="stock">{t('header.stock', 'Stock')}</option>
+                <option value="balance">{t('header.balance')}</option>
               </select>
             </ToolbarField>
             <ToolbarField label={t('notificationsPage.status', 'Status')}>
@@ -151,12 +152,18 @@ export function NotificationsPage() {
                         <td className="px-4 py-3">
                           <span
                             className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-                              row.kind === 'due' ? 'bg-warningBg text-[#B45309]' : 'bg-dangerBg text-danger'
+                              row.kind === 'due'
+                                ? 'bg-warningBg text-[#B45309]'
+                                : row.kind === 'balance'
+                                  ? 'bg-primary-light text-primary'
+                                  : 'bg-dangerBg text-danger'
                             }`}
                           >
                             {row.kind === 'due'
                               ? t('header.dueDate', 'Due date')
-                              : t('header.stock', 'Stock')}
+                              : row.kind === 'balance'
+                                ? t('header.balance')
+                                : t('header.stock', 'Stock')}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -192,6 +199,18 @@ export function NotificationsPage() {
                                 }}
                               >
                                 {t('notificationsPage.openOrders', 'Open orders')}
+                              </Button>
+                            )}
+                            {row.kind === 'balance' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (!row.isRead) void markRead(row.id)
+                                  navigate('/debts')
+                                }}
+                              >
+                                {t('notificationsPage.openDebts')}
                               </Button>
                             )}
                             {row.kind === 'stock' && (

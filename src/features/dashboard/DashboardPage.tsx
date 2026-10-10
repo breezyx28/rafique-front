@@ -109,7 +109,7 @@ export function DashboardPage() {
         name: timelineLabel(row.date, data?.period.grain ?? 'day'),
         value: row.revenue,
       })),
-    [data?.timeline, data?.period.grain],
+    [data?.timeline, data?.period],
   )
 
   const fabricBars = useMemo(

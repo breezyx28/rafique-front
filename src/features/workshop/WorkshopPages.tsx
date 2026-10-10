@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { NumberInput } from '@/components/ui/NumberInput'
 import {
-  useGetInventoryFabricsQuery,
+  useGetProductsQuery,
   useGetWorkshopPayrollQuery,
-  useUpdateFabricMutation,
+  useUpdateProductMutation,
 } from '@/features/api/appApi'
 import { formatMoney } from '@/lib/localeFormat'
 
@@ -14,8 +14,8 @@ export { WorkshopProductivityPage } from './ProductivityPage'
 
 export function SewingPricingPage() {
   const { t } = useTranslation()
-  const { data: fabrics } = useGetInventoryFabricsQuery({ page: 1, limit: 100 })
-  const [updateFabric] = useUpdateFabricMutation()
+  const { data: products } = useGetProductsQuery({ type: 'custom' })
+  const [updateProduct] = useUpdateProductMutation()
 
   return (
     <WorkshopShell title={t('workshop.pricingTitle')}>
@@ -27,12 +27,12 @@ export function SewingPricingPage() {
           <p className="text-[13px] text-text-secondary">
             {t('workshop.pricingHint')}
           </p>
-          {(fabrics?.data ?? []).map((fabric) => (
+          {(products ?? []).map((product) => (
             <PricingRow
-              key={fabric.id}
-              label={fabric.name}
-              value={fabric.sewingRatePerMeter}
-              onSave={(value) => updateFabric({ id: fabric.id, body: { sewingRatePerMeter: value } })}
+              key={product.id}
+              label={product.name}
+              value={product.sewingPrice}
+              onSave={(value) => updateProduct({ id: product.id, body: { sewingPrice: value } })}
             />
           ))}
         </CardContent>
@@ -50,11 +50,11 @@ export function TailorPaymentPage() {
         <CardHeader><CardTitle>{t('workshop.payrollTitle')}</CardTitle></CardHeader>
         <CardContent>
           <table className="w-full text-[13px]">
-            <thead><tr className="text-start text-[12px] text-text-muted"><th className="py-3">{t('workshop.fabric')}</th><th>{t('workshop.metersCompleted')}</th><th>{t('workshop.rate')}</th><th>{t('workshop.amount')}</th></tr></thead>
+            <thead><tr className="text-start text-[12px] text-text-muted"><th className="py-3">{t('workshop.product')}</th><th>{t('workshop.metersCompleted')}</th><th>{t('workshop.rate')}</th><th>{t('workshop.amount')}</th></tr></thead>
             <tbody>
               {(data?.breakdown ?? []).map((row) => (
-                <tr key={row.fabricId} className="border-t border-border">
-                  <td className="py-3 font-semibold">{row.fabricName}</td>
+                <tr key={`${row.productId}-${row.rate}`} className="border-t border-border">
+                  <td className="py-3 font-semibold">{row.productName}</td>
                   <td>{row.meters}</td><td>{formatMoney(row.rate)}</td><td className="font-semibold">{formatMoney(row.amount)}</td>
                 </tr>
               ))}
@@ -89,7 +89,7 @@ function PricingRow({ label, value, onSave }: { label: string; value: number; on
         value={local}
         onValueChange={setLocal}
         onBlur={() => void onSave(local)}
-        aria-label={t('workshop.sewingRateAria', { fabric: label })}
+        aria-label={t('workshop.sewingRateAria', { product: label })}
         placeholder="0"
       />
     </label>

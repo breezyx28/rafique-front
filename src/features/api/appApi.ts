@@ -17,7 +17,13 @@ const customerSchema = z.object({
   ordersCount: z.coerce.number().optional().default(0),
   totalSpent: z.coerce.number().optional().default(0),
   lastOrderDate: z.string().nullable().optional(),
-  orders: z.array(z.any()).optional(),
+  orders: z.array(z.object({
+    id: z.union([z.coerce.number(), z.string()]).optional(),
+    orderNumber: z.string().optional(),
+    type: z.string().optional(),
+    status: z.string().optional(),
+    createdAt: z.string().nullable().optional(),
+  }).passthrough()).optional(),
 }).passthrough()
 
 const customerMinimalSchema = z.object({
@@ -64,6 +70,7 @@ const customerMeasurementOrderSchema = z
     createdAt: z.string(),
     items: z.array(
       z.object({
+        productId: z.coerce.number().nullable().optional(),
         productName: z.string().nullable().optional(),
         measurements: z.array(orderMeasurementSchema),
       })
@@ -124,6 +131,8 @@ const orderSchema = z.object({
   }).passthrough()).optional().default([]),
 }).passthrough()
 
+export type ShopOrder = z.infer<typeof orderSchema>
+
 const inventoryItemSchema = z.object({
   id: z.coerce.number(),
   size: z.string().nullable().optional().default(''),
@@ -170,7 +179,7 @@ const notificationSchema = z.object({
   id: z.coerce.number(),
   title: z.string(),
   subtitle: z.string().nullable().optional(),
-  kind: z.enum(['due', 'stock']),
+  kind: z.enum(['due', 'stock', 'balance']),
   orderId: z.coerce.number().nullable().optional(),
   inventoryItemId: z.coerce.number().nullable().optional(),
   window: z.string().nullable().optional(),
@@ -321,10 +330,14 @@ function parseMany<T>(payload: unknown, schema: z.ZodType<T>): T[] {
   return z.array(schema).parse(unwrapBody(payload))
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
+}
+
 function parsePaginated<T>(payload: unknown, schema: z.ZodType<T>): Paginated<T> {
-  const body = unwrapBody(payload) as Envelope
-  const data = z.array(schema).parse((body as any)?.data ?? [])
-  const meta = metaSchema.parse((body as any)?.meta ?? (payload as any)?.meta ?? { page: 1, limit: data.length || 20, total: data.length })
+  const body = asRecord(unwrapBody(payload))
+  const data = z.array(schema).parse(body.data ?? [])
+  const meta = metaSchema.parse(body.meta ?? asRecord(payload).meta ?? { page: 1, limit: data.length || 20, total: data.length })
   return { data, meta }
 }
 
@@ -449,6 +462,7 @@ export const appApi = createApi({
       invalidatesTags: (_result, _error, { id }) => [
         { type: 'Product', id },
         { type: 'Product', id: 'LIST' },
+        { type: 'Workshop', id: 'PAYROLL' },
       ],
     }),
     getProductFields: builder.query<z.infer<typeof productFieldSchema>[], number>({
@@ -494,6 +508,78 @@ export const appApi = createApi({
       transformResponse: (response) => parseMany(response, customerMeasurementOrderSchema),
       providesTags: (_result, _error, customerId) => [{ type: 'Customer', id: `MEASUREMENTS-${customerId}` }],
     }),
+    getReceivables: builder.query<
+      {
+        stats: { balanceDue: number; openCount: number; collected: number }
+        aging: Array<{ bucket: 'not_yet_due' | 'due_today' | 'overdue'; total: number }>
+        rows: Array<{
+          id: number
+          orderNumber: string
+          receiptNumber: string | null
+          type: string
+          dueDate: string | null
+          total: number
+          paid: number
+          remaining: number
+          paymentMethod: string | null
+          customerId: number | null
+          customerName: string | null
+          customerPhone: string | null
+          needsCustomer: boolean
+          bucket: 'not_yet_due' | 'due_today' | 'overdue' | 'settled'
+        }>
+      },
+      { from?: string; to?: string; status?: 'open' | 'settled' | 'all' }
+    >({
+      query: (params) => ({ url: '/orders/receivables', params }),
+      transformResponse: (response) =>
+        unwrapBody(response) as {
+          stats: { balanceDue: number; openCount: number; collected: number }
+          aging: Array<{ bucket: 'not_yet_due' | 'due_today' | 'overdue'; total: number }>
+          rows: Array<{
+            id: number
+            orderNumber: string
+            receiptNumber: string | null
+            type: string
+            dueDate: string | null
+            total: number
+            paid: number
+            remaining: number
+            paymentMethod: string | null
+            customerId: number | null
+            customerName: string | null
+            customerPhone: string | null
+            needsCustomer: boolean
+            bucket: 'not_yet_due' | 'due_today' | 'overdue' | 'settled'
+          }>
+        },
+      providesTags: [{ type: 'Order', id: 'RECEIVABLES' }],
+    }),
+    addOrderReceipt: builder.mutation<
+      z.infer<typeof orderSchema>,
+      { id: number; body: { amount: number; paymentMethod: 'cash' | 'mbok'; paidAt?: string } }
+    >({
+      query: ({ id, body }) => ({ url: `/orders/${id}/receipts`, method: 'POST', body }),
+      transformResponse: (response) => parseOne(response, orderSchema),
+      invalidatesTags: [
+        { type: 'Order', id: 'LIST' },
+        { type: 'Order', id: 'RECEIVABLES' },
+        { type: 'Notification', id: 'LIST' },
+      ],
+    }),
+    attachOrderCustomer: builder.mutation<z.infer<typeof orderSchema>, { id: number; customerId: number }>({
+      query: ({ id, customerId }) => ({
+        url: `/orders/${id}/customer`,
+        method: 'PATCH',
+        body: { customerId },
+      }),
+      transformResponse: (response) => parseOne(response, orderSchema),
+      invalidatesTags: [
+        { type: 'Order', id: 'LIST' },
+        { type: 'Order', id: 'RECEIVABLES' },
+        { type: 'Notification', id: 'LIST' },
+      ],
+    }),
     getOrderById: builder.query<z.infer<typeof orderSchema>, number>({
       query: (id) => `/orders/${id}`,
       transformResponse: (response) => parseOne(response, orderSchema),
@@ -514,7 +600,11 @@ export const appApi = createApi({
     >({
       query: (body) => ({ url: '/orders/custom', method: 'POST', body }),
       transformResponse: (response) => parseOne(response, orderSchema),
-      invalidatesTags: [{ type: 'Order', id: 'LIST' }, { type: 'Customer', id: 'LIST-MIN' }],
+      invalidatesTags: [
+        { type: 'Order', id: 'LIST' },
+        { type: 'Order', id: 'RECEIVABLES' },
+        { type: 'Customer', id: 'LIST-MIN' },
+      ],
     }),
     createReadyOrder: builder.mutation<
       z.infer<typeof orderSchema>,
@@ -522,6 +612,7 @@ export const appApi = createApi({
         items: Array<{ inventoryItemId: number; qty: number; unitPrice: number }>
         total: number
         paid: number
+        customerId?: number
         paymentMethod?: 'cash' | 'mbok'
         dueDate?: string
       }
@@ -530,6 +621,7 @@ export const appApi = createApi({
       transformResponse: (response) => parseOne(response, orderSchema),
       invalidatesTags: [
         { type: 'Order', id: 'LIST' },
+        { type: 'Order', id: 'RECEIVABLES' },
         { type: 'InventoryItem', id: 'LIST' },
         { type: 'Customer', id: 'LIST-MIN' },
       ],
@@ -549,6 +641,7 @@ export const appApi = createApi({
       transformResponse: (response) => parseOne(response, orderSchema),
       invalidatesTags: [
         { type: 'Order', id: 'LIST' },
+        { type: 'Order', id: 'RECEIVABLES' },
         { type: 'Fabric', id: 'LIST' },
         { type: 'Customer', id: 'LIST-MIN' },
       ],
@@ -571,6 +664,8 @@ export const appApi = createApi({
       invalidatesTags: (_result, _error, { id }) => [
         { type: 'Order', id },
         { type: 'Order', id: 'LIST' },
+        { type: 'Order', id: 'RECEIVABLES' },
+        { type: 'Notification', id: 'LIST' },
         { type: 'Customer', id: 'LIST-MIN' },
       ],
     }),
@@ -673,16 +768,17 @@ export const appApi = createApi({
       transformResponse: (response) => parseOne(response, orderSchema),
       invalidatesTags: [
         { type: 'Workshop', id: 'ORDERS' },
+        { type: 'Workshop', id: 'PAYROLL' },
         { type: 'Order', id: 'LIST' },
       ],
     }),
     getWorkshopPayroll: builder.query<
-      { breakdown: Array<{ fabricId: number; fabricName: string; meters: number; rate: number; amount: number }>; total: number },
+      { breakdown: Array<{ productId: number; productName: string; meters: number; rate: number; amount: number }>; total: number },
       void
     >({
       query: () => '/workshop/payroll',
       transformResponse: (response) => unwrapBody(response) as {
-        breakdown: Array<{ fabricId: number; fabricName: string; meters: number; rate: number; amount: number }>
+        breakdown: Array<{ productId: number; productName: string; meters: number; rate: number; amount: number }>
         total: number
       },
       providesTags: [{ type: 'Workshop', id: 'PAYROLL' }],
@@ -789,6 +885,9 @@ export const {
   useDeleteProductFieldMutation,
   useGetCustomerListQuery,
   useGetCustomerMeasurementsQuery,
+  useGetReceivablesQuery,
+  useAddOrderReceiptMutation,
+  useAttachOrderCustomerMutation,
   useGetOrdersQuery,
   useGetOrderByIdQuery,
   useCreateCustomOrderMutation,

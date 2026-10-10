@@ -113,31 +113,50 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
         ${shopPhone ? `<p class="muted">${shopPhone}</p>` : ''}
       </div>
       <div class="sep"></div>
-      ${order.receiptNumber ? `<p><strong>${i18n.t('invoiceDetailsPage.receiptNumber', { number: order.receiptNumber })}</strong></p>` : ''}
+      ${
+        isPickup
+          ? `<p><strong>${
+              order.receiptNumber
+                ? i18n.t('invoiceDetailsPage.receiptNumber', { number: order.receiptNumber })
+                : i18n.t('invoiceDetailsPage.receiptNotIssued')
+            }</strong></p>`
+          : order.receiptNumber
+            ? `<p><strong>${i18n.t('invoiceDetailsPage.receiptNumber', { number: order.receiptNumber })}</strong></p>`
+            : ''
+      }
       <p>${i18n.t('invoiceDetailsPage.orderNumber', { orderNumber: order.orderNumber })}</p>
       <p>${i18n.t('invoiceDetailsPage.dateLabel', { date: formatDate(order.submittedAt) })}</p>
-      <p>${i18n.t('invoiceDetailsPage.dueLabel', { dueDate: formatDate(order.dueDate) })}</p>
+      ${isPickup ? '' : `<p>${i18n.t('invoiceDetailsPage.dueLabel', { dueDate: formatDate(order.dueDate) })}</p>`}
       ${isCustomer || isPickup ? `<p>${i18n.t('invoiceDetailsPage.customerLabel')}: ${order.customerName}</p><p>${i18n.t('invoiceDetailsPage.phoneLabel', { phone: order.customerPhone })}</p>` : ''}
+      ${isPickup ? `<p>${i18n.t('invoiceDetailsPage.paymentMethod')}: ${paymentMethod}</p>` : ''}
       <div class="sep"></div>
-    ${order.items
-      .map(
-        (item) => `
+    ${
+      isPickup
+        ? order.items.map((item) => `<p><strong>${item.product}</strong></p>`).join('')
+        : order.items
+            .map(
+              (item) => `
       <div class="block">
         <strong>${item.product} ${i18n.t('invoiceDetailsPage.qtyWithCount', { qty: item.qty })}</strong>
-        <table>
+        ${
+          item.measurements.length
+            ? `<table>
           <thead><tr><th>${i18n.t('invoiceDetailsPage.measurement')}</th><th>${i18n.t('invoiceDetailsPage.value')}</th></tr></thead>
           <tbody>
             ${item.measurements
               .map((m) => `<tr><td>${m.label}</td><td>${m.value || '—'}</td></tr>`)
               .join('')}
           </tbody>
-        </table>
+        </table>`
+            : ''
+        }
       </div>
     `
-      )
-      .join('')}
+            )
+            .join('')
+    }
     ${
-      isCustomer || isPickup
+      isCustomer
         ? `<div class="totals">
       <div class="sep"></div>
       <p>${i18n.t('invoiceDetailsPage.total')}: ${formatMoney(order.total)}</p>
@@ -146,7 +165,9 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
       <p>${i18n.t('invoiceDetailsPage.paymentMethod')}: ${paymentMethod}</p>
       <p>${i18n.t('invoiceDetailsPage.noteLabel')}: ${order.customerNote || i18n.t('invoiceDetailsPage.customerNoteDefault')}</p>
     </div>`
-        : `<div class="totals">
+        : isPickup
+          ? ''
+          : `<div class="totals">
       <div class="sep"></div>
       <p>${i18n.t('invoiceDetailsPage.workshopNoteLabel')}: ${order.workshopNote || i18n.t('invoiceDetailsPage.workshopNoteDefault')}</p>
       <p>${i18n.t('invoiceDetailsPage.noPriceContacts')}</p>
@@ -162,9 +183,7 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
 
 export function printInvoiceAndPickup(order: InvoicePayload) {
   printInvoice(order, 'customer')
-  if (order.receiptNumber) {
-    window.setTimeout(() => printInvoice(order, 'pickup'), 600)
-  }
+  window.setTimeout(() => printInvoice(order, 'pickup'), 600)
 }
 
 export function printInvoice(order: InvoicePayload, type: InvoiceType) {

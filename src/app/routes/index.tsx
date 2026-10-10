@@ -15,6 +15,7 @@ import { ProductConfigPage } from '@/features/settings/products/ProductConfigPag
 import { InvoicesPage } from '@/features/invoices/InvoicesPage'
 import { InvoiceDetailsPage } from '@/features/invoices/InvoiceDetailsPage'
 import { NotificationsPage } from '@/features/notifications/NotificationsPage'
+import { DebtsPage } from '@/features/debts/DebtsPage'
 import {
   DeliveredOrdersPage,
   SewingPricingPage,
@@ -39,6 +40,7 @@ export function AppRoutes() {
         <Route path="expenses" element={<ExpensesPage />} />
         <Route path="invoices" element={<InvoicesPage />} />
         <Route path="invoices/:orderNumber" element={<InvoiceDetailsPage />} />
+        <Route path="debts" element={<DebtsPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="settings/products" element={<ProductConfigPage />} />

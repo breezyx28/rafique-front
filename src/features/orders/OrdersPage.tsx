@@ -19,11 +19,26 @@ import {
   useGetOrdersQuery,
   useUndoDeliverOrderToWorkshopMutation,
   useUpdateOrderMutation,
+  type ShopOrder,
 } from '@/features/api/appApi'
 
 type OrderType = 'custom' | 'ready' | 'fabric'
 type PaymentMethod = 'cash' | 'mbok'
 type OrderStatus = 'pending' | 'in_progress' | 'ready' | 'delivered' | 'cancelled'
+type OrderItemDraft = {
+  id?: number
+  product?: { name?: string | null } | null
+  fabricId?: number | ''
+  fabricMeters?: number | ''
+}
+type EditableOrder = {
+  id: number
+  status: OrderStatus
+  type: OrderType
+  paid: number
+  workshopDeliveredAt?: string | null
+  items: OrderItemDraft[]
+}
 
 const statusClassMap: Record<OrderStatus, string> = {
   pending: 'bg-warningBg text-[#B45309]',
@@ -44,7 +59,9 @@ export function OrdersPage() {
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
   const [page, setPage] = useState(1)
-  const [editingOrder, setEditingOrder] = useState<any | null>(null)
+  const [editingOrder, setEditingOrder] = useState<EditableOrder | null>(null)
+  const [paidFloor, setPaidFloor] = useState(0)
+  const [editError, setEditError] = useState('')
   const { data } = useGetOrdersQuery({
     page,
     limit: 20,
@@ -58,7 +75,7 @@ export function OrdersPage() {
   const [deliverToWorkshop] = useDeliverOrderToWorkshopMutation()
   const [undoDeliver] = useUndoDeliverOrderToWorkshopMutation()
   const { data: fabricsData } = useGetInventoryFabricsQuery({ page: 1, limit: 100 })
-  const [confirmDeliver, setConfirmDeliver] = useState<any | null>(null)
+  const [confirmDeliver, setConfirmDeliver] = useState<ShopOrder | null>(null)
   const [undoToast, setUndoToast] = useState<{ id: number; orderNumber: string; expiresAt: number } | null>(null)
   const [undoSeconds, setUndoSeconds] = useState(30)
 
@@ -104,7 +121,7 @@ export function OrdersPage() {
 
   const totalPages = Math.max(1, Math.ceil((data?.meta.total ?? filteredOrders.length) / (data?.meta.limit ?? 20)))
 
-  const toInvoicePayload = (row: any): InvoicePayload => ({
+  const toInvoicePayload = (row: ShopOrder): InvoicePayload => ({
     orderNumber: row.orderNumber,
     receiptNumber: row.receiptNumber,
     submittedAt: (row.createdAt ?? '').slice(0, 10),
@@ -117,12 +134,12 @@ export function OrdersPage() {
     total: row.total,
     paid: row.paid,
     remaining: Math.max(0, row.total - row.paid),
-    items: (row.items ?? []).map((item: any) => ({
+    items: (row.items ?? []).map((item) => ({
       product: item.product?.name ?? t('orders.unnamedItem', { id: item.productId ?? '' }),
       qty: item.qty,
       unitPrice: item.unitPrice,
       subtotal: item.qty * item.unitPrice,
-      measurements: (item.measurements ?? []).map((m: any) => ({
+      measurements: (item.measurements ?? []).map((m) => ({
         label: getFieldLabel(m.field),
         value: m.value ?? '',
       })),
@@ -303,8 +320,8 @@ export function OrdersPage() {
                   {filteredOrders.map((row) => {
                     const remaining = row.remaining ?? row.total - row.paid
                     const products = [
-                      ...(row.items ?? []).map((item: any) => item.product?.name || t('orders.unnamedItem', { id: item.productId ?? '' })),
-                      ...(row.fabricSales ?? []).map((item: any) =>
+                      ...(row.items ?? []).map((item) => item.product?.name || t('orders.unnamedItem', { id: item.productId ?? '' })),
+                      ...(row.fabricSales ?? []).map((item) =>
                         t('orders.fabricSaleLine', {
                           name: item.fabric?.name ?? t('orders.new.fabric'),
                           meters: item.meters,
@@ -375,16 +392,23 @@ export function OrdersPage() {
                             </button>
                             <button
                               type="button"
-                              onClick={() =>
+                              onClick={() => {
+                                setPaidFloor(Number(row.paid) || 0)
+                                setEditError('')
                                 setEditingOrder({
-                                  ...row,
-                                  items: (row.items ?? []).map((item: any) => ({
-                                    ...item,
+                                  id: row.id,
+                                  status: row.status,
+                                  type: row.type,
+                                  paid: Number(row.paid) || 0,
+                                  workshopDeliveredAt: row.workshopDeliveredAt,
+                                  items: (row.items ?? []).map((item) => ({
+                                    id: item.id,
+                                    product: item.product,
                                     fabricId: item.fabricConsumptions?.[0]?.fabricId ?? '',
                                     fabricMeters: item.fabricConsumptions?.[0]?.meters ?? '',
                                   })),
                                 })
-                              }
+                              }}
                               className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
                               aria-label={t('orders.edit')}
                             >
@@ -469,14 +493,17 @@ export function OrdersPage() {
                 </label>
                 <Input value={formatOrderStatus(editingOrder.status)} readOnly />
               </div>
-              <NumberInput
-                label={t('ordersPage.editPaidLabel', 'Paid')}
-                format="money"
-                min={0}
-                value={editingOrder.paid}
-                onValueChange={(paid) => setEditingOrder({ ...editingOrder, paid })}
-                placeholder={t('common.pricePlaceholder', 'e.g. 700,000')}
-              />
+              <div>
+                <NumberInput
+                  label={t('ordersPage.editPaidLabel', 'Paid')}
+                  format="money"
+                  min={paidFloor}
+                  value={editingOrder.paid}
+                  onValueChange={(paid) => setEditingOrder({ ...editingOrder, paid })}
+                  placeholder={t('common.pricePlaceholder', 'e.g. 700,000')}
+                />
+                <p className="mt-1 text-[12px] text-text-muted">{t('ordersPage.editPaidHint')}</p>
+              </div>
               {editingOrder.status === 'ready' && (
                 <div className="flex items-end">
                   <Button
@@ -494,7 +521,7 @@ export function OrdersPage() {
             {editingOrder.type === 'custom' && !editingOrder.workshopDeliveredAt && (
               <div className="mt-4 space-y-3">
                 <p className="text-[12px] font-semibold text-text-secondary">{t('orders.new.steps.fabricAndMeters')}</p>
-                {(editingOrder.items ?? []).map((item: any, index: number) => (
+                {(editingOrder.items ?? []).map((item, index: number) => (
                   <div key={item.id ?? index} className="grid gap-2 rounded-[10px] border border-border p-3 md:grid-cols-2">
                     <p className="md:col-span-2 text-[13px] font-semibold">{item.product?.name ?? t('orders.unnamedItem', { id: item.id })}</p>
                     <select
@@ -530,12 +557,15 @@ export function OrdersPage() {
                 ))}
               </div>
             )}
+            {editError && <p className="mt-3 text-[12px] font-medium text-danger">{editError}</p>}
             <div className="mt-5 flex justify-end gap-2">
               <Button variant="outline" onClick={() => setEditingOrder(null)}>
                 {t('ordersPage.editCancel', 'Cancel')}
               </Button>
               <Button
                 onClick={async () => {
+                  setEditError('')
+                  try {
                   await updateOrder({
                     id: editingOrder.id,
                     body: {
@@ -543,9 +573,9 @@ export function OrdersPage() {
                       items:
                         editingOrder.type === 'custom' && !editingOrder.workshopDeliveredAt
                           ? (editingOrder.items ?? [])
-                              .filter((item: any) => item.id && item.fabricId && Number(item.fabricMeters) > 0)
-                              .map((item: any) => ({
-                                itemId: item.id,
+                              .filter((item) => item.id != null && item.fabricId && Number(item.fabricMeters) > 0)
+                              .map((item) => ({
+                                itemId: Number(item.id),
                                 fabricId: Number(item.fabricId),
                                 fabricMeters: Number(item.fabricMeters),
                               }))
@@ -553,6 +583,10 @@ export function OrdersPage() {
                     },
                   }).unwrap()
                   setEditingOrder(null)
+                  } catch (error) {
+                    const apiError = error as { data?: { message?: unknown } }
+                    setEditError(translateApiMessage(apiError.data?.message))
+                  }
                 }}
               >
                 {t('ordersPage.editSave', 'Save Changes')}

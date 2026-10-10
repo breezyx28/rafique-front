@@ -194,7 +194,7 @@ export function CustomersPage() {
             </div>
             <p className="mt-1 text-[13px] text-text-secondary">{historyCustomer.name} · {historyCustomer.phone || '—'}</p>
             <div className="mt-4 space-y-2">
-              {(historyCustomer.orders ?? []).map((order: any) => (
+              {(historyCustomer.orders ?? []).map((order) => (
                 <div key={String(order.id)} className="rounded-[10px] border border-border p-3">
                   <p className="text-[13px] font-semibold text-text-primary">{t('customersPage.orderLabel', { id: order.orderNumber || order.id })}</p>
                   <p className="text-[12px] text-text-muted">{formatOrderType(order.type)} · {formatOrderStatus(order.status)}</p>

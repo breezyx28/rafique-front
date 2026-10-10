@@ -13,6 +13,7 @@ import {
   Shirt,
   LogOut,
   Printer,
+  Wallet,
   ChevronDown,
   Hammer,
 } from 'lucide-react'
@@ -29,6 +30,7 @@ const mainNavItems = [
   { to: '/orders', icon: Package, key: 'orders' },
   { to: '/customers', icon: Users, key: 'customers' },
   { to: '/invoices', icon: Printer, key: 'invoices' },
+  { to: '/debts', icon: Wallet, key: 'debts' },
 ]
 
 const accountNavItems = [

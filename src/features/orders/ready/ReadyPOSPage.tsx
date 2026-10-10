@@ -5,7 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { NumberInput } from '@/components/ui/NumberInput'
-import { useCreateReadyOrderMutation, useGetInventoryItemsQuery } from '@/features/api/appApi'
+import {
+  useCreateCustomerMutation,
+  useCreateReadyOrderMutation,
+  useGetCustomerListQuery,
+  useGetInventoryItemsQuery,
+} from '@/features/api/appApi'
+import { translateApiMessage } from '@/lib/apiErrors'
 import { formatMoney as money } from '@/lib/localeFormat'
 
 type PaymentMethod = 'Cash' | 'MBOK'
@@ -27,6 +33,8 @@ export function ReadyPOSPage() {
   const { t } = useTranslation()
   const { data } = useGetInventoryItemsQuery({ page: 1, limit: 100 })
   const [createReadyOrder, { isLoading: isSubmitting }] = useCreateReadyOrderMutation()
+  const [createCustomer] = useCreateCustomerMutation()
+  const { data: customerList } = useGetCustomerListQuery()
   const [cart, setCart] = useState<CartItem[]>([])
   const [search, setSearch] = useState('')
   const [receivedAmount, setReceivedAmount] = useState<number>(0)
@@ -34,6 +42,10 @@ export function ReadyPOSPage() {
   const [dueDate, setDueDate] = useState('')
   const [checkoutMessage, setCheckoutMessage] = useState('')
   const [checkoutError, setCheckoutError] = useState('')
+  const [customerId, setCustomerId] = useState<number | null>(null)
+  const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
+  const [customerSearch, setCustomerSearch] = useState('')
 
   const filteredProducts = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -48,10 +60,22 @@ export function ReadyPOSPage() {
       }))
       .filter((p) => p.stock > 0)
       .filter((p) => !q || p.name.toLowerCase().includes(q) || p.size.toLowerCase().includes(q))
-  }, [data?.data, search])
+  }, [data?.data, search, t])
 
   const total = useMemo(() => cart.reduce((sum, i) => sum + i.qty * i.price, 0), [cart])
   const remaining = Math.max(0, total - receivedAmount)
+  const customerMatches = useMemo(() => {
+    const query = customerSearch.trim().toLowerCase()
+    if (!query) return []
+    return (customerList ?? [])
+      .filter(
+        (customer) =>
+          customer.name.toLowerCase().includes(query) ||
+          customer.phone.toLowerCase().includes(query)
+      )
+      .slice(0, 8)
+  }, [customerList, customerSearch])
+  const needsCustomer = remaining > 0 && (!customerName.trim() || !customerPhone.trim())
 
   const addToCart = (product: ReadyProduct) => {
     setCart((prev) => {
@@ -208,19 +232,74 @@ export function ReadyPOSPage() {
                 </label>
                 <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
               </div>
+              {remaining > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[12px] text-text-secondary">{t('orders.ready.balanceNeedsCustomer')}</p>
+                  <Input
+                    value={customerSearch}
+                    onChange={(event) => setCustomerSearch(event.target.value)}
+                    placeholder={t('orders.ready.searchCustomer')}
+                  />
+                  {customerMatches.length > 0 && (
+                    <ul className="rounded-[10px] border border-border bg-white">
+                      {customerMatches.map((customer) => (
+                        <li key={customer.id}>
+                          <button
+                            type="button"
+                            className="w-full px-3 py-2 text-start text-[13px] hover:bg-[#F5F5F5]"
+                            onClick={() => {
+                              setCustomerId(customer.id)
+                              setCustomerName(customer.name)
+                              setCustomerPhone(customer.phone)
+                              setCustomerSearch('')
+                            }}
+                          >
+                            {customer.name} · {customer.phone}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <Input
+                    value={customerName}
+                    onChange={(event) => {
+                      setCustomerName(event.target.value)
+                      setCustomerId(null)
+                    }}
+                    placeholder={t('orders.ready.customerName')}
+                  />
+                  <Input
+                    value={customerPhone}
+                    onChange={(event) => {
+                      setCustomerPhone(event.target.value)
+                      setCustomerId(null)
+                    }}
+                    placeholder={t('orders.ready.customerPhone')}
+                  />
+                </div>
+              )}
               <Button
                 className="mt-2 w-full"
                 disabled={
                   cart.length === 0 ||
                   isSubmitting ||
                   receivedAmount < 0 ||
-                  receivedAmount > total
+                  receivedAmount > total ||
+                  needsCustomer
                 }
                 onClick={async () => {
                   if (!cart.length) return
                   setCheckoutError('')
                   setCheckoutMessage('')
                   try {
+                    let readyCustomerId = customerId ?? undefined
+                    if (remaining > 0 && !readyCustomerId) {
+                      const created = await createCustomer({
+                        name: customerName.trim(),
+                        phone: customerPhone.trim(),
+                      }).unwrap()
+                      readyCustomerId = created.id
+                    }
                     const order = await createReadyOrder({
                       items: cart.map((item) => ({
                         inventoryItemId: item.inventoryItemId,
@@ -229,6 +308,7 @@ export function ReadyPOSPage() {
                       })),
                       total,
                       paid: receivedAmount,
+                      customerId: readyCustomerId,
                       paymentMethod: paymentMethod.toLowerCase() as 'cash' | 'mbok',
                       dueDate: dueDate || undefined,
                     }).unwrap()
@@ -240,11 +320,15 @@ export function ReadyPOSPage() {
                     setCart([])
                     setReceivedAmount(0)
                     setDueDate('')
+                    setCustomerId(null)
+                    setCustomerName('')
+                    setCustomerPhone('')
                   } catch (error) {
-                    const apiError = error as { data?: { message?: string } }
+                    const apiError = error as { data?: { message?: unknown } }
                     setCheckoutError(
-                      apiError.data?.message ??
-                        t('orders.ready.checkoutError', 'Checkout failed. Please try again.')
+                      apiError.data?.message
+                        ? translateApiMessage(apiError.data.message)
+                        : t('orders.ready.checkoutError', 'Checkout failed. Please try again.')
                     )
                   }
                 }}

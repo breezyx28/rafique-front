@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Check, ChevronRight, Minus, Plus, Trash2, Ruler, Clock3 } from 'lucide-react'
@@ -23,6 +23,8 @@ import {
 
 type PaymentMethod = 'Cash' | 'MBOK'
 type OrderKind = 'custom' | 'fabric'
+
+import { fillOnProductClick, labelSet, replaceFromPickedProduct } from './sharedMeasurements'
 
 interface CartItem {
   id: string
@@ -85,7 +87,6 @@ export function NewOrderPage() {
   const [workshopNotes, setWorkshopNotes] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const [ordersModalOpen, setOrdersModalOpen] = useState(false)
-  const [ordersModalCustomer, setOrdersModalCustomer] = useState<{ id: number; name: string; phone: string } | null>(null)
 
   // Global minimal customer list (cached once, reused for search)
   const { data: customerList } = useGetCustomerListQuery()
@@ -100,72 +101,100 @@ export function NewOrderPage() {
     ).slice(0, 20)
   }, [allCustomers, searchQuery])
 
-  const { data: measurementsOrders, isLoading: measurementsLoading } = useGetCustomerMeasurementsQuery(
-    ordersModalCustomer?.id ?? 0,
-    { skip: !ordersModalOpen || !ordersModalCustomer }
-  )
+  const knownCustomerId = selectedCustomerFromSearch?.id ?? 0
+  const measurementsQuery = useGetCustomerMeasurementsQuery(knownCustomerId, {
+    skip: !knownCustomerId,
+  })
+  const measurementsOrders = measurementsQuery.data
+  const measurementsLoading = measurementsQuery.isLoading
+  const measurementHistoryReady = !knownCustomerId || measurementsQuery.isSuccess
   const pastOrderItems = useMemo(() => {
-    if (!ordersModalCustomer) return []
-    const orders =
-      (measurementsOrders as
-        | Array<{
-            id: number
-            createdAt: string
-            items?: Array<{
-              productName?: string | null
-              measurements?: Array<{
-                fieldId?: number
-                value?: string
-                field?: { fieldKey: string; i18n?: Array<{ lang: string; label: string }> }
-              }>
-            }>
-          }>
-        | undefined) ?? []
+    const orders = measurementsOrders ?? []
     const out: Array<{
       orderId: number
       createdAt: string
+      productId: number | null
       productName: string
       measurements: Array<{
         fieldId: number
         value: string
+        inputType: string
+        labels: Set<string>
         field?: { fieldKey: string; i18n?: Array<{ lang: string; label: string }> }
       }>
     }> = []
     for (const order of orders) {
       for (const item of order.items ?? []) {
-        const productName = item.productName ?? ''
-        const measurements = (item.measurements ?? []).map((m) => ({
-          fieldId: m.fieldId ?? 0,
-          value: m.value ?? '',
-          field: m.field,
-        }))
         out.push({
           orderId: order.id,
           createdAt: order.createdAt,
-          productName,
-          measurements,
+          productId: item.productId ?? null,
+          productName: item.productName ?? '',
+          measurements: (item.measurements ?? []).map((measurement) => ({
+            fieldId: measurement.fieldId ?? 0,
+            value: measurement.value ?? '',
+            inputType: measurement.field?.inputType ?? 'text',
+            labels: labelSet(measurement.field ?? {}),
+            field: measurement.field as { fieldKey: string; i18n?: Array<{ lang: string; label: string }> } | undefined,
+          })),
         })
       }
     }
     return out
-  }, [measurementsOrders, ordersModalCustomer])
+  }, [measurementsOrders])
 
   const { data: products } = useGetProductsQuery({ type: 'custom' })
   const { data: fabricsData } = useGetInventoryFabricsQuery({ page: 1, limit: 100 })
   const [productId, setProductId] = useState<number | null>(null)
   const activeProductId = productId ?? products?.[0]?.id ?? null
-  const { data: productFields } = useGetProductFieldsQuery(activeProductId ?? 0, {
+  const { currentData: productFields } = useGetProductFieldsQuery(activeProductId ?? 0, {
     skip: !activeProductId || orderKind === 'fabric',
   })
+  const [pendingFillProductId, setPendingFillProductId] = useState<number | null>(null)
+  const [measurementSource, setMeasurementSource] = useState<string | null>(null)
 
   const [qty, setQty] = useState(1)
   const [fabricId, setFabricId] = useState<number | null>(null)
   const [fabricMeters, setFabricMeters] = useState(0)
   const [unitPrice, setUnitPrice] = useState(0)
+  const [appliedPriceKey, setAppliedPriceKey] = useState<string | null>(null)
   const [cart, setCart] = useState<CartItem[]>([])
   const [measurementValuesByProduct, setMeasurementValuesByProduct] = useState<
     Record<number, Record<number, string>>
   >({})
+
+  const orderedProductIds = useMemo(() => {
+    const ids = new Set<number>()
+    const names = new Map((products ?? []).map((product) => [product.name.trim().toLowerCase(), product.id]))
+    for (const item of pastOrderItems) {
+      if (item.productId) ids.add(item.productId)
+      else {
+        const id = names.get(item.productName.trim().toLowerCase())
+        if (id) ids.add(id)
+      }
+    }
+    return ids
+  }, [pastOrderItems, products])
+
+  if (
+    pendingFillProductId &&
+    pendingFillProductId === activeProductId &&
+    productFields &&
+    measurementHistoryReady
+  ) {
+    const productId = pendingFillProductId
+    const productName = (products ?? []).find((product) => product.id === productId)?.name ?? ''
+    const filled = fillOnProductClick({
+      productId,
+      productName,
+      fields: productFields,
+      history: pastOrderItems,
+      current: measurementValuesByProduct[productId] ?? {},
+    })
+    setMeasurementValuesByProduct((prev) => ({ ...prev, [productId]: filled.values }))
+    setMeasurementSource(filled.source)
+    setPendingFillProductId(null)
+  }
   const setOrderKind = (kind: OrderKind) => {
     setCart([])
     setFabricId(null)
@@ -182,15 +211,20 @@ export function NewOrderPage() {
     () => (fabricsData?.data ?? []).find((fabric) => fabric.id === fabricId),
     [fabricsData?.data, fabricId]
   )
-  useEffect(() => {
-    if (orderKind === 'fabric') {
-      const price = selectedFabric?.sellingPricePerMeter
-      setUnitPrice(price != null && price > 0 ? Number(price) : 0)
-      return
-    }
-    const base = activeProduct?.basePrice
-    setUnitPrice(base != null && base > 0 ? Number(base) : 0)
-  }, [activeProduct?.basePrice, activeProduct?.id, orderKind, selectedFabric?.id, selectedFabric?.sellingPricePerMeter])
+  const catalogUnitPrice = orderKind === 'fabric'
+    ? (selectedFabric?.sellingPricePerMeter != null && selectedFabric.sellingPricePerMeter > 0
+        ? Number(selectedFabric.sellingPricePerMeter)
+        : 0)
+    : (activeProduct?.basePrice != null && activeProduct.basePrice > 0
+        ? Number(activeProduct.basePrice)
+        : 0)
+  const priceSourceKey = orderKind === 'fabric'
+    ? `fabric:${selectedFabric?.id ?? 'none'}:${selectedFabric?.sellingPricePerMeter ?? ''}`
+    : `product:${activeProduct?.id ?? 'none'}:${activeProduct?.basePrice ?? ''}`
+  if (priceSourceKey !== appliedPriceKey) {
+    setAppliedPriceKey(priceSourceKey)
+    setUnitPrice(catalogUnitPrice)
+  }
 
   const [receivedAmount, setReceivedAmount] = useState(0)
   const [dueDate, setDueDate] = useState('')
@@ -382,10 +416,6 @@ export function NewOrderPage() {
                           setFullName(c.name ?? '')
                           setPhone(c.phone ?? '')
                           setSearchQuery('')
-                          if (orderKind === 'custom') {
-                            setOrdersModalCustomer({ id: c.id, name: c.name ?? '', phone: c.phone ?? '' })
-                            setOrdersModalOpen(true)
-                          }
                         }}
                       >
                         <span className="font-medium text-text-primary">{c.name || '—'}</span>
@@ -510,7 +540,11 @@ export function NewOrderPage() {
                     <button
                       key={p.id}
                       type="button"
-                      onClick={() => setProductId(p.id)}
+                      onClick={() => {
+                        setProductId(p.id)
+                        setMeasurementSource(null)
+                        if (selectedCustomerFromSearch) setPendingFillProductId(p.id)
+                      }}
                       className={`rounded-full px-4 py-1 text-[12px] font-medium ${
                         activeProductId === p.id ? 'bg-[#1A1A2E] text-white' : 'text-text-muted'
                       }`}
@@ -519,6 +553,18 @@ export function NewOrderPage() {
                     </button>
                   ))}
                 </div>
+                {measurementHistoryReady && selectedCustomerFromSearch && activeProductId && !orderedProductIds.has(activeProductId) && pastOrderItems.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button type="button" variant="outline" onClick={() => setOrdersModalOpen(true)}>
+                      {tr('orders.new.chooseMeasurements', 'Choose measurements')}
+                    </Button>
+                    {measurementSource && (
+                      <p className="text-[12px] text-text-secondary">
+                        {t('orders.new.filledFrom', { products: measurementSource })}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="grid gap-3 md:grid-cols-2">
                   {(productFields ?? []).map((field) => {
@@ -776,7 +822,7 @@ export function NewOrderPage() {
         </Card>
       </div>
 
-      {ordersModalOpen && ordersModalCustomer && (
+      {ordersModalOpen && selectedCustomerFromSearch && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.35)] p-4">
           <div className="w-full max-w-lg rounded-[16px] bg-white p-5 shadow-lg">
             <h3 className="text-[18px] font-semibold text-text-primary">
@@ -803,23 +849,22 @@ export function NewOrderPage() {
                       type="button"
                       className="group w-full rounded-[12px] border border-primary bg-secondary p-3 text-start shadow-sm transition-colors hover:border-primary hover:bg-primary/50 cursor-pointer"
                       onClick={() => {
-                        const matchingProduct = (products ?? []).find((p) => p.name === item.productName)
-                        const targetProductId = matchingProduct?.id ?? activeProductId
-                        if (!targetProductId) return
-                        setProductId(targetProductId)
-                        setMeasurementValuesByProduct((prev) => ({
-                          ...prev,
-                          [targetProductId]: item.measurements.reduce(
-                            (acc, m) => ({ ...acc, [m.fieldId]: m.value }),
-                            {} as Record<number, string>
-                          ),
-                        }))
-                        if (ordersModalCustomer) {
-                          setFullName(ordersModalCustomer.name)
-                          setPhone(ordersModalCustomer.phone)
+                        if (!activeProductId || !productFields) return
+                        const orderedBefore = orderedProductIds.has(activeProductId)
+                        const picked = replaceFromPickedProduct({
+                          orderedBefore,
+                          fields: productFields,
+                          current: measurementValuesByProduct[activeProductId] ?? {},
+                          picked: item,
+                        })
+                        if (!orderedBefore) {
+                          setMeasurementValuesByProduct((prev) => ({
+                            ...prev,
+                            [activeProductId]: picked.values,
+                          }))
+                          setMeasurementSource(picked.source)
                         }
                         setOrdersModalOpen(false)
-                        setOrdersModalCustomer(null)
                         setStep(2)
                       }}
                     >
@@ -860,10 +905,7 @@ export function NewOrderPage() {
             
               <Button
                 variant="outline"
-                onClick={() => {
-                  setOrdersModalOpen(false)
-                  setOrdersModalCustomer(null)
-                }}
+                onClick={() => setOrdersModalOpen(false)}
                 className='text-[12px]'
               >
              {tr('orders.new.ordersModal.continueWithout', 'Continue without copying')}

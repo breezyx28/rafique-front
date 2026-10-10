@@ -6,21 +6,33 @@ import { toastReducer, addToast } from '@/features/ui/toastSlice'
 import i18n from '@/lib/i18n'
 import { translateApiMessage } from '@/lib/apiErrors'
 
+type RejectedQueryAction = {
+  type?: string
+  meta?: { arg?: { endpointName?: string } }
+  payload?: {
+    data?: { message?: unknown }
+    message?: unknown
+    error?: unknown
+  }
+  error?: { message?: string }
+}
+
 const errorToastMiddleware: Middleware = (storeApi) => (next) => (action) => {
   const result = next(action)
 
   if (isRejectedWithValue(action)) {
     try {
+      const rejected = action as RejectedQueryAction
       const endpointName =
-        (action as any).meta?.arg?.endpointName ??
-        (action as any).type?.split('/')?.[0] ??
+        rejected.meta?.arg?.endpointName ??
+        rejected.type?.split('/')?.[0] ??
         'Request'
-      const payload = action.payload as any
+      const payload = rejected.payload
       const errorData = payload?.data ?? payload
       const rawMessage =
         errorData?.message ??
         payload?.error ??
-        action.error?.message
+        rejected.error?.message
       const message = translateApiMessage(rawMessage)
 
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
