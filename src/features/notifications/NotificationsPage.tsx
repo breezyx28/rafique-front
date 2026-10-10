@@ -16,7 +16,8 @@ import {
   useMarkNotificationReadMutation,
 } from '@/features/api/appApi'
 import { formatDateTime } from '@/lib/localeFormat'
-import { localizeNotification } from '@/lib/displayLabels'
+import { localizeNotification, notificationTone } from '@/lib/displayLabels'
+import { notificationStyles } from '@/lib/notificationAppearance'
 
 const PAGE_SIZE = 10
 
@@ -150,21 +151,7 @@ export function NotificationsPage() {
                           <p className="text-[12px] text-text-muted">{localizeNotification(row).subtitle || '—'}</p>
                         </td>
                         <td className="px-4 py-3">
-                          <span
-                            className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-                              row.kind === 'due'
-                                ? 'bg-warningBg text-[#B45309]'
-                                : row.kind === 'balance'
-                                  ? 'bg-primary-light text-primary'
-                                  : 'bg-dangerBg text-danger'
-                            }`}
-                          >
-                            {row.kind === 'due'
-                              ? t('header.dueDate', 'Due date')
-                              : row.kind === 'balance'
-                                ? t('header.balance')
-                                : t('header.stock', 'Stock')}
-                          </span>
+                          <NotificationStatus row={row} />
                         </td>
                         <td className="px-4 py-3">
                           {row.isRead ? (
@@ -250,5 +237,21 @@ export function NotificationsPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function NotificationStatus({
+  row,
+}: {
+  row: { kind: 'due' | 'stock' | 'balance'; window?: string | null; subtitle?: string | null }
+}) {
+  const { t } = useTranslation()
+  const tone = notificationStyles[notificationTone(row)]
+  const ToneIcon = tone.icon
+  return (
+    <span className={`alert-chip alert-${tone.level} gap-1`}>
+      <ToneIcon className="h-3.5 w-3.5" aria-hidden="true" />
+      {t(tone.label)}
+    </span>
   )
 }

@@ -17,10 +17,12 @@ export function InvoiceDetailsPage() {
   const location = useLocation()
   const incomingOrder = (location.state as { order?: InvoicePayload } | null)?.order
   const typeParam = searchParams.get('type')
-  const type: InvoiceType =
+  const requestedType: InvoiceType =
     typeParam === 'workshop' ? 'workshop' : typeParam === 'pickup' ? 'pickup' : 'customer'
   const orderId = Number(orderNumber)
   const { data: apiOrder } = useGetOrderByIdQuery(orderId, { skip: Number.isNaN(orderId) })
+  const workshopInvoice = apiOrder?.type === 'custom' && Boolean(apiOrder.customer)
+  const type: InvoiceType = requestedType === 'workshop' && !workshopInvoice ? 'customer' : requestedType
   const { data: settings } = useGetSettingsQuery()
   const shopName = String(settings?.workshopName || t('app.shopName'))
   const shopAddress = String(settings?.workshopAddress || t('invoiceDetailsPage.defaultAddress'))
@@ -122,23 +124,25 @@ export function InvoiceDetailsPage() {
         <CardContent className="pt-5">
           <div className="inline-flex rounded-full bg-[#F5F5F5] p-[3px]">
             <Link
-              to={`/invoices/${order.orderNumber}?type=customer`}
+              to={`/invoices/${orderNumber}?type=customer`}
               className={`rounded-full px-4 py-1 text-[12px] font-medium ${
                 type === 'customer' ? 'bg-[#1A1A2E] text-white' : 'text-text-muted'
               }`}
             >
               {t('invoiceDetailsPage.customerInvoice', 'Customer Invoice')}
             </Link>
+            {workshopInvoice && (
+              <Link
+                to={`/invoices/${orderNumber}?type=workshop`}
+                className={`rounded-full px-4 py-1 text-[12px] font-medium ${
+                  type === 'workshop' ? 'bg-[#1A1A2E] text-white' : 'text-text-muted'
+                }`}
+              >
+                {t('invoiceDetailsPage.workshopInvoice', 'Workshop Invoice')}
+              </Link>
+            )}
             <Link
-              to={`/invoices/${order.orderNumber}?type=workshop`}
-              className={`rounded-full px-4 py-1 text-[12px] font-medium ${
-                type === 'workshop' ? 'bg-[#1A1A2E] text-white' : 'text-text-muted'
-              }`}
-            >
-              {t('invoiceDetailsPage.workshopInvoice', 'Workshop Invoice')}
-            </Link>
-            <Link
-              to={`/invoices/${order.orderNumber}?type=pickup`}
+              to={`/invoices/${orderNumber}?type=pickup`}
               className={`rounded-full px-4 py-1 text-[12px] font-medium ${
                 type === 'pickup' ? 'bg-[#1A1A2E] text-white' : 'text-text-muted'
               }`}

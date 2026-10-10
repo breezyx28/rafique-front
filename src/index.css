@@ -95,6 +95,12 @@ body {
   font-family: 'Hind Siliguri', sans-serif;
 }
 
+@layer base {
+  th {
+    text-align: start;
+  }
+}
+
 /* Quick utility classes matching the design spec */
 
 .card-base {
@@ -181,6 +187,60 @@ body {
   height: 38px;
   border-radius: 10px;
   background-color: #f5f5f5;
+}
+
+.alert-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 10px;
+  box-shadow: none;
+  flex-shrink: 0;
+}
+
+.alert-icon svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.alert-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+  box-shadow: none;
+}
+
+.alert-danger {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.alert-error {
+  background-color: #ffe4e6;
+  color: #e11d48;
+}
+
+.alert-warning {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.alert-info {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.alert-success {
+  background-color: #dcfce7;
+  color: #15803d;
 }
 
 @theme inline {

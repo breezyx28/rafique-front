@@ -144,3 +144,29 @@ export function localizeNotification(input: {
 
   return { title, subtitle }
 }
+
+export type NotificationTone =
+  | 'overdue'
+  | 'dueToday'
+  | 'dueTomorrow'
+  | 'dueSoon'
+  | 'balanceOverdue'
+  | 'balance'
+  | 'needsCustomer'
+  | 'stock'
+
+export function notificationTone(input: {
+  kind: 'due' | 'stock' | 'balance'
+  window?: string | null
+  subtitle?: string | null
+}): NotificationTone {
+  if (input.kind === 'stock') return 'stock'
+  if (input.kind === 'balance') {
+    if (isNeedsCustomer(input.subtitle)) return 'needsCustomer'
+    return input.window === 'balance_overdue' ? 'balanceOverdue' : 'balance'
+  }
+  if (input.window === 'overdue') return 'overdue'
+  if (input.window === 'due_today') return 'dueToday'
+  if (input.window === 'due_tomorrow') return 'dueTomorrow'
+  return 'dueSoon'
+}

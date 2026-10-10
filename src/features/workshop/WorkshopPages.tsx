@@ -50,12 +50,21 @@ export function TailorPaymentPage() {
         <CardHeader><CardTitle>{t('workshop.payrollTitle')}</CardTitle></CardHeader>
         <CardContent>
           <table className="w-full text-[13px]">
-            <thead><tr className="text-start text-[12px] text-text-muted"><th className="py-3">{t('workshop.product')}</th><th>{t('workshop.metersCompleted')}</th><th>{t('workshop.rate')}</th><th>{t('workshop.amount')}</th></tr></thead>
+            <thead>
+              <tr className="text-[12px] text-text-muted">
+                <th className="px-3 py-3">{t('workshop.product')}</th>
+                <th className="px-3 py-3">{t('workshop.metersCompleted')}</th>
+                <th className="px-3 py-3">{t('workshop.rate')}</th>
+                <th className="px-3 py-3">{t('workshop.amount')}</th>
+              </tr>
+            </thead>
             <tbody>
               {(data?.breakdown ?? []).map((row) => (
                 <tr key={`${row.productId}-${row.rate}`} className="border-t border-border">
-                  <td className="py-3 font-semibold">{row.productName}</td>
-                  <td>{row.meters}</td><td>{formatMoney(row.rate)}</td><td className="font-semibold">{formatMoney(row.amount)}</td>
+                  <td className="px-3 py-3 font-semibold">{row.productName}</td>
+                  <td className="px-3 py-3">{row.meters}</td>
+                  <td className="px-3 py-3">{formatMoney(row.rate)}</td>
+                  <td className="px-3 py-3 font-semibold">{formatMoney(row.amount)}</td>
                 </tr>
               ))}
             </tbody>

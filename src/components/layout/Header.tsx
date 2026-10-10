@@ -17,7 +17,8 @@ import {
   useMarkAllNotificationsReadMutation,
   useMarkNotificationReadMutation,
 } from '@/features/api/appApi'
-import { localizeNotification } from '@/lib/displayLabels'
+import { localizeNotification, notificationTone } from '@/lib/displayLabels'
+import { notificationStyles } from '@/lib/notificationAppearance'
 
 const POLL_MS = 20_000
 
@@ -156,7 +157,7 @@ export function Header() {
             )}
           </button>
           {isNotificationOpen && (
-            <div className="absolute end-0 top-11 z-30 w-[320px] rounded-[12px] border border-border bg-white p-2 shadow-lg">
+            <div className="absolute end-0 top-11 z-30 w-[360px] rounded-[12px] border border-border bg-white p-2 shadow-lg">
               <div className="mb-1 flex items-center justify-between px-2 py-1">
                 <p className="text-[13px] font-semibold text-text-primary">
                   {t('header.latestAlerts', 'Latest Alerts')}
@@ -185,6 +186,8 @@ export function Header() {
                 )}
                 {notifications.map((a) => {
                   const copy = localizeNotification(a)
+                  const tone = notificationStyles[notificationTone(a)]
+                  const ToneIcon = tone.icon
                   return (
                   <button
                     key={a.id}
@@ -194,28 +197,21 @@ export function Header() {
                         markNotificationRead(a.id)
                       }
                     }}
-                    className={`w-full cursor-pointer rounded-[10px] px-3 py-2 text-start hover:bg-[#F5F5F5] ${
-                      a.isRead ? '' : 'bg-primary-light/50'
+                    className={`flex w-full cursor-pointer items-start gap-3 rounded-[10px] px-3 py-2 text-start hover:bg-[#F5F5F5] ${
+                      a.isRead ? '' : 'bg-primary-light/40'
                     }`}
                   >
-                    <p className="text-[12px] font-medium text-text-primary">{copy.title}</p>
-                    {copy.subtitle && (
-                      <p className="text-[11px] text-text-muted">{copy.subtitle}</p>
-                    )}
-                    <span
-                      className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                        a.kind === 'due'
-                          ? 'bg-warningBg text-[#B45309]'
-                          : a.kind === 'balance'
-                            ? 'bg-primary-light text-primary'
-                            : 'bg-dangerBg text-danger'
-                      }`}
-                    >
-                      {a.kind === 'due'
-                        ? t('header.dueDate', 'Due date')
-                        : a.kind === 'balance'
-                          ? t('header.balance')
-                          : t('header.stock', 'Stock')}
+                    <span className={`alert-icon alert-${tone.level}`}>
+                      <ToneIcon aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[12px] font-medium text-text-primary">{copy.title}</span>
+                      {copy.subtitle && (
+                        <span className="mt-0.5 block text-[11px] text-text-muted">{copy.subtitle}</span>
+                      )}
+                      <span className={`alert-chip alert-${tone.level} mt-1`}>
+                        {t(tone.label)}
+                      </span>
                     </span>
                   </button>
                   )

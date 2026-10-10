@@ -329,6 +329,13 @@
     "dueDate": "موعد التسليم",
     "stock": "المخزون",
     "balance": "رصيد",
+    "overdue": "متأخر",
+    "dueToday": "التسليم اليوم",
+    "dueTomorrow": "التسليم غداً",
+    "dueSoon": "التسليم قريباً",
+    "balanceOverdue": "رصيد متأخر",
+    "needsCustomer": "يحتاج عميلاً",
+    "lowStock": "مخزون منخفض",
     "viewAll": "عرض كل الإشعارات"
   },
   "notificationsPage": {
@@ -855,6 +862,7 @@
     "paid": "المدفوع",
     "balance": "الرصيد",
     "needsCustomer": "يحتاج عميلاً",
+    "actions": "إجراءات",
     "recordReceipt": "تسجيل إيصال",
     "attachCustomer": "ربط عميل",
     "searchCustomer": "ابحث بالاسم أو الهاتف",

@@ -329,6 +329,13 @@
     "dueDate": "Due date",
     "stock": "Stock",
     "balance": "Balance",
+    "overdue": "Overdue",
+    "dueToday": "Due today",
+    "dueTomorrow": "Due tomorrow",
+    "dueSoon": "Due soon",
+    "balanceOverdue": "Overdue balance",
+    "needsCustomer": "Needs customer",
+    "lowStock": "Low stock",
     "viewAll": "View all notifications"
   },
   "notificationsPage": {
@@ -855,6 +862,7 @@
     "paid": "Paid",
     "balance": "Balance",
     "needsCustomer": "Needs a customer",
+    "actions": "Actions",
     "recordReceipt": "Record receipt",
     "attachCustomer": "Attach customer",
     "searchCustomer": "Search by name or phone",

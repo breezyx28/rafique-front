@@ -185,42 +185,42 @@ export function DebtsPage() {
           </div>
 
           <div className="overflow-auto">
-            <table className="w-full text-[13px]">
+            <table className="w-full min-w-[760px] text-[13px]">
               <thead>
-                <tr className="text-start text-[12px] text-text-muted">
-                  <th className="py-3">{t('debtsPage.customer')}</th>
-                  <th>{t('debtsPage.invoice')}</th>
-                  <th>{t('debtsPage.dueDate')}</th>
-                  <th>{t('debtsPage.total')}</th>
-                  <th>{t('debtsPage.paid')}</th>
-                  <th>{t('debtsPage.balance')}</th>
-                  <th>{t('debtsPage.status')}</th>
-                  <th />
+                <tr className="text-[12px] text-text-muted">
+                  <th className="px-3 py-3">{t('debtsPage.customer')}</th>
+                  <th className="px-3 py-3">{t('debtsPage.invoice')}</th>
+                  <th className="px-3 py-3">{t('debtsPage.dueDate')}</th>
+                  <th className="px-3 py-3">{t('debtsPage.total')}</th>
+                  <th className="px-3 py-3">{t('debtsPage.paid')}</th>
+                  <th className="px-3 py-3">{t('debtsPage.balance')}</th>
+                  <th className="px-3 py-3">{t('debtsPage.status')}</th>
+                  <th className="px-3 py-3 text-end">{t('debtsPage.actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading && (
                   <tr>
-                    <td colSpan={8} className="py-6 text-text-muted">{t('common.loading')}</td>
+                    <td colSpan={8} className="px-3 py-6 text-text-muted">{t('common.loading')}</td>
                   </tr>
                 )}
                 {(data?.rows ?? []).map((row) => (
                   <tr key={row.id} className="border-t border-border">
-                    <td className="py-3">
+                    <td className="px-3 py-3">
                       <p className="font-semibold">{row.customerName || t('debtsPage.needsCustomer')}</p>
                       <p className="text-[12px] text-text-muted">{row.customerPhone || '—'}</p>
                     </td>
-                    <td>
+                    <td className="px-3 py-3">
                       <Link className="font-semibold text-primary" to={`/invoices/${row.id}?type=customer`}>
                         #{row.orderNumber}
                       </Link>
                     </td>
-                    <td>{row.dueDate ? formatDate(row.dueDate) : '—'}</td>
-                    <td>{formatMoney(row.total)}</td>
-                    <td>{formatMoney(row.paid)}</td>
-                    <td className="font-semibold">{formatMoney(row.remaining)}</td>
-                    <td>{row.remaining > 0 ? t('debtsPage.open') : t('debtsPage.settled')}</td>
-                    <td className="py-3 text-end">
+                    <td className="px-3 py-3">{row.dueDate ? formatDate(row.dueDate) : '—'}</td>
+                    <td className="px-3 py-3">{formatMoney(row.total)}</td>
+                    <td className="px-3 py-3">{formatMoney(row.paid)}</td>
+                    <td className="px-3 py-3 font-semibold">{formatMoney(row.remaining)}</td>
+                    <td className="px-3 py-3">{row.remaining > 0 ? t('debtsPage.open') : t('debtsPage.settled')}</td>
+                    <td className="px-3 py-3 text-end">
                       {row.remaining > 0 && (
                         <Button variant="outline" size="sm" onClick={() => openReceipt(row.id, row.remaining)}>
                           {row.needsCustomer ? t('debtsPage.attachCustomer') : t('debtsPage.recordReceipt')}
@@ -236,16 +236,15 @@ export function DebtsPage() {
       </Card>
 
       {active && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.32)] p-4">
+          <div className="w-full max-w-lg rounded-[14px] bg-white p-5 shadow-lg">
+            <h3 className="text-[18px] font-semibold text-text-primary">
               {active.needsCustomer
                 ? t('debtsPage.attachCustomer')
                 : t('debtsPage.recordReceipt')}{' '}
               #{active.orderNumber}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+            </h3>
+            <div className="mt-4 space-y-3">
             {active.needsCustomer ? (
               <>
                 <Input
@@ -323,8 +322,14 @@ export function DebtsPage() {
             )}
             {message && <p className="text-[12px] font-medium text-success">{message}</p>}
             {error && <p className="text-[12px] font-medium text-danger">{error}</p>}
-          </CardContent>
-        </Card>
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={() => setActiveId(null)}>
+                {t('common.close')}
+              </Button>
+            </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

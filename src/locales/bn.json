@@ -329,6 +329,13 @@
     "dueDate": "ডেলিভারি তারিখ",
     "stock": "স্টক",
     "balance": "বাকি",
+    "overdue": "মেয়াদোত্তীর্ণ",
+    "dueToday": "আজ ডেলিভারি",
+    "dueTomorrow": "আগামীকাল ডেলিভারি",
+    "dueSoon": "শীঘ্রই ডেলিভারি",
+    "balanceOverdue": "বকেয়া বাকি",
+    "needsCustomer": "গ্রাহক লাগবে",
+    "lowStock": "কম স্টক",
     "viewAll": "সব বিজ্ঞপ্তি দেখুন"
   },
   "notificationsPage": {
@@ -855,6 +862,7 @@
     "paid": "পেড",
     "balance": "বকেয়া",
     "needsCustomer": "গ্রাহক লাগবে",
+    "actions": "কার্যক্রম",
     "recordReceipt": "রসিদ লিখুন",
     "attachCustomer": "গ্রাহক যোগ করুন",
     "searchCustomer": "নাম বা ফোন দিয়ে খুঁজুন",
