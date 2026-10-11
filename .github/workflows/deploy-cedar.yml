@@ -1,0 +1,92 @@
+# Deploy the cedar branch to cedar.sd.
+# master keeps using .github/workflows/deploy.yml and is not triggered here.
+
+name: Deploy cedar
+
+on:
+  push:
+    branches:
+      - cedar
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      SSH_HOST: cedar.sd
+      SSH_USER: cedarsd
+      DEPLOY_PATH: /home/cedarsd/domains/cedar.sd/public_html
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        env:
+          VITE_API_URL: https://api.cedar.sd/api
+        run: npm run build
+
+      - name: Confirm the cedar API address
+        run: |
+          if ! grep -R "api.cedar.sd" dist/assets >/dev/null; then
+            echo "Build is missing the cedar API address"
+            exit 1
+          fi
+          if grep -R "rafique-api.kat-jr.com" dist/assets >/dev/null; then
+            echo "Build still points at the other server"
+            exit 1
+          fi
+
+      - name: Prepare SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.CEDAR_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan -H 89.163.214.37 >> ~/.ssh/known_hosts
+
+      - name: Create deploy archive
+        run: cd dist && zip -r ../deploy-frontend.zip .
+
+      - name: Upload archive
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o IPQoS=none \
+            "$SSH_USER@$SSH_HOST" "mkdir -p /home/cedarsd/deploy"
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o IPQoS=none \
+            deploy-frontend.zip \
+            "$SSH_USER@$SSH_HOST:/home/cedarsd/deploy/deploy-frontend.zip"
+
+      - name: Replace the site with the new build
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o IPQoS=none \
+            "$SSH_USER@$SSH_HOST" 'bash -s' <<'EOF'
+          set -euo pipefail
+          WEB=/home/cedarsd/domains/cedar.sd/public_html
+          STAGE=/home/cedarsd/deploy/web-stage
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE"
+          unzip -o /home/cedarsd/deploy/deploy-frontend.zip -d "$STAGE"
+          rm -f /home/cedarsd/deploy/deploy-frontend.zip
+          test -f "$STAGE/index.html"
+          test -f "$STAGE/.htaccess"
+          if [ -d "$WEB/cgi-bin" ]; then cp -a "$WEB/cgi-bin" "$STAGE/cgi-bin"; fi
+          if [ -d "$WEB/.well-known" ]; then cp -a "$WEB/.well-known" "$STAGE/.well-known"; fi
+          rm -rf "${WEB}.prev"
+          mv "$WEB" "${WEB}.prev"
+          mv "$STAGE" "$WEB"
+          rm -rf "${WEB}.prev"
+          test -f "$WEB/index.html"
+          echo "Cedar site deploy ok"
+          EOF
+
+      - name: Cleanup
+        if: always()
+        run: rm -f ~/.ssh/deploy_key deploy-frontend.zip
