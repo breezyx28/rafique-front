@@ -19,8 +19,7 @@ function getStoredLanguage(): LangCode {
 }
 
 export function applyDocumentTitle() {
-  const shopName = usePreferenceStore.getState().workshopName
-  document.title = shopName || i18n.t('app.shopName')
+  document.title = i18n.t('app.documentTitle')
 }
 
 function applyDocumentLanguage(code: LangCode) {
