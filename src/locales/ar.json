@@ -1,7 +1,9 @@
 {
   "app": {
     "name": "جلابية POS",
-    "shopName": "خياطة رفيق"
+    "shopName": "سيدار",
+    "phone": "09922666720",
+    "instagram": "_CEDARJLABIYA"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -659,7 +661,7 @@
     "pickupSlip": "إيصال الاستلام",
     "printPickup": "طباعة إيصال الاستلام",
     "defaultAddress": "الخرطوم، السودان",
-    "defaultPhone": "0912345678",
+    "defaultPhone": "09922666720",
     "addressLine": "{{address}} · {{phone}}",
     "thankYou": "شكراً لكم",
     "receiptNumber": "إيصال #{{number}}",

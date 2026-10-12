@@ -1,7 +1,9 @@
 {
   "app": {
     "name": "Jelabeya POS",
-    "shopName": "Rafique Tailors"
+    "shopName": "Cedar",
+    "phone": "09922666720",
+    "instagram": "_CEDARJLABIYA"
   },
   "auth": {
     "login": "Login",
@@ -659,7 +661,7 @@
     "pickupSlip": "Pickup Slip",
     "printPickup": "Print Pickup Slip",
     "defaultAddress": "Khartoum, Sudan",
-    "defaultPhone": "0912345678",
+    "defaultPhone": "09922666720",
     "addressLine": "{{address}} · {{phone}}",
     "thankYou": "Thank you",
     "receiptNumber": "Receipt #{{number}}",

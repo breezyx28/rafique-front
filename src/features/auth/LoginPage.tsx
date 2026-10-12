@@ -64,9 +64,11 @@ export function LoginPage() {
       <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden rounded-[16px] bg-white shadow-lg md:grid-cols-2">
         {/* Left gradient / promo panel */}
         <div className="relative hidden flex-col justify-between bg-gradient-to-br from-primary via-[#0B9E8E] to-[#FFB48A] px-10 py-10 md:flex">
-          <div className="text-[16px] font-bold tracking-[0.04em] text-white uppercase">
-            {t('app.shopName')}
-          </div>
+          <img
+            src="/assets/cedar/logo-transparent.png"
+            alt={t('app.shopName')}
+            className="h-40 w-auto object-contain"
+          />
           <div className="space-y-3">
             <p className="text-[12px] font-medium text-white/80">
               {t('app.name')}
@@ -93,6 +95,20 @@ export function LoginPage() {
                 'Sign in to manage orders, customers, and invoices in one place.'
               )}
             </p>
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-[13px]">
+              <a dir="ltr" className="font-semibold text-primary" href={`tel:${t('app.phone')}`}>
+                {t('app.phone')}
+              </a>
+              <a
+                dir="ltr"
+                className="font-semibold text-primary"
+                href={`https://instagram.com/${t('app.instagram')}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                @{t('app.instagram')}
+              </a>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

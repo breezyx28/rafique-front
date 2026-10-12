@@ -18,7 +18,9 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
   const shop = usePreferenceStore.getState()
   const shopName = shop.workshopName || i18n.t('app.shopName')
   const shopAddress = shop.workshopAddress
-  const shopPhone = shop.workshopPhone
+  const shopPhone = shop.workshopPhone || i18n.t('app.phone')
+  const instagram = i18n.t('app.instagram')
+  const logoUrl = new URL('/assets/cedar/logo-transparent-black.png', window.location.origin).href
   return `
 <!doctype html>
 <html lang="${lang}" dir="${dir}">
@@ -56,9 +58,17 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
       }
 
       h1 {
-        margin: 0;
+        margin: 4px 0 0;
         font-size: 15px;
         font-weight: 700;
+      }
+
+      .logo {
+        display: block;
+        height: 28mm;
+        width: auto;
+        margin: 0 auto 2mm;
+        object-fit: contain;
       }
 
       .muted {
@@ -107,10 +117,10 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
   <body>
     <div class="receipt">
       <div class="center">
+        <img class="logo" src="${logoUrl}" alt="${shopName}" />
         <h1>${shopName}</h1>
         <p class="muted">${title}</p>
         ${shopAddress ? `<p class="muted">${shopAddress}</p>` : ''}
-        ${shopPhone ? `<p class="muted">${shopPhone}</p>` : ''}
       </div>
       <div class="sep"></div>
       ${
@@ -174,6 +184,8 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
     </div>`
     }
       <div class="sep"></div>
+      <p class="center" dir="ltr">${shopPhone}</p>
+      <p class="center" dir="ltr">@${instagram}</p>
       <p class="center muted">${i18n.t('invoiceDetailsPage.thankYou')}</p>
     </div>
   </body>

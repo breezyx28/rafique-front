@@ -1,7 +1,9 @@
 {
   "app": {
     "name": "জেলাবিয়া POS",
-    "shopName": "রফিক টেইলার্স"
+    "shopName": "সিডার",
+    "phone": "09922666720",
+    "instagram": "_CEDARJLABIYA"
   },
   "auth": {
     "login": "লগইন",
@@ -659,7 +661,7 @@
     "pickupSlip": "পিকআপ স্লিপ",
     "printPickup": "পিকআপ স্লিপ প্রিন্ট",
     "defaultAddress": "খার্তুম, সুদান",
-    "defaultPhone": "0912345678",
+    "defaultPhone": "09922666720",
     "addressLine": "{{address}} · {{phone}}",
     "thankYou": "ধন্যবাদ",
     "receiptNumber": "রসিদ #{{number}}",

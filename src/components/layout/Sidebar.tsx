@@ -88,12 +88,12 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
         collapsed ? 'w-16' : 'w-[240px]'
       )}
     >
-      <div className="flex h-16 items-center border-b border-border px-5">
-        {!collapsed && (
-          <span className="text-[26px] font-bold tracking-[0.02em] text-text-primary">
-            {t('app.shopName')}
-          </span>
-        )}
+      <div className="flex items-center gap-2 border-b border-border px-3 py-3">
+        <img
+          src={collapsed ? '/assets/cedar/logo-small--black-transparent.png' : '/assets/cedar/logo-transparent-black.png'}
+          alt={t('app.shopName')}
+          className={collapsed ? 'mx-auto h-10 w-10 object-contain' : 'h-16 w-full object-contain'}
+        />
       </div>
       <div className="flex-1 overflow-auto px-3 py-4">
         {!workshopOnly && (
@@ -174,6 +174,22 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
       </div>
 
       <div className="space-y-1 border-t border-border px-3 py-4">
+        {!collapsed && (
+          <div className="mb-2 space-y-1 px-3 text-[12px] text-text-secondary">
+            <a dir="ltr" className="block hover:text-primary" href={`tel:${t('app.phone')}`}>
+              {t('app.phone')}
+            </a>
+            <a
+              dir="ltr"
+              className="block hover:text-primary"
+              href={`https://instagram.com/${t('app.instagram')}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              @{t('app.instagram')}
+            </a>
+          </div>
+        )}
         {adminUser && renderNavItem('/settings', Settings, t('nav.settings'))}
         <button
           type="button"

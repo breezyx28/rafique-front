@@ -185,6 +185,14 @@ export function InvoiceDetailsPage() {
           </p>
         </CardHeader>
         <CardContent className="space-y-4 pt-4">
+          <div className="flex flex-col items-center text-center">
+            <img
+              src="/assets/cedar/logo-transparent-black.png"
+              alt={shopName}
+              className="h-24 w-auto object-contain"
+            />
+            <p className="mt-1 text-[14px] font-semibold text-text-primary">{shopName}</p>
+          </div>
           {type === 'pickup' ? (
             <>
               <div className="text-[13px]">
@@ -277,6 +285,10 @@ export function InvoiceDetailsPage() {
               </p>
             </>
           )}
+          <div className="border-t border-border pt-3 text-center text-[13px] text-text-secondary">
+            <p dir="ltr">{shopPhone}</p>
+            <p dir="ltr">@{t('app.instagram')}</p>
+          </div>
         </CardContent>
       </Card>
     </div>
