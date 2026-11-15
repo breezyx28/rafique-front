@@ -8,6 +8,9 @@
         if (!['en', 'ar', 'bn'].includes(language)) language = 'en'
         document.documentElement.lang = language
         document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
+        if (localStorage.getItem('theme') === 'dark') {
+          document.documentElement.classList.add('dark')
+        }
       } catch (_) {}
     </script>
     <link rel="icon" type="image/png" href="/assets/cedar/logo-small.png" />

@@ -339,7 +339,9 @@
     "balanceOverdue": "বকেয়া বাকি",
     "needsCustomer": "গ্রাহক লাগবে",
     "lowStock": "কম স্টক",
-    "viewAll": "সব বিজ্ঞপ্তি দেখুন"
+    "viewAll": "সব বিজ্ঞপ্তি দেখুন",
+    "darkMode": "ডার্ক মোড",
+    "lightMode": "লাইট মোড"
   },
   "notificationsPage": {
     "title": "বিজ্ঞপ্তি",
@@ -584,7 +586,10 @@
     "pricingHint": "প্রতিটি কাস্টম পণ্যের একটি তৈরি পিসের দর্জির মজুরি ঠিক করুন। এটি বিক্রয় মূল্য থেকে আলাদা।",
     "sewingRateAria": "{{product}} প্রতি পিস দর্জির হার",
     "paymentTitle": "দর্জির পেমেন্ট",
+    "payrollFiltersTitle": "দর্জির মজুরি ফিল্টার",
     "payrollTitle": "তৈরি পিস, সব দর্জির জন্য একই হার",
+    "allProducts": "সব পণ্য",
+    "payrollEmpty": "এই ফিল্টারে কোনো দর্জির মজুরি নেই।",
     "pieces": "পিস",
     "metersCompleted": "মিটার",
     "metersNote": "মিটার শুধু স্টকের জন্য। মজুরি হলো তৈরি পিসের সংখ্যা গুণ পিসের হার।",
@@ -689,6 +694,9 @@
     "saveGeneral": "সাধারণ সেটিংস সংরক্ষণ",
     "preferencesTitle": "অ্যাপ্লিকেশন পছন্দ",
     "language": "ভাষা",
+    "theme": "থিম",
+    "themeLight": "লাইট",
+    "themeDark": "ডার্ক",
     "currency": "মুদ্রা",
     "dateFormat": "তারিখ ফরম্যাট",
     "printerConfig": "প্রিন্টার কনফিগার",

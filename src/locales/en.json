@@ -339,7 +339,9 @@
     "balanceOverdue": "Overdue balance",
     "needsCustomer": "Needs customer",
     "lowStock": "Low stock",
-    "viewAll": "View all notifications"
+    "viewAll": "View all notifications",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode"
   },
   "notificationsPage": {
     "title": "Notifications",
@@ -584,7 +586,10 @@
     "pricingHint": "Set the tailor pay for one finished piece of each custom product. This rate is separate from the selling price.",
     "sewingRateAria": "{{product}} tailor rate per piece",
     "paymentTitle": "Tailor Payment",
+    "payrollFiltersTitle": "Filter tailor wages",
     "payrollTitle": "Finished pieces, same rate for every tailor",
+    "allProducts": "All products",
+    "payrollEmpty": "No tailor wages match these filters.",
     "pieces": "Pieces",
     "metersCompleted": "Meters",
     "metersNote": "Meters are listed for stock only. Pay is the number of ready pieces times the piece rate.",
@@ -689,6 +694,9 @@
     "saveGeneral": "Save General Settings",
     "preferencesTitle": "Application Preferences",
     "language": "Language",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
     "currency": "Currency",
     "dateFormat": "Date Format",
     "printerConfig": "Printer Config",

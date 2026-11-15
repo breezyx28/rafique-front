@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/Input'
 import { cn } from '@/lib/utils'
 
 export const toolbarSelectClass =
-  'h-10 w-full cursor-pointer rounded-[6px] border border-border bg-white px-3 text-[13px] text-text-primary'
+  'h-10 w-full cursor-pointer rounded-[6px] border border-border bg-surface px-3 text-[13px] text-text-primary'
 
 export function FilterToolbar({
   children,

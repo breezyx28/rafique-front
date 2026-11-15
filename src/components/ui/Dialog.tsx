@@ -22,7 +22,7 @@ export function Dialog({ open, onOpenChange, children, className }: DialogProps)
       />
       <div
         className={cn(
-          'relative z-10 w-full max-w-sm rounded-[16px] border border-border bg-white p-5 shadow-card',
+          'relative z-10 w-full max-w-sm rounded-[16px] border border-border bg-surface p-5 shadow-card',
           className,
         )}
       >

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/useAuthStore'
+import { usePreferenceStore } from '@/store/usePreferenceStore'
 import { isAdmin, isCashier, isWorkshop } from '@/lib/roles'
 import type { ComponentType } from 'react'
 import { useState } from 'react'
@@ -45,12 +46,17 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
   const location = useLocation()
   const clearAuth = useAuthStore((s) => s.clearAuth)
   const role = useAuthStore((s) => s.user?.role)
+  const theme = usePreferenceStore((s) => s.theme)
   const workshopOnly = isWorkshop(role)
   const cashierOnly = isCashier(role)
   const adminUser = isAdmin(role)
   const [workshopOpen, setWorkshopOpen] = useState(
     location.pathname.startsWith('/workshop')
   )
+  const logoSrc =
+    theme === 'dark'
+      ? '/assets/cedar/logo-small-transparent.png'
+      : '/assets/cedar/logo-small--black-transparent.png'
 
   const renderNavItem = (
     to: string,
@@ -67,7 +73,7 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
           'flex h-10 items-center gap-3 rounded-[10px] px-3 text-[13px] font-medium transition-colors',
           isActive
             ? 'bg-primary-light text-primary shadow-nav'
-            : 'text-text-secondary hover:bg-[#F5F5F5]'
+            : 'text-text-secondary hover:bg-muted'
         )}
       >
         <Icon className="h-[18px] w-[18px] shrink-0" />
@@ -90,7 +96,7 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
     >
       <div className="flex h-16 items-center border-b border-border px-3">
         <img
-          src="/assets/cedar/logo-small--black-transparent.png"
+          src={logoSrc}
           alt={t('app.shopName')}
           className={collapsed ? 'mx-auto h-9 w-9 object-contain' : 'h-12 w-12 object-contain'}
         />
@@ -124,7 +130,7 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
               'flex h-10 w-full items-center gap-3 rounded-[10px] px-3 text-[13px] font-medium transition-colors',
               location.pathname.startsWith('/workshop')
                 ? 'bg-primary-light text-primary shadow-nav'
-                : 'text-text-secondary hover:bg-[#F5F5F5]'
+                : 'text-text-secondary hover:bg-muted'
             )}
           >
             <Hammer className="h-[18px] w-[18px]" />
@@ -146,7 +152,7 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
                   to={to}
                   className={cn(
                     'flex h-9 items-center rounded-[8px] px-2 text-[12px]',
-                    location.pathname === to ? 'font-semibold text-primary' : 'text-text-secondary hover:bg-[#F5F5F5]'
+                    location.pathname === to ? 'font-semibold text-primary' : 'text-text-secondary hover:bg-muted'
                   )}
                 >
                   {label}
@@ -178,7 +184,7 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
         <button
           type="button"
           onClick={clearAuth}
-          className="flex h-10 w-full items-center gap-3 rounded-[10px] px-3 text-[13px] font-medium text-text-secondary transition-colors hover:bg-[#F5F5F5]"
+          className="flex h-10 w-full items-center gap-3 rounded-[10px] px-3 text-[13px] font-medium text-text-secondary transition-colors hover:bg-muted"
         >
           <LogOut className="h-[18px] w-[18px] shrink-0" />
           {!collapsed && <span>{t('auth.logout')}</span>}

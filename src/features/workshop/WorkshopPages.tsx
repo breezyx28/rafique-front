@@ -43,9 +43,57 @@ export function SewingPricingPage() {
 
 export function TailorPaymentPage() {
   const { t } = useTranslation()
-  const { data } = useGetWorkshopPayrollQuery()
+  const [fromDate, setFromDate] = React.useState('')
+  const [toDate, setToDate] = React.useState('')
+  const [productId, setProductId] = React.useState('')
+  const { data: products } = useGetProductsQuery({ type: 'custom' })
+  const { data } = useGetWorkshopPayrollQuery({
+    from: fromDate || undefined,
+    to: toDate || undefined,
+    productId: productId ? Number(productId) : undefined,
+  })
   return (
     <WorkshopShell title={t('workshop.paymentTitle')}>
+      <Card>
+        <CardHeader><CardTitle>{t('workshop.payrollFiltersTitle')}</CardTitle></CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-3">
+          <label className="space-y-1 text-[12px] font-medium text-text-secondary">
+            <span>{t('common.fromDate', 'From date')}</span>
+            <input
+              type="date"
+              dir="ltr"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px] text-text-primary"
+            />
+          </label>
+          <label className="space-y-1 text-[12px] font-medium text-text-secondary">
+            <span>{t('common.toDate', 'To date')}</span>
+            <input
+              type="date"
+              dir="ltr"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px] text-text-primary"
+            />
+          </label>
+          <label className="space-y-1 text-[12px] font-medium text-text-secondary">
+            <span>{t('workshop.product')}</span>
+            <select
+              value={productId}
+              onChange={(e) => setProductId(e.target.value)}
+              className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px] text-text-primary"
+            >
+              <option value="">{t('workshop.allProducts')}</option>
+              {(products ?? []).map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader><CardTitle>{t('workshop.payrollTitle')}</CardTitle></CardHeader>
         <CardContent>
@@ -69,6 +117,13 @@ export function TailorPaymentPage() {
                   <td className="px-3 py-3 text-text-secondary">{row.meters}</td>
                 </tr>
               ))}
+              {(data?.breakdown ?? []).length === 0 && (
+                <tr className="border-t border-border">
+                  <td colSpan={5} className="px-3 py-6 text-center text-text-muted">
+                    {t('workshop.payrollEmpty')}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
           <p className="mt-3 text-[12px] text-text-muted">{t('workshop.metersNote')}</p>

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Bell, ChevronDown, Globe2, Mail } from 'lucide-react'
+import { Bell, ChevronDown, Globe2, Mail, Moon, Sun } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -25,6 +25,8 @@ const POLL_MS = 20_000
 export function Header() {
   const { user } = useAuthStore()
   const lang = usePreferenceStore((s) => s.language)
+  const theme = usePreferenceStore((s) => s.theme)
+  const setTheme = usePreferenceStore((s) => s.setTheme)
   const { t } = useTranslation()
   const username = user?.username ?? t('common.user')
   const avatarInitial = username.slice(0, 1).toUpperCase()
@@ -101,14 +103,14 @@ export function Header() {
             setIsLangOpen((v) => !v)
             setIsNotificationOpen(false)
           }}
-          className="inline-flex items-center gap-2 rounded-full bg-[#F5F5F5] px-3 py-1.5 text-[12px] font-medium text-text-secondary hover:bg-primary-light hover:text-primary"
+          className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-[12px] font-medium text-text-secondary hover:bg-primary-light hover:text-primary"
         >
           <Globe2 className="h-4 w-4" />
           {lang.toUpperCase()}
           <ChevronDown className="h-3.5 w-3.5" />
         </button>
         {isLangOpen && (
-          <div className="absolute start-0 top-11 z-30 w-40 rounded-[12px] border border-border bg-white p-1 shadow-lg">
+          <div className="absolute start-0 top-11 z-30 w-40 rounded-[12px] border border-border bg-surface p-1 shadow-lg">
             {languages.map((l) => (
               <button
                 key={l.code}
@@ -120,7 +122,7 @@ export function Header() {
                   className={`w-full rounded-[8px] px-3 py-2 text-start text-[13px] ${
                   lang === l.code
                     ? 'bg-primary-light font-semibold text-primary'
-                    : 'text-text-secondary hover:bg-[#F5F5F5]'
+                    : 'text-text-secondary hover:bg-muted'
                 }`}
               >
                 {l.label}
@@ -133,7 +135,15 @@ export function Header() {
       <div className="flex items-center gap-3">
         <button
           type="button"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F5F5F5] text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-muted text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
+          aria-label={theme === 'dark' ? t('header.lightMode', 'Light mode') : t('header.darkMode', 'Dark mode')}
+        >
+          {theme === 'dark' ? <Sun className="h-[16px] w-[16px]" /> : <Moon className="h-[16px] w-[16px]" />}
+        </button>
+        <button
+          type="button"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-muted text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
           aria-label={t('header.messages', 'Messages')}
         >
           <Mail className="h-[16px] w-[16px]" />
@@ -146,7 +156,7 @@ export function Header() {
               setIsNotificationOpen((v) => !v)
               setIsLangOpen(false)
             }}
-            className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F5F5F5] text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
+            className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-muted text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
             aria-label={t('header.notifications', 'Notifications')}
           >
             <Bell className="h-[16px] w-[16px]" />
@@ -157,7 +167,7 @@ export function Header() {
             )}
           </button>
           {isNotificationOpen && (
-            <div className="absolute end-0 top-11 z-30 w-[360px] rounded-[12px] border border-border bg-white p-2 shadow-lg">
+            <div className="absolute end-0 top-11 z-30 w-[360px] rounded-[12px] border border-border bg-surface p-2 shadow-lg">
               <div className="mb-1 flex items-center justify-between px-2 py-1">
                 <p className="text-[13px] font-semibold text-text-primary">
                   {t('header.latestAlerts', 'Latest Alerts')}
@@ -197,7 +207,7 @@ export function Header() {
                         markNotificationRead(a.id)
                       }
                     }}
-                    className={`flex w-full cursor-pointer items-start gap-3 rounded-[10px] px-3 py-2 text-start hover:bg-[#F5F5F5] ${
+                    className={`flex w-full cursor-pointer items-start gap-3 rounded-[10px] px-3 py-2 text-start hover:bg-muted ${
                       a.isRead ? '' : 'bg-primary-light/40'
                     }`}
                   >
@@ -232,7 +242,7 @@ export function Header() {
 
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-full px-2 py-1 transition-colors hover:bg-[#F5F5F5]"
+          className="inline-flex items-center gap-2 rounded-full px-2 py-1 transition-colors hover:bg-muted"
         >
           <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary-light text-[12px] font-semibold text-primary">
             {avatarInitial}

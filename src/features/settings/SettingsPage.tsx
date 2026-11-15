@@ -37,6 +37,7 @@ export function SettingsPage() {
   const [shopAddress, setShopAddress] = useState('')
 
   const [language, setLanguage] = useState('en')
+  const [theme, setTheme] = useState<'light' | 'dark'>(prefStore.theme)
   const [currency, setCurrency] = useState('SDG')
   const [dateFormat, setDateFormat] = useState('YYYY-MM-DD')
   const [printer, setPrinter] = useState('')
@@ -61,13 +62,14 @@ export function SettingsPage() {
 
     const uiLanguage = (i18n.language || '').split('-')[0]
     setLanguage(uiLanguage === 'ar' || uiLanguage === 'bn' || uiLanguage === 'en' ? uiLanguage : String(settings.language ?? 'en'))
+    setTheme(prefStore.theme)
     setCurrency(String(settings.currency ?? prefStore.currency ?? 'SDG'))
     setDateFormat(String(settings.dateFormat ?? prefStore.dateFormat ?? 'YYYY-MM-DD'))
     setPrinter(String(settings.printer ?? ''))
     setShowOrderConfirm(Boolean(settings.showOrderSubmitConfirm ?? true))
 
     setAdminUsername(String(settings.adminUsername ?? ''))
-  }, [settings, prefStore.currency, prefStore.dateFormat])
+  }, [settings, prefStore.currency, prefStore.dateFormat, prefStore.theme])
 
   return (
     <div className="space-y-5">
@@ -155,7 +157,7 @@ export function SettingsPage() {
             <div>
               <label className="mb-1 block text-[12px] font-medium text-text-secondary">{t('settingsPage.language', 'Language')}</label>
               <select
-                className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px] text-text-primary"
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
               >
@@ -165,9 +167,20 @@ export function SettingsPage() {
               </select>
             </div>
             <div>
+              <label className="mb-1 block text-[12px] font-medium text-text-secondary">{t('settingsPage.theme', 'Theme')}</label>
+              <select
+                className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px] text-text-primary"
+                value={theme}
+                onChange={(e) => setTheme(e.target.value === 'dark' ? 'dark' : 'light')}
+              >
+                <option value="light">{t('settingsPage.themeLight', 'Light')}</option>
+                <option value="dark">{t('settingsPage.themeDark', 'Dark')}</option>
+              </select>
+            </div>
+            <div>
               <label className="mb-1 block text-[12px] font-medium text-text-secondary">{t('settingsPage.currency', 'Currency')}</label>
               <select
-                className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px] text-text-primary"
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
               >
@@ -178,7 +191,7 @@ export function SettingsPage() {
             <div>
               <label className="mb-1 block text-[12px] font-medium text-text-secondary">{t('settingsPage.dateFormat', 'Date Format')}</label>
               <select
-                className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px] text-text-primary"
                 value={dateFormat}
                 onChange={(e) => setDateFormat(e.target.value)}
               >
@@ -194,7 +207,7 @@ export function SettingsPage() {
                 onChange={(e) => setPrinter(e.target.value)}
               />
             </div>
-            <div className="md:col-span-2 rounded-[10px] border border-border bg-[#FAFAFA] p-3 text-[13px]">
+            <div className="md:col-span-2 rounded-[10px] border border-border bg-muted p-3 text-[13px]">
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -219,6 +232,7 @@ export function SettingsPage() {
                   if (language === 'en' || language === 'ar' || language === 'bn') {
                     applyLanguage(language)
                   }
+                  prefStore.setTheme(theme)
                   prefStore.setConfirmOrderDialog(showOrderConfirm)
                   prefStore.setDateFormat(dateFormat === 'DD/MM/YYYY' ? 'DD/MM/YYYY' : 'YYYY-MM-DD')
                   prefStore.setCurrency(currency)

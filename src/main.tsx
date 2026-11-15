@@ -10,6 +10,9 @@ import '@fontsource/cairo/600.css'
 import '@fontsource/hind-siliguri/400.css'
 import '@fontsource/hind-siliguri/600.css'
 import './index.css'
+import { applyDocumentTheme, usePreferenceStore } from '@/store/usePreferenceStore'
+
+applyDocumentTheme(usePreferenceStore.getState().theme)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

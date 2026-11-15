@@ -339,7 +339,9 @@
     "balanceOverdue": "رصيد متأخر",
     "needsCustomer": "يحتاج عميلاً",
     "lowStock": "مخزون منخفض",
-    "viewAll": "عرض كل الإشعارات"
+    "viewAll": "عرض كل الإشعارات",
+    "darkMode": "الوضع الداكن",
+    "lightMode": "الوضع الفاتح"
   },
   "notificationsPage": {
     "title": "الإشعارات",
@@ -584,7 +586,10 @@
     "pricingHint": "حدد أجر الخياط عن القطعة الواحدة لكل منتج تفصيل. هذا الأجر منفصل عن سعر البيع.",
     "sewingRateAria": "أجر خياطة {{product}} للقطعة",
     "paymentTitle": "دفع الخياطين",
+    "payrollFiltersTitle": "تصفية أجور الخياطين",
     "payrollTitle": "القطع الجاهزة بنفس الأجر لكل خياط",
+    "allProducts": "كل المنتجات",
+    "payrollEmpty": "لا توجد أجور خياطين تطابق هذه التصفية.",
     "pieces": "القطع",
     "metersCompleted": "الأمتار",
     "metersNote": "الأمتار للمخزون فقط. الأجر هو عدد القطع الجاهزة مضروباً في أجر القطعة.",
@@ -689,6 +694,9 @@
     "saveGeneral": "حفظ الإعدادات العامة",
     "preferencesTitle": "تفضيلات التطبيق",
     "language": "اللغة",
+    "theme": "المظهر",
+    "themeLight": "فاتح",
+    "themeDark": "داكن",
     "currency": "العملة",
     "dateFormat": "تنسيق التاريخ",
     "printerConfig": "إعدادات الطابعة",
