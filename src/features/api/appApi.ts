@@ -773,7 +773,14 @@ export const appApi = createApi({
       ],
     }),
     getWorkshopPayroll: builder.query<
-      { breakdown: Array<{ productId: number; productName: string; pieces: number; meters: number; rate: number; amount: number }>; total: number },
+      {
+        breakdown: Array<{ productId: number; productName: string; pieces: number; meters: number; rate: number; amount: number }>
+        total: number
+        periodTotals: { pieces: number; meters: number; amount: number }
+        totalAccrued: number
+        totalPaid: number
+        outstandingBalance: number
+      },
       { from?: string; to?: string; productId?: number } | void
     >({
       query: (params) => ({
@@ -786,11 +793,110 @@ export const appApi = createApi({
             }
           : undefined,
       }),
-      transformResponse: (response) => unwrapBody(response) as {
-        breakdown: Array<{ productId: number; productName: string; pieces: number; meters: number; rate: number; amount: number }>
-        total: number
+      transformResponse: (response) => {
+        const body = unwrapBody(response) as {
+          breakdown: Array<{ productId: number; productName: string; pieces: number; meters: number; rate: number; amount: number }>
+          total: number
+          periodTotals?: { pieces: number; meters: number; amount: number }
+          totalAccrued?: number
+          totalPaid?: number
+          outstandingBalance?: number
+        }
+        const breakdown = body.breakdown ?? []
+        const periodAmount = body.periodTotals?.amount ?? body.total ?? 0
+        return {
+          breakdown,
+          total: periodAmount,
+          periodTotals: body.periodTotals ?? {
+            pieces: breakdown.reduce((sum, row) => sum + row.pieces, 0),
+            meters: breakdown.reduce((sum, row) => sum + row.meters, 0),
+            amount: periodAmount,
+          },
+          totalAccrued: body.totalAccrued ?? periodAmount,
+          totalPaid: body.totalPaid ?? 0,
+          outstandingBalance: body.outstandingBalance ?? Math.max(0, (body.totalAccrued ?? periodAmount) - (body.totalPaid ?? 0)),
+        }
       },
       providesTags: [{ type: 'Workshop', id: 'PAYROLL' }],
+    }),
+    getWorkshopWagePayouts: builder.query<
+      Array<{
+        id: number
+        amount: number
+        balanceBefore: number
+        balanceAfter: number
+        note: string | null
+        createdAt: string
+        createdByUserId: number
+        createdByUsername: string | null
+      }>,
+      { from?: string; to?: string } | void
+    >({
+      query: (params) => ({
+        url: '/workshop/payroll/payouts',
+        params: params
+          ? {
+              from: params.from || undefined,
+              to: params.to || undefined,
+            }
+          : undefined,
+      }),
+      transformResponse: (response) =>
+        (unwrapBody(response) as Array<{
+          id: number
+          amount: number
+          balanceBefore: number
+          balanceAfter: number
+          note: string | null
+          createdAt: string
+          createdByUserId: number
+          createdByUsername: string | null
+        }>) ?? [],
+      providesTags: [{ type: 'Workshop', id: 'PAYOUTS' }],
+    }),
+    createWorkshopWagePayout: builder.mutation<
+      {
+        payout: {
+          id: number
+          amount: number
+          balanceBefore: number
+          balanceAfter: number
+          note: string | null
+          createdAt: string
+          createdByUserId: number
+          createdByUsername: string | null
+        }
+        totalAccrued: number
+        totalPaid: number
+        outstandingBalance: number
+      },
+      { amount: number; note?: string }
+    >({
+      query: (body) => ({
+        url: '/workshop/payroll/payouts',
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response) =>
+        unwrapBody(response) as {
+          payout: {
+            id: number
+            amount: number
+            balanceBefore: number
+            balanceAfter: number
+            note: string | null
+            createdAt: string
+            createdByUserId: number
+            createdByUsername: string | null
+          }
+          totalAccrued: number
+          totalPaid: number
+          outstandingBalance: number
+        },
+      invalidatesTags: [
+        { type: 'Workshop', id: 'PAYROLL' },
+        { type: 'Workshop', id: 'PAYOUTS' },
+      ],
     }),
 
     getExpenseTypes: builder.query<z.infer<typeof expenseTypeSchema>[], void>({
@@ -917,6 +1023,8 @@ export const {
   useUndoDeliverOrderToWorkshopMutation,
   useSetWorkshopItemReadinessMutation,
   useGetWorkshopPayrollQuery,
+  useGetWorkshopWagePayoutsQuery,
+  useCreateWorkshopWagePayoutMutation,
   useGetExpenseTypesQuery,
   useCreateExpenseTypeMutation,
   useGetExpensesQuery,

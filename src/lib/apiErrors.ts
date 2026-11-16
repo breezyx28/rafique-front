@@ -30,6 +30,8 @@ const exactMessages: Record<string, string> = {
   'Every order item must have fabric and meters before workshop delivery': 'errors.fabricMetersRequired',
   'Undo window expired. Delete the order to start again.': 'errors.undoExpired',
   'Order item not found': 'errors.orderItemMissing',
+  'Payout amount must be greater than zero': 'errors.payoutAmountRequired',
+  'Payout amount cannot exceed the outstanding balance': 'errors.payoutExceedsBalance',
 }
 
 export function translateApiMessage(raw: unknown): string {
