@@ -126,7 +126,7 @@ export function NotificationsPage() {
           <div className="overflow-hidden rounded-[12px] border border-border">
             <div className="overflow-x-auto">
               <table className="min-w-[760px] w-full">
-                <thead className="bg-[#FAFAFA]">
+                <thead className="bg-muted">
                   <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">{t('notificationsPage.colTitle', 'Notification')}</th>
                     <th className="px-4 py-3">{t('notificationsPage.type', 'Type')}</th>

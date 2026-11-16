@@ -158,7 +158,7 @@ export function ProductConfigPage() {
                 className={`flex items-center rounded-[10px] ${
                   selectedProductId === p.id
                     ? 'bg-primary-light text-primary'
-                    : 'text-text-secondary hover:bg-[#F5F5F5]'
+                    : 'text-text-secondary hover:bg-muted'
                 }`}
               >
                 <button
@@ -205,7 +205,7 @@ export function ProductConfigPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {fields.map((field) => (
-              <div key={field.id} className="rounded-[12px] border border-border bg-[#FAFAFA] p-3">
+              <div key={field.id} className="rounded-[12px] border border-border bg-muted p-3">
                 <div className="mb-2 flex items-center justify-between">
                   <div className="inline-flex items-center gap-2 text-[12px] text-text-muted">
                     <GripVertical className="h-4 w-4" />

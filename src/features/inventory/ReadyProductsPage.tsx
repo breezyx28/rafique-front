@@ -289,7 +289,7 @@ export function ReadyProductsPage() {
           <div className="overflow-hidden rounded-[12px] border border-border">
             <div className="overflow-x-auto">
               <table className="min-w-[980px] w-full">
-                <thead className="bg-[#FAFAFA]">
+                <thead className="bg-muted">
                   <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">{t('readyProductsPage.name', 'Product name')}</th>
                     <th className="px-4 py-3">{t('readyProductsPage.size', 'Size')}</th>
@@ -343,7 +343,7 @@ export function ReadyProductsPage() {
                             <button
                               type="button"
                               onClick={() => openEdit(row)}
-                              className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-primary"
+                              className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-muted hover:text-primary"
                               aria-label={t('readyProductsPage.edit', 'Edit')}
                             >
                               <Pencil className="h-4 w-4" />
@@ -351,7 +351,7 @@ export function ReadyProductsPage() {
                             <button
                               type="button"
                               onClick={() => setDeleting(row)}
-                              className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-danger"
+                              className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-muted hover:text-danger"
                               aria-label={t('readyProductsPage.delete', 'Delete')}
                             >
                               <Trash2 className="h-4 w-4" />

@@ -182,7 +182,7 @@ export function OrdersPage() {
 
       <Card>
         <CardHeader className="flex flex-col gap-3 pb-3 md:flex-row md:items-center md:justify-between">
-          <div className="inline-flex rounded-full bg-[#F5F5F5] p-[3px]">
+          <div className="inline-flex rounded-full bg-muted p-[3px]">
             <button
               type="button"
               onClick={() => {
@@ -299,7 +299,7 @@ export function OrdersPage() {
           <div className="overflow-hidden rounded-[12px] border border-border">
             <div className="overflow-x-auto">
               <table className="min-w-[980px] w-full">
-                <thead className="bg-[#FAFAFA]">
+                <thead className="bg-muted">
                   <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">{t('orders.orderNumber', 'Order #')}</th>
                     <th className="px-4 py-3">{t('orders.receiptNumber', 'Receipt #')}</th>
@@ -385,7 +385,7 @@ export function OrdersPage() {
                             <button
                               type="button"
                               onClick={() => navigate(`/invoices/${String(row.id)}?type=customer`, { state: { order: toInvoicePayload(row) } })}
-                              className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
+                              className="rounded-md p-1.5 hover:bg-muted"
                               aria-label={t('orders.view')}
                             >
                               <Eye className="h-4 w-4" />
@@ -409,7 +409,7 @@ export function OrdersPage() {
                                   })),
                                 })
                               }}
-                              className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
+                              className="rounded-md p-1.5 hover:bg-muted"
                               aria-label={t('orders.edit')}
                             >
                               <Pencil className="h-4 w-4" />
@@ -425,7 +425,7 @@ export function OrdersPage() {
                                 if (!confirmed) return
                                 await deleteOrder(row.id)
                               }}
-                              className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
+                              className="rounded-md p-1.5 hover:bg-muted"
                               aria-label={t('orders.delete')}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -433,7 +433,7 @@ export function OrdersPage() {
                             <button
                               type="button"
                               onClick={() => printInvoiceAndPickup(toInvoicePayload(row))}
-                              className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
+                              className="rounded-md p-1.5 hover:bg-muted"
                               aria-label={t('orders.printInvoice')}
                             >
                               <Printer className="h-4 w-4" />

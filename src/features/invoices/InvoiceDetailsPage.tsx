@@ -122,7 +122,7 @@ export function InvoiceDetailsPage() {
 
       <Card>
         <CardContent className="pt-5">
-          <div className="inline-flex rounded-full bg-[#F5F5F5] p-[3px]">
+          <div className="inline-flex rounded-full bg-muted p-[3px]">
             <Link
               to={`/invoices/${orderNumber}?type=customer`}
               className={`rounded-full px-4 py-1 text-[12px] font-medium ${
@@ -227,7 +227,7 @@ export function InvoiceDetailsPage() {
                   {item.measurements.length > 0 && (
                   <div className="overflow-hidden rounded-[10px] border border-border">
                     <table className="w-full">
-                      <thead className="bg-[#FAFAFA]">
+                      <thead className="bg-muted">
                         <tr className="text-start text-[12px] font-medium text-text-muted">
                           <th className="px-4 py-2">{t('invoiceDetailsPage.measurement', 'Measurement')}</th>
                           <th className="px-4 py-2">{t('invoiceDetailsPage.value', 'Value')}</th>

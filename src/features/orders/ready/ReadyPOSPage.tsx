@@ -192,7 +192,7 @@ export function ReadyPOSPage() {
               </div>
             ))}
 
-            <div className="rounded-[10px] bg-[#FAFAFA] p-3 space-y-2">
+            <div className="rounded-[10px] bg-muted p-3 space-y-2">
               <div className="flex items-center justify-between text-[13px]">
                 <span className="text-text-secondary">{t('orders.ready.total', 'Total')}</span>
                 <span className="font-semibold text-text-primary">{money(total)}</span>
@@ -246,7 +246,7 @@ export function ReadyPOSPage() {
                         <li key={customer.id}>
                           <button
                             type="button"
-                            className="w-full px-3 py-2 text-start text-[13px] hover:bg-[#F5F5F5]"
+                            className="w-full px-3 py-2 text-start text-[13px] hover:bg-muted"
                             onClick={() => {
                               setCustomerId(customer.id)
                               setCustomerName(customer.name)

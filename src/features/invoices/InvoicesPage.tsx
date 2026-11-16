@@ -116,7 +116,7 @@ export function InvoicesPage() {
         <CardContent>
           <div className="overflow-hidden rounded-[12px] border border-border">
             <table className="w-full min-w-[760px]">
-              <thead className="bg-[#FAFAFA]">
+              <thead className="bg-muted">
                 <tr className="text-start text-[12px] font-medium text-text-muted">
                   <th className="px-4 py-3">{t('orders.orderNumber', 'Order #')}</th>
                   <th className="px-4 py-3">{t('orders.customer', 'Customer')}</th>

@@ -80,7 +80,7 @@ export function SettingsPage() {
 
       <Card>
         <CardContent className="pt-5">
-          <div className="inline-flex rounded-full bg-[#F5F5F5] p-[3px]">
+          <div className="inline-flex rounded-full bg-muted p-[3px]">
             {tabKeys.map((key) => (
               <button
                 key={key}
@@ -265,7 +265,7 @@ export function SettingsPage() {
           <CardContent>
             <div className="overflow-hidden rounded-[12px] border border-border">
               <table className="w-full min-w-[620px]">
-                <thead className="bg-[#FAFAFA]">
+                <thead className="bg-muted">
                   <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">{t('settingsPage.user', 'User')}</th>
                     <th className="px-4 py-3">{t('settingsPage.username', 'Username')}</th>
@@ -384,7 +384,7 @@ export function SettingsPage() {
         <Card>
           <CardHeader><CardTitle>{t('settingsPage.backupTitle', 'Backup & Restore')}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            <div className="rounded-[10px] border border-border bg-[#FAFAFA] p-4">
+            <div className="rounded-[10px] border border-border bg-muted p-4">
               <p className="text-[13px] font-semibold text-text-primary">{t('settingsPage.exportTitle', 'Export current database snapshot')}</p>
               <p className="mt-1 text-[12px] text-text-secondary">{t('settingsPage.exportDescription', 'Download a local backup file for offline safety.')}</p>
               <Button
@@ -413,7 +413,7 @@ export function SettingsPage() {
                 <Download className="h-4 w-4" />{t('settingsPage.exportBackup', 'Export Backup')}
               </Button>
             </div>
-            <div className="rounded-[10px] border border-border bg-[#FAFAFA] p-4">
+            <div className="rounded-[10px] border border-border bg-muted p-4">
               <p className="text-[13px] font-semibold text-text-primary">{t('settingsPage.importTitle', 'Import / Restore backup')}</p>
               <p className="mt-1 text-[12px] text-text-secondary">{t('settingsPage.importDescription', 'Upload backup file to restore previous state.')}</p>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">

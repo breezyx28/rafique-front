@@ -258,7 +258,7 @@ export function DebtsPage() {
                       <li key={customer.id}>
                         <button
                           type="button"
-                          className="w-full px-3 py-2 text-start text-[13px] hover:bg-[#F5F5F5]"
+                          className="w-full px-3 py-2 text-start text-[13px] hover:bg-muted"
                           onClick={() => {
                             setCustomerId(customer.id)
                             setCustomerName(customer.name ?? '')

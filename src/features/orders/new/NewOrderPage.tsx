@@ -328,7 +328,7 @@ export function NewOrderPage() {
               : tr('orders.new.subtitle', 'Create a custom order in 4 steps with live cart and payment summary.')}
           </p>
         </div>
-        <div className="inline-flex rounded-full bg-[#F5F5F5] p-[3px]">
+        <div className="inline-flex rounded-full bg-muted p-[3px]">
           <button
             type="button"
             onClick={() => setOrderKind('custom')}
@@ -376,7 +376,7 @@ export function NewOrderPage() {
                         ? 'bg-primary text-white'
                         : isDone
                         ? 'bg-success text-white'
-                        : 'bg-[#F5F5F5] text-text-secondary'
+                        : 'bg-muted text-text-secondary'
                     }`}
                   >
                     {isDone ? <Check className="h-3.5 w-3.5" /> : current}
@@ -409,7 +409,7 @@ export function NewOrderPage() {
                     <li key={c.id}>
                       <button
                         type="button"
-                        className="w-full px-4 py-2 text-start text-[13px] hover:bg-[#F5F5F5]"
+                        className="w-full px-4 py-2 text-start text-[13px] hover:bg-muted"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
                           setSelectedCustomerFromSearch({ id: c.id, name: c.name ?? '', phone: c.phone ?? '' })
@@ -535,7 +535,7 @@ export function NewOrderPage() {
 
             {step === 2 && orderKind === 'custom' && (
               <div className="space-y-4">
-                <div className="inline-flex rounded-full bg-[#F5F5F5] p-[3px]">
+                <div className="inline-flex rounded-full bg-muted p-[3px]">
                   {(products ?? []).map((p) => (
                     <button
                       key={p.id}
@@ -606,7 +606,7 @@ export function NewOrderPage() {
                       placeholder={tr('orders.new.workshopNotePlaceholder', 'Note for workshop')}
                     />
                   </div>
-                  <div className="space-y-2 rounded-[12px] border border-border bg-[#FAFAFA] p-3">
+                  <div className="space-y-2 rounded-[12px] border border-border bg-muted p-3">
                     <p className="text-[12px] font-medium text-text-secondary">{tr('orders.new.addToCart', 'Add to cart')}</p>
                     <NumberInput
                       label={tr('orders.new.unitPrice', 'Unit price')}
@@ -709,7 +709,7 @@ export function NewOrderPage() {
 
             {step === 4 && (
               <div className="space-y-4">
-                <div className="rounded-[12px] border border-border bg-[#FAFAFA] p-4">
+                <div className="rounded-[12px] border border-border bg-muted p-4">
                   <p className="text-[13px] font-semibold text-text-primary">{tr('orders.new.review.orderSummary', 'Order Summary')}</p>
                   <div className="mt-3 grid gap-2 text-[13px]">
                     <p><span className="text-text-muted">{tr('orders.new.review.customer', 'Customer')}:</span> {fullName || '—'}</p>
@@ -783,7 +783,7 @@ export function NewOrderPage() {
                   <button
                     type="button"
                     onClick={() => removeItem(item.id)}
-                    className="rounded-md p-1 text-text-muted hover:bg-[#F5F5F5] hover:text-danger"
+                    className="rounded-md p-1 text-text-muted hover:bg-muted hover:text-danger"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -833,11 +833,11 @@ export function NewOrderPage() {
             </p>
             <div className="mt-4 max-h-64 space-y-3 overflow-auto">
               {measurementsLoading && !measurementsOrders ? (
-                <p className="rounded-[10px] bg-[#FAFAFA] px-4 py-3 text-[13px] text-text-muted">
+                <p className="rounded-[10px] bg-muted px-4 py-3 text-[13px] text-text-muted">
                   {tr('orders.new.ordersModal.loading', 'Loading…')}
                 </p>
               ) : pastOrderItems.length === 0 ? (
-                <p className="rounded-[10px] bg-[#FAFAFA] px-4 py-3 text-[13px] text-text-muted">
+                <p className="rounded-[10px] bg-muted px-4 py-3 text-[13px] text-text-muted">
                   {tr('orders.new.ordersModal.noOrders', 'No past custom orders.')}
                 </p>
               ) : (
@@ -920,7 +920,7 @@ export function NewOrderPage() {
           <div className="w-full max-w-lg rounded-[16px] bg-white p-5 shadow-lg">
             <h3 className="text-[18px] font-semibold text-text-primary">{tr('orders.new.modal.title', 'Confirm Order Submission')}</h3>
             <p className="mt-1 text-[13px] text-text-secondary">{tr('orders.new.modal.subtitle', 'Please review order details before final submit.')}</p>
-            <div className="mt-4 space-y-2 rounded-[10px] bg-[#FAFAFA] p-3 text-[13px]">
+            <div className="mt-4 space-y-2 rounded-[10px] bg-muted p-3 text-[13px]">
               <p>{tr('orders.new.review.customer', 'Customer')}: {fullName || '—'}</p>
               <p>{tr('orders.new.review.phone', 'Phone')}: {phone || '—'}</p>
               <p>{tr('orders.new.review.items', 'Items')}: {cart.length}</p>

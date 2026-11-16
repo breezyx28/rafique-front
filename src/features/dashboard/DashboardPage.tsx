@@ -324,7 +324,7 @@ export function DashboardPage() {
                   key={order.id}
                   type="button"
                   onClick={() => navigate(`/invoices/${order.id}?type=customer`)}
-                  className="flex w-full cursor-pointer items-center justify-between py-2.5 text-start text-[13px] hover:bg-[#FAFAFA]"
+                  className="flex w-full cursor-pointer items-center justify-between py-2.5 text-start text-[13px] hover:bg-muted"
                 >
                   <div>
                     <p className="font-semibold text-text-primary">#{order.orderNumber}</p>
@@ -363,7 +363,7 @@ export function DashboardPage() {
                     key={customer.customerId}
                     type="button"
                     onClick={() => navigate(`/customers/${customer.customerId}/edit`)}
-                    className="flex w-full cursor-pointer items-center justify-between py-2.5 text-start text-[13px] hover:bg-[#FAFAFA]"
+                    className="flex w-full cursor-pointer items-center justify-between py-2.5 text-start text-[13px] hover:bg-muted"
                   >
                     <div>
                       <p className="font-semibold text-text-primary">{customer.name}</p>
@@ -397,7 +397,7 @@ export function DashboardPage() {
             <CardContent className="pt-0">
               <div className="space-y-2">
                 {(data?.topProducts ?? []).map((product) => (
-                  <div key={product.name} className="flex items-center justify-between rounded-[10px] bg-[#FAFAFA] px-3 py-2 text-[13px]">
+                  <div key={product.name} className="flex items-center justify-between rounded-[10px] bg-muted px-3 py-2 text-[13px]">
                     <div>
                       <p className="font-semibold text-text-primary">{product.name}</p>
                       <p className="text-[11px] text-text-muted">{product.qty} {t('dashboard.sold', 'sold')}</p>

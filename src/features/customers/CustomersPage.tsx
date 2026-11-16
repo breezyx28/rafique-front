@@ -95,7 +95,7 @@ export function CustomersPage() {
           <div className="overflow-hidden rounded-[12px] border border-border">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[780px]">
-                <thead className="bg-[#FAFAFA]">
+                <thead className="bg-muted">
                   <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">
                       {t('customersPage.name', 'Name')}
@@ -142,7 +142,7 @@ export function CustomersPage() {
                           <button
                             type="button"
                             onClick={() => navigate(`/customers/${String(c.id)}/edit`)}
-                            className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
+                            className="rounded-md p-1.5 hover:bg-muted"
                             aria-label={t('customersPage.editCustomer')}
                           >
                             <Pencil className="h-4 w-4" />
@@ -150,7 +150,7 @@ export function CustomersPage() {
                           <button
                             type="button"
                             onClick={() => setHistoryCustomerId(c.id)}
-                            className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
+                            className="rounded-md p-1.5 hover:bg-muted"
                             aria-label={t('customersPage.viewHistory')}
                           >
                             <Eye className="h-4 w-4" />
@@ -158,7 +158,7 @@ export function CustomersPage() {
                           <button
                             type="button"
                             onClick={() => setDeletingCustomerId(c.id)}
-                            className="rounded-md p-1.5 hover:bg-[#F5F5F5]"
+                            className="rounded-md p-1.5 hover:bg-muted"
                             aria-label={t('common.delete')}
                           >
                             <Trash2 className="h-4 w-4" />

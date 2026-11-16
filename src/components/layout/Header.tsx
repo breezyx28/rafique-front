@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Bell, ChevronDown, Globe2, Mail, Moon, Sun } from 'lucide-react'
+import { Bell, ChevronDown, Globe2, LogOut, Mail, Moon, Settings, Sun } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -19,21 +19,26 @@ import {
 } from '@/features/api/appApi'
 import { localizeNotification, notificationTone } from '@/lib/displayLabels'
 import { notificationStyles } from '@/lib/notificationAppearance'
+import { isAdmin } from '@/lib/roles'
 
 const POLL_MS = 20_000
 
 export function Header() {
   const { user } = useAuthStore()
+  const clearAuth = useAuthStore((s) => s.clearAuth)
   const lang = usePreferenceStore((s) => s.language)
   const theme = usePreferenceStore((s) => s.theme)
   const setTheme = usePreferenceStore((s) => s.setTheme)
   const { t } = useTranslation()
   const username = user?.username ?? t('common.user')
   const avatarInitial = username.slice(0, 1).toUpperCase()
+  const adminUser = isAdmin(user?.role)
   const [isLangOpen, setIsLangOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
+  const [isUserOpen, setIsUserOpen] = useState(false)
   const langRef = useRef<HTMLDivElement>(null)
   const notificationRef = useRef<HTMLDivElement>(null)
+  const userRef = useRef<HTMLDivElement>(null)
   const seenIdsRef = useRef<Set<number>>(loadSeenNotificationIds())
 
   const { data: notifications = [], isLoading: notificationsLoading } = useGetNotificationsQuery(
@@ -47,6 +52,12 @@ export function Header() {
   const [markAllNotificationsRead] = useMarkAllNotificationsReadMutation()
   const unreadCount = unreadData?.unread ?? notifications.filter((a) => !a.isRead).length
   const badgeLabel = unreadCount > 9 ? '9+' : String(unreadCount)
+
+  const closeMenus = () => {
+    setIsLangOpen(false)
+    setIsNotificationOpen(false)
+    setIsUserOpen(false)
+  }
 
   useEffect(() => {
     const unlock = () => unlockNotificationAudio()
@@ -79,12 +90,12 @@ export function Header() {
       if (langRef.current && !langRef.current.contains(target)) {
         setIsLangOpen(false)
       }
+      if (userRef.current && !userRef.current.contains(target)) {
+        setIsUserOpen(false)
+      }
     }
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsNotificationOpen(false)
-        setIsLangOpen(false)
-      }
+      if (event.key === 'Escape') closeMenus()
     }
     document.addEventListener('mousedown', onPointerDown)
     document.addEventListener('keydown', onKeyDown)
@@ -102,6 +113,7 @@ export function Header() {
           onClick={() => {
             setIsLangOpen((v) => !v)
             setIsNotificationOpen(false)
+            setIsUserOpen(false)
           }}
           className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-[12px] font-medium text-text-secondary hover:bg-primary-light hover:text-primary"
         >
@@ -119,7 +131,7 @@ export function Header() {
                   setLanguage(l.code as LangCode)
                   setIsLangOpen(false)
                 }}
-                  className={`w-full rounded-[8px] px-3 py-2 text-start text-[13px] ${
+                className={`w-full rounded-[8px] px-3 py-2 text-start text-[13px] ${
                   lang === l.code
                     ? 'bg-primary-light font-semibold text-primary'
                     : 'text-text-secondary hover:bg-muted'
@@ -155,6 +167,7 @@ export function Header() {
               unlockNotificationAudio()
               setIsNotificationOpen((v) => !v)
               setIsLangOpen(false)
+              setIsUserOpen(false)
             }}
             className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-muted text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"
             aria-label={t('header.notifications', 'Notifications')}
@@ -199,31 +212,31 @@ export function Header() {
                   const tone = notificationStyles[notificationTone(a)]
                   const ToneIcon = tone.icon
                   return (
-                  <button
-                    key={a.id}
-                    type="button"
-                    onClick={() => {
-                      if (!a.isRead) {
-                        markNotificationRead(a.id)
-                      }
-                    }}
-                    className={`flex w-full cursor-pointer items-start gap-3 rounded-[10px] px-3 py-2 text-start hover:bg-muted ${
-                      a.isRead ? '' : 'bg-primary-light/40'
-                    }`}
-                  >
-                    <span className={`alert-icon alert-${tone.level}`}>
-                      <ToneIcon aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[12px] font-medium text-text-primary">{copy.title}</span>
-                      {copy.subtitle && (
-                        <span className="mt-0.5 block text-[11px] text-text-muted">{copy.subtitle}</span>
-                      )}
-                      <span className={`alert-chip alert-${tone.level} mt-1`}>
-                        {t(tone.label)}
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => {
+                        if (!a.isRead) {
+                          markNotificationRead(a.id)
+                        }
+                      }}
+                      className={`flex w-full cursor-pointer items-start gap-3 rounded-[10px] px-3 py-2 text-start hover:bg-muted ${
+                        a.isRead ? '' : 'bg-primary-light/40'
+                      }`}
+                    >
+                      <span className={`alert-icon alert-${tone.level}`}>
+                        <ToneIcon aria-hidden="true" />
                       </span>
-                    </span>
-                  </button>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[12px] font-medium text-text-primary">{copy.title}</span>
+                        {copy.subtitle && (
+                          <span className="mt-0.5 block text-[11px] text-text-muted">{copy.subtitle}</span>
+                        )}
+                        <span className={`alert-chip alert-${tone.level} mt-1`}>
+                          {t(tone.label)}
+                        </span>
+                      </span>
+                    </button>
                   )
                 })}
               </div>
@@ -240,16 +253,58 @@ export function Header() {
           )}
         </div>
 
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 rounded-full px-2 py-1 transition-colors hover:bg-muted"
-        >
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary-light text-[12px] font-semibold text-primary">
-            {avatarInitial}
-          </span>
-          <span className="text-[14px] font-semibold text-text-primary">{username}</span>
-          <ChevronDown className="h-4 w-4 text-text-muted" />
-        </button>
+        <div className="relative" ref={userRef}>
+          <button
+            type="button"
+            onClick={() => {
+              setIsUserOpen((v) => !v)
+              setIsLangOpen(false)
+              setIsNotificationOpen(false)
+            }}
+            className="inline-flex items-center gap-2 rounded-full px-2 py-1 transition-colors hover:bg-muted"
+            aria-expanded={isUserOpen}
+            aria-haspopup="menu"
+          >
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary-light text-[12px] font-semibold text-primary">
+              {avatarInitial}
+            </span>
+            <span className="text-[14px] font-semibold text-text-primary">{username}</span>
+            <ChevronDown className="h-4 w-4 text-text-muted" />
+          </button>
+          {isUserOpen && (
+            <div className="absolute end-0 top-11 z-30 w-48 rounded-[12px] border border-border bg-surface p-1 shadow-lg">
+              {adminUser && (
+                <Link
+                  to="/settings"
+                  onClick={closeMenus}
+                  className="flex w-full items-center gap-2 rounded-[8px] px-3 py-2 text-[13px] text-text-secondary hover:bg-muted hover:text-text-primary"
+                >
+                  <Settings className="h-4 w-4" />
+                  {t('nav.settings', 'Settings')}
+                </Link>
+              )}
+              <Link
+                to="/notifications"
+                onClick={closeMenus}
+                className="flex w-full items-center gap-2 rounded-[8px] px-3 py-2 text-[13px] text-text-secondary hover:bg-muted hover:text-text-primary"
+              >
+                <Bell className="h-4 w-4" />
+                {t('header.notifications', 'Notifications')}
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  closeMenus()
+                  clearAuth()
+                }}
+                className="flex w-full items-center gap-2 rounded-[8px] px-3 py-2 text-start text-[13px] text-text-secondary hover:bg-muted hover:text-danger"
+              >
+                <LogOut className="h-4 w-4" />
+                {t('auth.logout', 'Logout')}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   )

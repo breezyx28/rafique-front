@@ -94,7 +94,7 @@ export function InventoryPage() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <div className="inline-flex rounded-full bg-[#F5F5F5] p-[3px]">
+          <div className="inline-flex rounded-full bg-muted p-[3px]">
             <button
               type="button"
               onClick={() => setTab('ready')}
@@ -128,7 +128,7 @@ export function InventoryPage() {
           {tab === 'ready' && (
             <div className="overflow-hidden rounded-[12px] border border-border">
               <table className="w-full min-w-[720px]">
-                <thead className="bg-[#FAFAFA]">
+                <thead className="bg-muted">
                   <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">
                       {t('inventoryPage.readyName', 'Name')}
@@ -171,10 +171,10 @@ export function InventoryPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 text-text-secondary">
-                          <button type="button" onClick={() => setEditingReady({ ...r })} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-primary" aria-label={t('inventoryPage.editReadyItem')}>
+                          <button type="button" onClick={() => setEditingReady({ ...r })} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-muted hover:text-primary" aria-label={t('inventoryPage.editReadyItem')}>
                             <Pencil className="h-4 w-4" />
                           </button>
-                          <button type="button" onClick={() => setDeletingReady(r)} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-danger" aria-label={t('inventoryPage.deleteReadyItem')}>
+                          <button type="button" onClick={() => setDeletingReady(r)} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-muted hover:text-danger" aria-label={t('inventoryPage.deleteReadyItem')}>
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -189,7 +189,7 @@ export function InventoryPage() {
           {tab === 'fabrics' && (
             <div className="overflow-hidden rounded-[12px] border border-border">
               <table className="w-full min-w-[720px]">
-                <thead className="bg-[#FAFAFA]">
+                <thead className="bg-muted">
                   <tr className="text-start text-[12px] font-medium text-text-muted">
                     <th className="px-4 py-3">
                       {t('inventoryPage.fabricName', 'Fabric / Asset')}
@@ -239,10 +239,10 @@ export function InventoryPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 text-text-secondary">
-                          <button type="button" onClick={() => setEditingFabric({ ...f, packageQty: remainingPackages(f.qty, f.packageMeters) })} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-primary" aria-label={t('inventoryPage.editFabricItem')}>
+                          <button type="button" onClick={() => setEditingFabric({ ...f, packageQty: remainingPackages(f.qty, f.packageMeters) })} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-muted hover:text-primary" aria-label={t('inventoryPage.editFabricItem')}>
                             <Pencil className="h-4 w-4" />
                           </button>
-                          <button type="button" onClick={() => setDeletingFabric(f)} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-[#F5F5F5] hover:text-danger" aria-label={t('inventoryPage.deleteFabricItem')}>
+                          <button type="button" onClick={() => setDeletingFabric(f)} className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-muted hover:text-danger" aria-label={t('inventoryPage.deleteFabricItem')}>
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -366,7 +366,7 @@ export function InventoryPage() {
                 }
                 placeholder={t('common.pricePlaceholder', 'e.g. 700,000')}
               />
-              <p className="md:col-span-2 rounded-[10px] bg-[#FAFAFA] px-3 py-2 text-[12px] text-text-secondary">
+              <p className="md:col-span-2 rounded-[10px] bg-muted px-3 py-2 text-[12px] text-text-secondary">
                 {t('inventoryPage.totalMetersPreview', 'Total meters')}
                 {': '}
                 <span className="font-semibold text-text-primary tabular-nums">
@@ -623,7 +623,7 @@ export function InventoryPage() {
                 onValueChange={setCreateFabricPackagePrice}
                 placeholder={t('common.pricePlaceholder', 'e.g. 700,000')}
               />
-              <p className="md:col-span-2 rounded-[10px] bg-[#FAFAFA] px-3 py-2 text-[12px] text-text-secondary">
+              <p className="md:col-span-2 rounded-[10px] bg-muted px-3 py-2 text-[12px] text-text-secondary">
                 {t('inventoryPage.totalMetersPreview', 'Total meters')}
                 {': '}
                 <span className="font-semibold text-text-primary tabular-nums">
