@@ -55,13 +55,13 @@ export function LoginPage() {
             key={l.code}
             type="button"
             onClick={() => setLanguage(l.code as LangCode)}
-            className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-text-muted shadow-card hover:bg-gray-50"
+            className="rounded-full bg-surface px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-text-muted shadow-card hover:bg-gray-50"
           >
             {l.label}
           </button>
         ))}
       </div>
-      <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden rounded-[16px] bg-white shadow-lg md:grid-cols-2">
+      <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden rounded-[16px] bg-surface shadow-lg md:grid-cols-2">
         {/* Left gradient / promo panel */}
         <div className="relative hidden flex-col justify-between bg-gradient-to-br from-primary via-[#0B9E8E] to-[#FFB48A] px-10 py-10 md:flex">
           <img

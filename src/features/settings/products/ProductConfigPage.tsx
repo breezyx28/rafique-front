@@ -170,7 +170,7 @@ export function ProductConfigPage() {
                 </button>
                 <button
                   type="button"
-                  className="me-2 cursor-pointer rounded-md p-1.5 text-text-secondary transition-colors hover:bg-white hover:text-primary"
+                  className="me-2 cursor-pointer rounded-md p-1.5 text-text-secondary transition-colors hover:bg-surface hover:text-primary"
                   onClick={() => setRenamingProduct({ id: p.id, name: p.name })}
                   aria-label={t('productConfigPage.rename', { name: p.name })}
                 >
@@ -211,7 +211,7 @@ export function ProductConfigPage() {
                     <GripVertical className="h-4 w-4" />
                     {t('productConfigPage.dragToReorder')}
                   </div>
-                  <button type="button" onClick={() => removeField(field.id)} className="rounded-md p-1 hover:bg-white">
+                  <button type="button" onClick={() => removeField(field.id)} className="rounded-md p-1 hover:bg-surface">
                     <Trash2 className="h-4 w-4 text-text-muted hover:text-danger" />
                   </button>
                 </div>
@@ -247,7 +247,7 @@ export function ProductConfigPage() {
                     <select
                       value={field.inputType}
                       onChange={(e) => void updateField(field.id, { inputType: e.target.value as FieldConfig['inputType'] })}
-                      className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                      className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px]"
                     >
                       <option value="text">{t('productConfigPage.text')}</option>
                       <option value="number">{t('productConfigPage.number')}</option>
@@ -383,7 +383,7 @@ export function ProductConfigPage() {
             <select
               value={newFieldInputType}
               onChange={(e) => setNewFieldInputType(e.target.value as 'text' | 'number' | 'select')}
-              className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+              className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px]"
             >
               <option value="text">{t('productConfigPage.text')}</option>
               <option value="number">{t('productConfigPage.number')}</option>

@@ -74,7 +74,7 @@ export function InvoicesPage() {
                 setPage(1)
               }}
               aria-label={t('orders.method', 'Method')}
-              className="h-10 rounded-[6px] border border-border bg-white px-3 text-[13px]"
+              className="h-10 rounded-[6px] border border-border bg-surface px-3 text-[13px]"
             >
               <option value="all">{t('invoicesPage.allMethods', 'All Methods')}</option>
               <option value="cash">{t('orders.cash', 'Cash')}</option>
@@ -87,7 +87,7 @@ export function InvoicesPage() {
                 setPage(1)
               }}
               aria-label={t('orders.status', 'Status')}
-              className="h-10 rounded-[6px] border border-border bg-white px-3 text-[13px]"
+              className="h-10 rounded-[6px] border border-border bg-surface px-3 text-[13px]"
             >
               <option value="all">{t('invoicesPage.allStatus', 'All Status')}</option>
               <option value="paid">{t('invoicesPage.paid', 'Paid')}</option>

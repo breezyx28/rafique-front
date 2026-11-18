@@ -1,6 +1,6 @@
 import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Printer } from 'lucide-react'
+import { ArrowLeft, Printer, MessageCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import type { InvoicePayload, InvoiceType } from './types'
@@ -8,10 +8,13 @@ import { money } from './types'
 import { printInvoice } from './printInvoice'
 import { formatDate } from '@/lib/localeFormat'
 import { formatPaymentMethod, getFieldLabel } from '@/lib/displayLabels'
+import { resolveInvoiceNotes } from '@/lib/invoiceNotes'
+import { openInvoiceWhatsApp, toWhatsAppPhone } from '@/lib/whatsapp'
 import { useGetOrderByIdQuery, useGetSettingsQuery } from '@/features/api/appApi'
+import { usePreferenceStore } from '@/store/usePreferenceStore'
 
 export function InvoiceDetailsPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { orderNumber = '' } = useParams()
   const [searchParams] = useSearchParams()
   const location = useLocation()
@@ -24,9 +27,11 @@ export function InvoiceDetailsPage() {
   const workshopInvoice = apiOrder?.type === 'custom' && Boolean(apiOrder.customer)
   const type: InvoiceType = requestedType === 'workshop' && !workshopInvoice ? 'customer' : requestedType
   const { data: settings } = useGetSettingsQuery()
+  const prefInvoiceNotes = usePreferenceStore((s) => s.invoiceNotes)
   const shopName = String(settings?.workshopName || t('app.shopName'))
   const shopAddress = String(settings?.workshopAddress || t('invoiceDetailsPage.defaultAddress'))
   const shopPhone = String(settings?.workshopPhone || t('invoiceDetailsPage.defaultPhone'))
+  const invoiceTerms = resolveInvoiceNotes(settings?.invoiceNotes ?? prefInvoiceNotes, i18n.language)
 
   const order: InvoicePayload | undefined = apiOrder
     ? {
@@ -63,6 +68,8 @@ export function InvoiceDetailsPage() {
         ],
       }
     : incomingOrder
+
+  const canShareWhatsApp = Boolean(order && toWhatsAppPhone(order.customerPhone))
 
   if (!order) {
     return (
@@ -102,12 +109,24 @@ export function InvoiceDetailsPage() {
               : t('invoiceDetailsPage.orderDue', { orderNumber: order.orderNumber, dueDate: formatDate(order.dueDate) })}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button asChild variant="outline">
             <Link to="/invoices">
               <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
               {t('invoiceDetailsPage.back', 'Back')}
             </Link>
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-1"
+            disabled={!canShareWhatsApp}
+            onClick={() => {
+              const ok = openInvoiceWhatsApp(order.customerPhone, order, invoiceTerms)
+              if (!ok) window.alert(t('whatsapp.missingPhone', 'No valid WhatsApp number on this order.'))
+            }}
+          >
+            <MessageCircle className="h-4 w-4" />
+            {t('whatsapp.shareInvoice', 'Share on WhatsApp')}
           </Button>
           <Button className="gap-1" onClick={() => printInvoice(order, type)}>
             <Printer className="h-4 w-4" />
@@ -224,26 +243,6 @@ export function InvoiceDetailsPage() {
                   <p className="text-[13px] font-semibold text-text-primary">
                     {item.product} ({t('invoiceDetailsPage.qty', 'qty')}: {item.qty})
                   </p>
-                  {item.measurements.length > 0 && (
-                  <div className="overflow-hidden rounded-[10px] border border-border">
-                    <table className="w-full">
-                      <thead className="bg-muted">
-                        <tr className="text-start text-[12px] font-medium text-text-muted">
-                          <th className="px-4 py-2">{t('invoiceDetailsPage.measurement', 'Measurement')}</th>
-                          <th className="px-4 py-2">{t('invoiceDetailsPage.value', 'Value')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {item.measurements.map((m) => (
-                          <tr key={`${item.product}-${m.label}`} className="border-t border-border text-[13px]">
-                            <td className="px-4 py-2 text-text-primary">{m.label}</td>
-                            <td className="px-4 py-2 text-text-secondary">{m.value || '—'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  )}
                 </div>
               ))}
               <div className="grid gap-2 text-[13px] sm:grid-cols-2">
@@ -252,9 +251,11 @@ export function InvoiceDetailsPage() {
                 <p><span className="text-text-muted">{t('invoiceDetailsPage.remaining', 'Remaining')}:</span> {money(order.remaining)}</p>
                 <p><span className="text-text-muted">{t('invoiceDetailsPage.paymentMethod', 'Payment Method')}:</span> {formatPaymentMethod(order.paymentMethod)}</p>
               </div>
-              <p className="text-[12px] text-text-secondary">
-                {t('invoiceDetailsPage.noteLabel', 'Note')}: {order.customerNote || t('invoiceDetailsPage.customerNoteDefault', 'Please bring this receipt when collecting.')}
-              </p>
+              {order.customerNote ? (
+                <p className="text-[12px] text-text-secondary">
+                  {t('invoiceDetailsPage.noteLabel', 'Note')}: {order.customerNote}
+                </p>
+              ) : null}
             </>
           ) : (
             <>
@@ -289,6 +290,14 @@ export function InvoiceDetailsPage() {
             <p dir="ltr">{shopPhone}</p>
             <p dir="ltr">@{t('app.instagram')}</p>
           </div>
+          {type === 'customer' && invoiceTerms ? (
+            <div className="border-t border-border pt-3 text-[12px] text-text-secondary">
+              <p className="font-semibold text-text-primary">
+                {t('invoiceDetailsPage.termsLabel', 'Invoice notes')}
+              </p>
+              <div className="mt-1 space-y-1 whitespace-pre-line">{invoiceTerms}</div>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
     </div>

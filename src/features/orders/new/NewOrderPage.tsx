@@ -367,7 +367,7 @@ export function NewOrderPage() {
                       ? 'border-primary bg-primary-light'
                       : isDone
                       ? 'border-success bg-successBg'
-                      : 'border-border bg-white'
+                      : 'border-border bg-surface'
                   }`}
                 >
                   <span
@@ -392,7 +392,7 @@ export function NewOrderPage() {
       <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,1.3fr)]">
         <div className="space-y-3">
           {step === 1 && (
-            <div className="relative rounded-[12px] border border-border bg-white px-4 py-3">
+            <div className="relative rounded-[12px] border border-border bg-surface px-4 py-3">
               <label className="mb-1 block text-[12px] font-medium text-text-secondary">
                 {tr('orders.new.customer.phoneLookup', 'Phone Lookup')}
               </label>
@@ -404,7 +404,7 @@ export function NewOrderPage() {
                 placeholder={tr('orders.new.customer.phoneLookupPlaceholder', 'Search by phone or name')}
               />
               {searchFocused && searchQuery.trim() && searchResults.length > 0 && (
-                <ul className="absolute inset-x-4 top-full z-20 mt-1 max-h-48 overflow-auto rounded-[10px] border border-border bg-white py-1 shadow-lg">
+                <ul className="absolute inset-x-4 top-full z-20 mt-1 max-h-48 overflow-auto rounded-[10px] border border-border bg-surface py-1 shadow-lg">
                   {searchResults.map((c) => (
                     <li key={c.id}>
                       <button
@@ -469,7 +469,7 @@ export function NewOrderPage() {
                   <textarea
                     value={customerNotes}
                     onChange={(e) => setCustomerNotes(e.target.value)}
-                    className="min-h-[96px] w-full rounded-[10px] border border-border bg-white px-3 py-2 text-[13px] text-text-primary"
+                    className="min-h-[96px] w-full rounded-[10px] border border-border bg-surface px-3 py-2 text-[13px] text-text-primary"
                     placeholder={tr('orders.new.customer.notesPlaceholder', 'Optional customer notes')}
                   />
                 </div>
@@ -495,7 +495,7 @@ export function NewOrderPage() {
                   <select
                     value={fabricId ?? ''}
                     onChange={(e) => setFabricId(e.target.value ? Number(e.target.value) : null)}
-                    className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                    className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px]"
                   >
                     <option value="">{tr('orders.new.selectFabric', 'Select fabric')}</option>
                     {(fabricsData?.data ?? []).map((fabric) => (
@@ -602,7 +602,7 @@ export function NewOrderPage() {
                     <textarea
                       value={workshopNotes}
                       onChange={(e) => setWorkshopNotes(e.target.value)}
-                      className="min-h-[96px] w-full rounded-[10px] border border-border bg-white px-3 py-2 text-[13px] text-text-primary"
+                      className="min-h-[96px] w-full rounded-[10px] border border-border bg-surface px-3 py-2 text-[13px] text-text-primary"
                       placeholder={tr('orders.new.workshopNotePlaceholder', 'Note for workshop')}
                     />
                   </div>
@@ -623,7 +623,7 @@ export function NewOrderPage() {
                       <select
                         value={fabricId ?? ''}
                         onChange={(e) => setFabricId(e.target.value ? Number(e.target.value) : null)}
-                        className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                        className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px]"
                       >
                         <option value="">{tr('orders.new.selectFabric', 'Select fabric')}</option>
                         {(fabricsData?.data ?? []).map((fabric) => (
@@ -694,7 +694,7 @@ export function NewOrderPage() {
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                    className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                    className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px]"
                   >
                     <option value="Cash">{tr('orders.new.payment.cash', 'Cash')}</option>
                     <option value="MBOK">{tr('orders.new.payment.mbok', 'MBOK')}</option>
@@ -824,7 +824,7 @@ export function NewOrderPage() {
 
       {ordersModalOpen && selectedCustomerFromSearch && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.35)] p-4">
-          <div className="w-full max-w-lg rounded-[16px] bg-white p-5 shadow-lg">
+          <div className="w-full max-w-lg rounded-[16px] bg-surface p-5 shadow-lg">
             <h3 className="text-[18px] font-semibold text-text-primary">
               {tr('orders.new.ordersModal.title', 'Copy from past order')}
             </h3>
@@ -873,7 +873,7 @@ export function NewOrderPage() {
                           <Ruler className="h-3.5 w-3.5 text-primary" />
                           {item.productName || tr('orders.new.ordersModal.product', 'Product')}
                         </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 text-[11px] font-medium text-text-secondary group-hover:bg-white">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-surface/70 px-2 py-0.5 text-[11px] font-medium text-text-secondary group-hover:bg-surface">
                           <Clock3 className="h-3 w-3" />
                           #{item.orderId} · {formatDate(createdDate)}
                         </span>
@@ -917,7 +917,7 @@ export function NewOrderPage() {
 
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.35)] p-4">
-          <div className="w-full max-w-lg rounded-[16px] bg-white p-5 shadow-lg">
+          <div className="w-full max-w-lg rounded-[16px] bg-surface p-5 shadow-lg">
             <h3 className="text-[18px] font-semibold text-text-primary">{tr('orders.new.modal.title', 'Confirm Order Submission')}</h3>
             <p className="mt-1 text-[13px] text-text-secondary">{tr('orders.new.modal.subtitle', 'Please review order details before final submit.')}</p>
             <div className="mt-4 space-y-2 rounded-[10px] bg-muted p-3 text-[13px]">

@@ -19,6 +19,7 @@ export function PreferencesSync() {
       workshopAddress: String(settings.workshopAddress ?? ''),
       workshopPhone: String(settings.workshopPhone ?? ''),
     })
+    usePreferenceStore.getState().setInvoiceNotes(settings.invoiceNotes)
     applyDocumentTitle()
 
     const stored = localStorage.getItem('language')

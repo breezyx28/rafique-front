@@ -183,7 +183,7 @@ export function CustomersPage() {
 
       {historyCustomer && (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-[rgba(0,0,0,0.28)]">
-          <div className="h-full w-full max-w-md bg-white p-5 shadow-lg">
+          <div className="h-full w-full max-w-md bg-surface p-5 shadow-lg">
             <div className="flex items-center justify-between">
               <h3 className="text-[18px] font-semibold text-text-primary">
                 {t('customersPage.orderHistoryTitle', 'Order History')}
@@ -216,7 +216,7 @@ export function CustomersPage() {
 
       {deletingCustomerId !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.32)] p-4">
-          <div className="w-full max-w-md rounded-[14px] bg-white p-5 shadow-lg">
+          <div className="w-full max-w-md rounded-[14px] bg-surface p-5 shadow-lg">
             <h3 className="text-[18px] font-semibold text-text-primary">
               {t('customersPage.deleteTitle', 'Delete Customer')}
             </h3>

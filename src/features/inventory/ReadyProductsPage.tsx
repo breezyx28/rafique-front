@@ -489,7 +489,7 @@ export function ReadyProductsPage() {
             <textarea
               value={form.note}
               onChange={(e) => setForm({ ...form, note: e.target.value })}
-              className="min-h-[84px] w-full rounded-[6px] border border-border bg-white px-3 py-2 text-[13px]"
+              className="min-h-[84px] w-full rounded-[6px] border border-border bg-surface px-3 py-2 text-[13px]"
               placeholder={t('readyProductsPage.notePlaceholder', 'Optional note')}
             />
           </div>

@@ -61,7 +61,7 @@ export function DashboardBarChart({
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <p className="text-[22px] font-bold text-white">{total}</p>
             {badge ? (
-              <span className="rounded-[4px] bg-white px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+              <span className="rounded-[4px] bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-primary">
                 {badge}
               </span>
             ) : null}

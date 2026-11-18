@@ -72,7 +72,7 @@ export function ExpensesPage() {
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px]"
               >
                 <option value="">
                   {t('expensesPage.typeSelectPlaceholder', 'Select type')}
@@ -125,7 +125,7 @@ export function ExpensesPage() {
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                className="min-h-[90px] w-full rounded-[10px] border border-border bg-white px-3 py-2 text-[13px]"
+                className="min-h-[90px] w-full rounded-[10px] border border-border bg-surface px-3 py-2 text-[13px]"
                 placeholder={t(
                   'expensesPage.notePlaceholder',
                   'Optional expense note'

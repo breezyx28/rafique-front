@@ -258,7 +258,7 @@ export function InventoryPage() {
 
       {editingReady && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.32)] p-4">
-          <div className="w-full max-w-lg rounded-[14px] bg-white p-5 shadow-lg">
+          <div className="w-full max-w-lg rounded-[14px] bg-surface p-5 shadow-lg">
             <h3 className="text-[18px] font-semibold text-text-primary">
               {t('inventoryPage.editReadyTitle', 'Edit Ready Product')}
             </h3>
@@ -317,7 +317,7 @@ export function InventoryPage() {
 
       {editingFabric && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.32)] p-4">
-          <div className="w-full max-w-lg rounded-[14px] bg-white p-5 shadow-lg">
+          <div className="w-full max-w-lg rounded-[14px] bg-surface p-5 shadow-lg">
             <h3 className="text-[18px] font-semibold text-text-primary">
               {t('inventoryPage.editFabricTitle', 'Edit Fabric / Asset')}
             </h3>
@@ -418,7 +418,7 @@ export function InventoryPage() {
 
       {deletingReady && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.32)] p-4">
-          <div className="w-full max-w-md rounded-[14px] bg-white p-5 shadow-lg">
+          <div className="w-full max-w-md rounded-[14px] bg-surface p-5 shadow-lg">
             <h3 className="text-[18px] font-semibold text-text-primary">
               {t('inventoryPage.deleteReadyTitle', 'Delete Ready Product')}
             </h3>
@@ -448,7 +448,7 @@ export function InventoryPage() {
 
       {deletingFabric && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.32)] p-4">
-          <div className="w-full max-w-md rounded-[14px] bg-white p-5 shadow-lg">
+          <div className="w-full max-w-md rounded-[14px] bg-surface p-5 shadow-lg">
             <h3 className="text-[18px] font-semibold text-text-primary">
               {t('inventoryPage.deleteFabricTitle', 'Delete Fabric / Asset')}
             </h3>
@@ -479,7 +479,7 @@ export function InventoryPage() {
 
       {isCreateReadyOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.32)] p-4">
-          <div className="w-full max-w-lg rounded-[14px] bg-white p-5 shadow-lg">
+          <div className="w-full max-w-lg rounded-[14px] bg-surface p-5 shadow-lg">
             <h3 className="text-[18px] font-semibold text-text-primary">
               {t('inventoryPage.createReadyTitle', 'Add Ready Product')}
             </h3>
@@ -492,7 +492,7 @@ export function InventoryPage() {
                   value={createReadyProductId}
                   onChange={(e) => setCreateReadyProductId(e.target.value ? Number(e.target.value) : '')}
                   aria-label={t('inventoryPage.createReadyProduct', 'Product')}
-                  className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                  className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px]"
                 >
                   <option value="">{t('inventoryPage.selectProduct', 'Select a product')}</option>
                   {(readyProducts ?? []).map((p) => (
@@ -580,7 +580,7 @@ export function InventoryPage() {
 
       {isCreateFabricOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.32)] p-4">
-          <div className="w-full max-w-lg rounded-[14px] bg-white p-5 shadow-lg">
+          <div className="w-full max-w-lg rounded-[14px] bg-surface p-5 shadow-lg">
             <h3 className="text-[18px] font-semibold text-text-primary">
               {t('inventoryPage.createFabricTitle', 'Add Fabric / Asset')}
             </h3>

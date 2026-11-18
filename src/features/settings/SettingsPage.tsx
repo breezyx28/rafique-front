@@ -16,6 +16,7 @@ import { useAuthStore } from '@/store/useAuthStore'
 import { API_BASE } from '@/lib/api'
 import { applyDocumentTitle, setLanguage as applyLanguage } from '@/lib/i18n'
 import i18n from '@/lib/i18n'
+import { DEFAULT_INVOICE_NOTES, parseInvoiceNotes, type InvoiceNotesByLang } from '@/lib/invoiceNotes'
 
 type SettingsTab = 'general' | 'preferences' | 'users' | 'security' | 'backup'
 
@@ -35,6 +36,7 @@ export function SettingsPage() {
   const [shopName, setShopName] = useState('')
   const [shopPhone, setShopPhone] = useState('')
   const [shopAddress, setShopAddress] = useState('')
+  const [invoiceNotes, setInvoiceNotes] = useState<InvoiceNotesByLang>({ ...DEFAULT_INVOICE_NOTES })
 
   const [language, setLanguage] = useState('en')
   const [theme, setTheme] = useState<'light' | 'dark'>(prefStore.theme)
@@ -59,6 +61,7 @@ export function SettingsPage() {
     setShopName(String(settings.workshopName ?? ''))
     setShopPhone(String(settings.workshopPhone ?? ''))
     setShopAddress(String(settings.workshopAddress ?? ''))
+    setInvoiceNotes(parseInvoiceNotes(settings.invoiceNotes))
 
     const uiLanguage = (i18n.language || '').split('-')[0]
     setLanguage(uiLanguage === 'ar' || uiLanguage === 'bn' || uiLanguage === 'en' ? uiLanguage : String(settings.language ?? 'en'))
@@ -129,16 +132,56 @@ export function SettingsPage() {
               <label className="mb-1 block text-[12px] font-medium text-text-secondary">{t('settingsPage.logo', 'Logo')}</label>
               <Input type="file" aria-label={t('settingsPage.logo', 'Logo')} />
             </div>
+            <div className="md:col-span-2 space-y-3 rounded-[10px] border border-border bg-muted/40 p-3">
+              <div>
+                <p className="text-[13px] font-semibold text-text-primary">
+                  {t('settingsPage.invoiceNotesTitle', 'Customer invoice notes')}
+                </p>
+                <p className="mt-1 text-[12px] text-text-secondary">
+                  {t(
+                    'settingsPage.invoiceNotesHint',
+                    'Shown at the bottom of the customer invoice (screen and print). One language is used based on the app language.'
+                  )}
+                </p>
+              </div>
+              {(
+                [
+                  ['ar', t('settingsPage.languageArabic', 'Arabic')],
+                  ['en', t('settingsPage.languageEnglish', 'English')],
+                  ['bn', t('settingsPage.languageBengali', 'Bengali')],
+                ] as const
+              ).map(([lang, label]) => (
+                <div key={lang}>
+                  <label className="mb-1 block text-[12px] font-medium text-text-secondary">
+                    {t('settingsPage.invoiceNotesLang', 'Notes ({{lang}})', { lang: label })}
+                  </label>
+                  <textarea
+                    value={invoiceNotes[lang]}
+                    onChange={(e) => setInvoiceNotes((prev) => ({ ...prev, [lang]: e.target.value }))}
+                    rows={3}
+                    className="min-h-[84px] w-full rounded-[10px] border border-border bg-surface px-3 py-2 text-[13px] text-text-primary"
+                    placeholder={DEFAULT_INVOICE_NOTES[lang]}
+                  />
+                </div>
+              ))}
+            </div>
             <div className="md:col-span-2 flex justify-end">
               <Button
                 className="gap-1"
                 onClick={async () => {
-                  await patchSettings({ workshopName: shopName, workshopPhone: shopPhone, workshopAddress: shopAddress })
+                  const notes = parseInvoiceNotes(invoiceNotes)
+                  await patchSettings({
+                    workshopName: shopName,
+                    workshopPhone: shopPhone,
+                    workshopAddress: shopAddress,
+                    invoiceNotes: notes,
+                  })
                   prefStore.setShopProfile({
                     workshopName: shopName,
                     workshopPhone: shopPhone,
                     workshopAddress: shopAddress,
                   })
+                  prefStore.setInvoiceNotes(notes)
                   applyDocumentTitle()
                 }}
                 disabled={isLoading}
@@ -449,7 +492,7 @@ export function SettingsPage() {
       )}
       {isUserModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.35)] p-4">
-          <div className="w-full max-w-md rounded-[16px] bg-white p-5 shadow-lg">
+          <div className="w-full max-w-md rounded-[16px] border border-border bg-surface p-5 shadow-lg">
             <h3 className="text-[18px] font-semibold text-text-primary">
               {t('settingsPage.addUser', 'Add User')}
             </h3>
@@ -478,7 +521,7 @@ export function SettingsPage() {
                 <select
                   value={userRole}
                   onChange={(e) => setUserRole(e.target.value as typeof userRole)}
-                  className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                  className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px] text-text-primary"
                 >
                   <option value="Workshop">{t('settingsPage.roleWorkshop')}</option>
                   <option value="Cashier">{t('settingsPage.roleCashier')}</option>

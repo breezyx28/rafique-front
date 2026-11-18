@@ -110,7 +110,7 @@ export function CustomerEditPage() {
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="min-h-[96px] w-full rounded-[10px] border border-border bg-white px-3 py-2 text-[13px] text-text-primary"
+              className="min-h-[96px] w-full rounded-[10px] border border-border bg-surface px-3 py-2 text-[13px] text-text-primary"
               placeholder={t('customersPage.notesPlaceholder')}
             />
           </div>

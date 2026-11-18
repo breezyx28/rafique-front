@@ -1,6 +1,7 @@
 import i18n from '@/lib/i18n'
 import { formatDate, formatMoney } from '@/lib/localeFormat'
 import { formatPaymentMethod } from '@/lib/displayLabels'
+import { formatInvoiceNotesHtml, resolveInvoiceNotes } from '@/lib/invoiceNotes'
 import { usePreferenceStore } from '@/store/usePreferenceStore'
 import type { InvoicePayload, InvoiceType } from './types'
 
@@ -20,7 +21,9 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
   const shopAddress = shop.workshopAddress
   const shopPhone = shop.workshopPhone || i18n.t('app.phone')
   const instagram = i18n.t('app.instagram')
+  const invoiceTerms = resolveInvoiceNotes(shop.invoiceNotes, lang)
   const logoUrl = new URL('/assets/cedar/logo-transparent-black.png', window.location.origin).href
+  const showMeasurements = !isCustomer && !isPickup
   return `
 <!doctype html>
 <html lang="${lang}" dir="${dir}">
@@ -107,6 +110,16 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
         margin: 3px 0;
       }
 
+      .terms {
+        margin-top: 6px;
+        font-size: 10px;
+        color: #374151;
+      }
+
+      .terms-line {
+        margin: 2px 0;
+      }
+
       @media print {
         html, body {
           width: 72mm;
@@ -149,7 +162,7 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
       <div class="block">
         <strong>${item.product} ${i18n.t('invoiceDetailsPage.qtyWithCount', { qty: item.qty })}</strong>
         ${
-          item.measurements.length
+          showMeasurements && item.measurements.length
             ? `<table>
           <thead><tr><th>${i18n.t('invoiceDetailsPage.measurement')}</th><th>${i18n.t('invoiceDetailsPage.value')}</th></tr></thead>
           <tbody>
@@ -173,7 +186,11 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
       <p>${i18n.t('invoiceDetailsPage.paid')}: ${formatMoney(order.paid)}</p>
       <p>${i18n.t('invoiceDetailsPage.remaining')}: ${formatMoney(order.remaining)}</p>
       <p>${i18n.t('invoiceDetailsPage.paymentMethod')}: ${paymentMethod}</p>
-      <p>${i18n.t('invoiceDetailsPage.noteLabel')}: ${order.customerNote || i18n.t('invoiceDetailsPage.customerNoteDefault')}</p>
+      ${
+        order.customerNote
+          ? `<p>${i18n.t('invoiceDetailsPage.noteLabel')}: ${order.customerNote}</p>`
+          : ''
+      }
     </div>`
         : isPickup
           ? ''
@@ -186,6 +203,11 @@ function renderPrintableInvoice(order: InvoicePayload, type: InvoiceType) {
       <div class="sep"></div>
       <p class="center" dir="ltr">${shopPhone}</p>
       <p class="center" dir="ltr">@${instagram}</p>
+      ${
+        isCustomer && invoiceTerms
+          ? `<div class="sep"></div><div class="terms"><p><strong>${i18n.t('invoiceDetailsPage.termsLabel')}</strong></p>${formatInvoiceNotesHtml(invoiceTerms)}</div>`
+          : ''
+      }
       <p class="center muted">${i18n.t('invoiceDetailsPage.thankYou')}</p>
     </div>
   </body>

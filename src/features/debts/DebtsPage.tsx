@@ -175,7 +175,7 @@ export function DebtsPage() {
               <select
                 value={status}
                 onChange={(event) => setStatus(event.target.value as typeof status)}
-                className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px]"
               >
                 <option value="open">{t('debtsPage.open')}</option>
                 <option value="settled">{t('debtsPage.settled')}</option>
@@ -237,7 +237,7 @@ export function DebtsPage() {
 
       {active && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.32)] p-4">
-          <div className="w-full max-w-lg rounded-[14px] bg-white p-5 shadow-lg">
+          <div className="w-full max-w-lg rounded-[14px] bg-surface p-5 shadow-lg">
             <h3 className="text-[18px] font-semibold text-text-primary">
               {active.needsCustomer
                 ? t('debtsPage.attachCustomer')
@@ -306,7 +306,7 @@ export function DebtsPage() {
                 <select
                   value={method}
                   onChange={(event) => setMethod(event.target.value as ReceiptMethod)}
-                  className="h-10 rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                  className="h-10 rounded-[6px] border border-border bg-surface px-3 text-[13px]"
                 >
                   <option value="cash">{t('orders.cash')}</option>
                   <option value="mbok">{t('orders.mbok')}</option>

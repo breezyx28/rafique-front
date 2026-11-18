@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { Eye, FileText, Pencil, Printer, Search, Trash2 } from 'lucide-react'
+import { Eye, FileText, MessageCircle, Pencil, Printer, Search, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { NumberInput } from '@/components/ui/NumberInput'
@@ -12,6 +12,9 @@ import { fabricStockLabel } from '@/lib/fabricStock'
 import { formatDate, formatMoney as money } from '@/lib/localeFormat'
 import { translateApiMessage } from '@/lib/apiErrors'
 import { formatOrderStatus, formatPaymentMethod, getFieldLabel } from '@/lib/displayLabels'
+import { resolveInvoiceNotes } from '@/lib/invoiceNotes'
+import { openInvoiceWhatsApp, toWhatsAppPhone } from '@/lib/whatsapp'
+import { usePreferenceStore } from '@/store/usePreferenceStore'
 import {
   useDeleteOrderMutation,
   useDeliverOrderToWorkshopMutation,
@@ -50,7 +53,9 @@ const statusClassMap: Record<OrderStatus, string> = {
 
 export function OrdersPage() {
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const invoiceNotes = usePreferenceStore((s) => s.invoiceNotes)
+  const invoiceTerms = resolveInvoiceNotes(invoiceNotes, i18n.language)
   const [activeTab, setActiveTab] = useState<OrderType>('custom')
   const [search, setSearch] = useState('')
   const [customer, setCustomer] = useState('')
@@ -438,6 +443,22 @@ export function OrdersPage() {
                             >
                               <Printer className="h-4 w-4" />
                             </button>
+                            <button
+                              type="button"
+                              disabled={!toWhatsAppPhone(row.customer?.phone)}
+                              onClick={() => {
+                                const payload = toInvoicePayload(row)
+                                const ok = openInvoiceWhatsApp(row.customer?.phone, payload, invoiceTerms)
+                                if (!ok) {
+                                  window.alert(t('whatsapp.missingPhone', 'No valid WhatsApp number on this order.'))
+                                }
+                              }}
+                              className="rounded-md p-1.5 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+                              aria-label={t('whatsapp.shareInvoice', 'Share on WhatsApp')}
+                              title={t('whatsapp.shareInvoice', 'Share on WhatsApp')}
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -482,7 +503,7 @@ export function OrdersPage() {
 
       {editingOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.32)] p-4">
-          <div className="w-full max-w-lg rounded-[14px] bg-white p-5 shadow-lg">
+          <div className="w-full max-w-lg rounded-[14px] border border-border bg-surface p-5 shadow-lg">
             <h3 className="text-[18px] font-semibold text-text-primary">
               {t('ordersPage.editTitle', 'Edit Order #{{id}}', { id: editingOrder.id })}
             </h3>
@@ -532,7 +553,7 @@ export function OrdersPage() {
                         setEditingOrder({ ...editingOrder, items })
                       }}
                       aria-label={t('orders.new.fabric', 'Fabric')}
-                      className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                      className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px]"
                     >
                       <option value="">{t('orders.new.selectFabric', 'Select fabric')}</option>
                       {(fabricsData?.data ?? []).map((fabric) => (
@@ -597,7 +618,7 @@ export function OrdersPage() {
       )}
       {confirmDeliver && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.32)] p-4">
-          <div className="w-full max-w-md rounded-[14px] bg-white p-5 shadow-lg">
+          <div className="w-full max-w-md rounded-[14px] bg-surface p-5 shadow-lg">
             <h3 className="text-[18px] font-semibold text-text-primary">{t('orders.deliverToWorkshop')}</h3>
             <p className="mt-2 text-[13px] text-text-secondary">
               {t('orders.deliverConfirm', { orderNumber: confirmDeliver.orderNumber })}

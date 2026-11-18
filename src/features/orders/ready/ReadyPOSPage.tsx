@@ -220,7 +220,7 @@ export function ReadyPOSPage() {
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                  className="h-10 w-full rounded-[6px] border border-border bg-white px-3 text-[13px]"
+                  className="h-10 w-full rounded-[6px] border border-border bg-surface px-3 text-[13px]"
                 >
                   <option value="Cash">{t('orders.ready.cash', 'Cash')}</option>
                   <option value="MBOK">{t('orders.ready.mbok', 'MBOK')}</option>
@@ -241,7 +241,7 @@ export function ReadyPOSPage() {
                     placeholder={t('orders.ready.searchCustomer')}
                   />
                   {customerMatches.length > 0 && (
-                    <ul className="rounded-[10px] border border-border bg-white">
+                    <ul className="rounded-[10px] border border-border bg-surface">
                       {customerMatches.map((customer) => (
                         <li key={customer.id}>
                           <button

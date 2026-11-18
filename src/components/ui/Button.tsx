@@ -4,17 +4,17 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[6px] font-semibold cursor-pointer shadow-card transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-default [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[6px] font-semibold cursor-pointer shadow-card transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-app disabled:pointer-events-none disabled:opacity-50 disabled:cursor-default [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
         primary:
-          'bg-[var(--color-primary)] text-white hover:bg-[#0a8477] hover:shadow-lg hover:-translate-y-[1px]',
+          'bg-primary text-[color:var(--primary-foreground)] hover:bg-primary-dark hover:shadow-lg hover:-translate-y-[1px]',
         secondary:
-          'bg-white text-[color:var(--color-primary)] border border-[color:var(--color-primary)]/20 hover:bg-[var(--color-primary-light)] hover:shadow-md hover:-translate-y-[1px]',
+          'bg-surface text-primary border border-primary/20 hover:bg-primary-light hover:shadow-md hover:-translate-y-[1px]',
         outline:
-          'border border-border bg-surface text-text-secondary hover:bg-gray-50',
-        ghost: 'text-text-secondary hover:bg-gray-100',
+          'border border-border bg-surface text-text-secondary hover:bg-muted',
+        ghost: 'text-text-secondary shadow-none hover:bg-muted',
         danger:
           'bg-danger text-white hover:bg-danger/90 hover:shadow-lg hover:-translate-y-[1px]',
         link: 'text-primary underline-offset-4 hover:underline shadow-none',

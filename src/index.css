@@ -157,6 +157,35 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Dark mode: never use white / near-white surfaces. text-white stays allowed. */
+html.dark :where(
+  .bg-white,
+  .bg-white\/70,
+  .bg-white\/50,
+  .bg-\[\#fff\],
+  .bg-\[\#FFF\],
+  .bg-\[\#ffffff\],
+  .bg-\[\#FFFFFF\],
+  .bg-gray-50,
+  .bg-gray-100,
+  .bg-neutral-50,
+  .bg-neutral-100,
+  .bg-slate-50,
+  .bg-slate-100
+) {
+  background-color: var(--color-surface) !important;
+}
+
+html.dark :where(
+  .hover\:bg-white:hover,
+  .hover\:bg-gray-50:hover,
+  .hover\:bg-gray-100:hover,
+  .hover\:bg-neutral-50:hover,
+  .hover\:bg-neutral-100:hover
+) {
+  background-color: var(--muted) !important;
+}
+
 [dir='rtl'] body {
   font-family: 'Cairo', 'Noto Sans Arabic', sans-serif;
 }

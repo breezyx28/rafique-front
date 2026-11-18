@@ -1,9 +1,15 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import {
+  DEFAULT_INVOICE_NOTES,
+  parseInvoiceNotes,
+  type InvoiceNotesByLang,
+} from '@/lib/invoiceNotes'
 
 type LangCode = 'en' | 'ar' | 'bn'
 export type DateFormat = 'YYYY-MM-DD' | 'DD/MM/YYYY'
 export type ThemeMode = 'light' | 'dark'
+export type { InvoiceNotesByLang }
 
 function readStoredLanguage(): LangCode {
   const stored = localStorage.getItem('language')
@@ -29,12 +35,14 @@ interface PreferenceState {
   workshopName: string
   workshopAddress: string
   workshopPhone: string
+  invoiceNotes: InvoiceNotesByLang
   setLanguage: (code: LangCode) => void
   setTheme: (theme: ThemeMode) => void
   setConfirmOrderDialog: (value: boolean) => void
   setDateFormat: (value: DateFormat) => void
   setCurrency: (value: string) => void
   setShopProfile: (value: { workshopName?: string; workshopAddress?: string; workshopPhone?: string }) => void
+  setInvoiceNotes: (value: InvoiceNotesByLang | unknown) => void
 }
 
 export const usePreferenceStore = create<PreferenceState>()(
@@ -48,6 +56,7 @@ export const usePreferenceStore = create<PreferenceState>()(
       workshopName: '',
       workshopAddress: '',
       workshopPhone: '',
+      invoiceNotes: { ...DEFAULT_INVOICE_NOTES },
       setLanguage: (code) => {
         localStorage.setItem('language', code)
         set({ language: code })
@@ -65,6 +74,7 @@ export const usePreferenceStore = create<PreferenceState>()(
           workshopAddress: value.workshopAddress ?? '',
           workshopPhone: value.workshopPhone ?? '',
         }),
+      setInvoiceNotes: (value) => set({ invoiceNotes: parseInvoiceNotes(value) }),
     }),
     {
       name: 'jelabeya-prefs',
@@ -73,6 +83,7 @@ export const usePreferenceStore = create<PreferenceState>()(
         dateFormat: state.dateFormat,
         currency: state.currency,
         theme: state.theme,
+        invoiceNotes: state.invoiceNotes,
       }),
       merge: (persisted, current) => {
         const next = {
